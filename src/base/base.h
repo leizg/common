@@ -2,6 +2,7 @@
 #define BASE_H_
 
 #include "closure.h"
+#include "disk_file.h"
 #include "macro_def.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
