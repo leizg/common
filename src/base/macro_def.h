@@ -2,6 +2,7 @@
 #define MACRO_DEF_H_
 
 #define INVALID_TID (-1)
+#define INVALID_FD (-1)
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName)    \
   TypeName(const TypeName&);                  \

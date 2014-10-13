@@ -11,6 +11,28 @@
 #include "thread.h"
 #include "thread_util.h"
 
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>              /* Obtain O_* constant definitions */
+#include <unistd.h>
+
+#include <sys/signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <set>
+#include <map>
+#include <list>
+#include <deque>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+#define SetFdBlock(fd) \
+  ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_NONBLOCK)
+#define SetFdNonBlock(fd) \
+  ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) & ~O_NONBLOCK)
+
 // stl utilites
 template<typename T> inline void STLClear(T* t) {
   for (typename T::iterator it = t->begin(); it != t->end(); ++it) {

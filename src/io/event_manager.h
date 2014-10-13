@@ -22,7 +22,7 @@ class EventManager {
   virtual ~EventManager();
 
   virtual bool Init() = 0;
-  virtual bool Loop() = 0;
+  virtual void Loop() = 0;
   virtual bool LoopInAnotherThread() = 0;
   virtual void Stop() = 0;
 

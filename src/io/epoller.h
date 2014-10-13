@@ -13,7 +13,7 @@ class Epoller : public EventManager {
   virtual ~Epoller();
 
   virtual bool Init();
-  virtual bool Loop();
+  virtual void Loop();
   virtual bool LoopInAnotherThread();
   virtual void Stop();
 
