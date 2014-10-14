@@ -2,7 +2,7 @@
 #include "timer_queue.h"
 
 namespace {
-scoped_ptr<Event> signal_ev;
+scoped_ptr<io::Event> signal_ev;
 
 void HandleSignal(int fd, void* arg, uint8 revent,
                   const TimeStamp& time_stamp) {
