@@ -27,9 +27,12 @@ class Epoller : public EventManager {
   typedef std::map<int, Event*> EvMap;
   EvMap ev_map_;
 
-  std::vector<Event> events_;
+  const static uint32 kTriggerNumber = 128;
+  std::vector<epoll_event> events_;
 
   scoped_ptr<StoppableThread> loop_pthread_;
+
+  uint32 ChangeEvent(uint8 event);
 
   DISALLOW_COPY_AND_ASSIGN(Epoller);
 };
