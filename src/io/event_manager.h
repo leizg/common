@@ -7,15 +7,15 @@
 #define EV_WRITE (1<<1)
 #define EV_ERROR (1<<2)
 
+namespace io {
+class TimerQueue;
+
 struct Event {
   int fd;
   void* arg;
   uint8 event;
   void (*cb)(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp);
 };
-
-namespace io {
-class TimerQueue;
 
 class EventManager {
  public:

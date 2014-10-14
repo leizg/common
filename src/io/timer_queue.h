@@ -5,6 +5,7 @@
 
 namespace io {
 class Timer;
+struct Event;
 class EventManager;
 
 struct TimerId {
@@ -15,7 +16,7 @@ struct TimerId {
 class TimerQueue {
  public:
   explicit TimerQueue(EventManager* ev_mgr)
-      : timer_(NULL),
+      : timer_fd_(INVALID_FD),
         ev_mgr_(ev_mgr) {
     CHECK_NOTNULL(ev_mgr);
   }
@@ -23,14 +24,24 @@ class TimerQueue {
 
   bool Init();
 
-  void handleRead(const TimeStamp& time_stamp);
-
+  // thread safe.
+  // you can call this methord from any thread.
   TimerId AddTimer(Closure* closure, uint32 interval, bool repeated);
+
+  // thread safe.
+  // you can call this methord from any thread.
   void CancelTimer(const TimerId& timer);
 
+  // only used for trigger expired events
+  // called by event_manager,
+  // not threadsafe. must in loop thread.
+  void handleRead(const TimeStamp& time_stamp);
+
  private:
-  timer_t timer_;
+  int timer_fd_;
+
   EventManager* ev_mgr_;
+  scoped_ptr<Event> event_;
 
   typedef std::pair<TimeStamp, Timer*> Entry;
   typedef std::list<Entry> EntryList;
@@ -38,6 +49,11 @@ class TimerQueue {
 
   typedef std::set<uint64> IdSet;
   IdSet id_set_;
+
+  // return true if first changed.
+  bool insert(Timer* timer);
+  void Reset();
+  void ReleaseActiveTimer(uint32 trigger_count, std::vector<Timer*>* timer_vec);
 
   DISALLOW_COPY_AND_ASSIGN(TimerQueue);
 };

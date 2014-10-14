@@ -18,6 +18,12 @@ class TimeStamp {
   time_t MicroSecs() const {
     return stamp_;
   }
+  timespec TimeSpec() const {
+    timespec ts = { 0 };
+    ts.tv_sec = stamp_ / 1000;
+    ts.tv_nsec = (stamp_ % 1000) * 1000;
+    return ts;
+  }
 
   bool operator <(time_t t) const {
     return stamp_ < t;
@@ -30,10 +36,10 @@ class TimeStamp {
   time_t stamp_;
 };
 
-bool operator < (const TimeStamp& t1, const TimeStamp& t2) {
+bool operator <(const TimeStamp& t1, const TimeStamp& t2) {
   return t1 < t2.MicroSecs();
 }
-bool operator > (const TimeStamp& t1, const TimeStamp& t2) {
+bool operator >(const TimeStamp& t1, const TimeStamp& t2) {
   return !operator <(t1, t2);
 }
 

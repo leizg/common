@@ -38,6 +38,13 @@ class Timer : public Closure {
     return stamp_ < ts;
   }
 
+  // by Closure.
+  void Run() {
+    if (closure_ != NULL) {
+      closure_->Run();
+    }
+  }
+
  private:
   const uint32 id_;
   bool is_repeated_;
@@ -45,12 +52,6 @@ class Timer : public Closure {
 
   TimeStamp stamp_;
   Closure* closure_;
-
-  void Run() {
-    if (closure_ != NULL) {
-      closure_->Run();
-    }
-  }
 
   static uint64 timer_id_;
 
