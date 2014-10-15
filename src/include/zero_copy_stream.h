@@ -11,7 +11,7 @@ class ZeroCopyInputStream {
   // return 0 iif no data.
   virtual int32 Next(char** buf, uint32* len) = 0;
 
-  virtual void Skip(uint32 len) = 0;
+  virtual char* Skip(uint32 len) = 0;
   virtual void Backup(uint32 len) = 0;
 
  private:
