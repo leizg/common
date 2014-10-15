@@ -17,7 +17,9 @@ void RpcServer::setHandlerMap(HandlerMap* handler_map) {
 void RpcServer::Loop(bool in_another_thread) {
   tcp_serv_.reset(new io::TcpServer(ev_mgr_, ip_, port_));
   tcp_serv_->setWorker(worker_);
-  protocol_.reset(new RpcProtocol(handler_map_));
+
+  CHECK_NOTNULL(handler_map_.get());
+  protocol_.reset(new RpcProtocol(handler_map_.get()));
 
   if (!tcp_serv_->Start()) {
     LOG(WARNING)<< "tcp server start error";

@@ -55,10 +55,9 @@ class ReplyObject : public io::OutVectorObject::IoObject {
 
 class ReplyClosure : public ::google::protobuf::Closure {
  public:
-  ReplyClosure(io::Connection* conn, const MessageHeader& header, Message* req,
+  ReplyClosure(io::Connection* conn, const MessageHeader& header,
                Message* reply)
       : hdr_(header),
-        req_(req),
         reply_(reply),
         conn_(conn) {
     conn->Ref();
@@ -68,7 +67,6 @@ class ReplyClosure : public ::google::protobuf::Closure {
 
  private:
   const MessageHeader hdr_;
-  scoped_ptr<Message> req_;
   scoped_ptr<Message> reply_;
 
   scoped_ref<io::Connection> conn_;
@@ -98,18 +96,18 @@ void RpcProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
   }
 
   // req and reply are released by Closure.
-  Message* req = method_handler->request->New();
+  scoped_ptr<Message> req(method_handler->request->New());
   // TODO: zeroCopyStream.
   bool ret = req->ParseFromArray(input_buf->peekR(), input_buf->size());
   if (!ret) {
     DLOG(WARNING)<< "parse data error: " << req->DebugString();
-    delete req;
+    return;
   }
 
   Message* reply = method_handler->reply->New();
-  method_handler->service->CallMethod(
-      method_handler->method, NULL, req, reply,
-      new ReplyClosure(conn, header, req, reply));
+  method_handler->service->CallMethod(method_handler->method, NULL, req.get(),
+                                      reply,
+                                      new ReplyClosure(conn, header, reply));
 }
 
 }

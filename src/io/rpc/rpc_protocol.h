@@ -19,7 +19,7 @@ class RpcProtocol : public io::Protocol {
 
     virtual void Init();
     virtual uint32 HeaderLength() const {
-      return RPC_HEADER_LENGTH ;
+      return RPC_HEADER_LENGTH;
     }
 
     bool Parse(char* buf);
@@ -48,7 +48,7 @@ class RpcProtocol : public io::Protocol {
   DISALLOW_COPY_AND_ASSIGN(RpcProtocol);
 };
 
-const MessageHeader& GetRpcHeaderFromConnection(io::Connection* conn) {
+inline const MessageHeader& GetRpcHeaderFromConnection(io::Connection* conn) {
   RpcProtocol::RpcAttr* attr =
       dynamic_cast<RpcProtocol::RpcAttr*>(conn->getAttr());
   return attr->header();

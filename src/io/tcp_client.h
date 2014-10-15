@@ -4,6 +4,7 @@
 #include "base/base.h"
 
 namespace io {
+class Protocol;
 class EventManager;
 
 class TcpClient {
@@ -21,10 +22,16 @@ class TcpClient {
   TcpClient(EventManager* ev, const std::string& ip, uint16 port);
   ~TcpClient();
 
+  // not thread safe.
+  void SetProtocol(Protocol* p) {
+    protocol_ = p;
+  }
+  // not thread safe.
   void SetCloseClosure(Closure* c) {
     close_slosure_.reset(c);
   }
 
+  // please set protocol and closeClosure first.
   bool Connect(uint32 time_out);
 
  private:
@@ -35,6 +42,7 @@ class TcpClient {
   scoped_ptr<Connector> connector_;
   scoped_ref<Connection> connection_;
 
+  Protocol* protocol_;
   scoped_ptr<Closure> close_slosure_;
 
   DISALLOW_COPY_AND_ASSIGN(TcpClient);
