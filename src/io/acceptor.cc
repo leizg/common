@@ -15,6 +15,7 @@ namespace io {
 
 Acceptor::~Acceptor() {
   if (listen_fd_ != INVALID_FD) {
+    ev_mgr_->Del(*event_);
     ::close(listen_fd_);
   }
 }
@@ -40,7 +41,7 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
     return false;
   }
 
-  ret = ::listen(listen_fd_, 1024);
+  ret = ::listen(listen_fd_, 1024); // todo: magic number -> macro def
   if (ret != 0) {
     ::close(listen_fd_);
     listen_fd_ = INVALID_FD;

@@ -6,7 +6,7 @@
 namespace io {
 class Protocol;
 class Connection;
-class EventPoller;
+class EventPooler;
 class EventManager;
 
 class TcpServer {
@@ -19,7 +19,7 @@ class TcpServer {
     virtual void Accept() = 0;
   };
 
-  // event_manager should initialized successfully.
+  // event_manager must initialized successfully.
   TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port);
   ~TcpServer();
 
@@ -46,7 +46,7 @@ class TcpServer {
   EventManager* ev_mgr_;
   Protocol* protocol_;
   scoped_ptr<Listener> listener_;
-  scoped_ptr<EventPoller> event_poller_;
+  scoped_ptr<EventPooler> event_poller_;
 
   Mutex mutex_;
   typedef std::map<int, Connection*> ConnMap;

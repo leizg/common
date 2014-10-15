@@ -1,6 +1,7 @@
 #ifndef BASE_H_
 #define BASE_H_
 
+#include "hash.h"
 #include "closure.h"
 #include "disk_file.h"
 #include "macro_def.h"

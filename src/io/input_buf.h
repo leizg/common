@@ -21,9 +21,10 @@ class InputBuf : public MemoryBlock, public ZeroCopyInputStream {
   // by ZeroCopyInputStream.
   virtual int32 Next(char** buf, uint32* len);
 
-  virtual void Skip(uint32 len) {
+  virtual char* Skip(uint32 len) {
     rpos_ += len;
     CHECK_LE(rpos_, wpos_);
+    return rpos_;
   }
   virtual void Backup(uint32 len) {
     rpos_ -= len;

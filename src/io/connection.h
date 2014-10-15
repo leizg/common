@@ -14,9 +14,11 @@ class Connection : public RefCounted {
   struct Attr {
     virtual void Init() = 0;
 
-    bool is_last_pkg;
     uint32 io_stat;
     uint32 pending_size;
+
+    // FIXME: unsed, todo.
+    bool is_last_pkg;
   };
 
   Connection(int fd, EventManager* ev_mgr);
@@ -69,8 +71,9 @@ class Connection : public RefCounted {
   virtual ~Connection();
 
   DISALLOW_COPY_AND_ASSIGN(Connection);
-
 };
+
+
 }
 
 #endif /* CONNECTION_H_ */

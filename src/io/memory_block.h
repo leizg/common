@@ -26,6 +26,17 @@ class MemoryBlock {
     return NULL == mem_;
   }
 
+  inline char* peekR() const {
+    return rpos_;
+  }
+  inline char* peekW() const {
+    return wpos_;
+  }
+
+  void review() {
+    rpos_ = wpos_ = mem_;
+  }
+
   inline uint32 readn() const {
     return rpos_ - mem_;
   }
@@ -41,7 +52,8 @@ class MemoryBlock {
 
  private:
   DISALLOW_COPY_AND_ASSIGN(MemoryBlock);
-};
+}
+;
 }
 
 #endif /* MEMORY_BLOCK_H_ */

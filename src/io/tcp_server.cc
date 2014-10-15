@@ -23,7 +23,7 @@ bool TcpServer::Start() {
   CHECK_NOTNULL(protocol_);
   if (listener_.get() != NULL) return true;
 
-  event_poller_.reset(new EventPoller(ev_mgr_, worker_));
+  event_poller_.reset(new EventPooler(ev_mgr_, worker_));
   if (!event_poller_->Init()) {
     event_poller_.reset();
     return false;
