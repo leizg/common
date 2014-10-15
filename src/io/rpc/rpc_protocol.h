@@ -18,6 +18,9 @@ class RpcProtocol : public io::Protocol {
     }
 
     virtual void Init();
+    virtual uint32 HeaderLength() const {
+      return RPC_HEADER_LENGTH ;
+    }
 
     bool Parse(char* buf);
     const MessageHeader& header() const {

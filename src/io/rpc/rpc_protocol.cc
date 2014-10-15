@@ -12,7 +12,7 @@ namespace rpc {
 
 void RpcProtocol::RpcAttr::Init() {
   ::memset(&header_, 0, RPC_HEADER_LENGTH);
-  io_stat = 0;
+  io_stat = io::Protocol::IO_HEADER;
   pending_size = 0;
 }
 

@@ -4,7 +4,9 @@
 #include "base/base.h"
 
 namespace io {
+class InputBuf;
 class Protocol;
+
 class EventManager;
 class OutputObject;
 
@@ -13,6 +15,7 @@ class Connection : public RefCounted {
  public:
   struct Attr {
     virtual void Init() = 0;
+    virtual uint32 HeaderLength() const = 0;
 
     uint32 io_stat;
     uint32 pending_size;
@@ -51,28 +54,31 @@ class Connection : public RefCounted {
   // out_obj will deleted by connection.
   // Note: not thread safe.
   void Send(OutputObject* out_obj);
+  int32 Recv(uint32 len);
 
-  void handleRead();
-  void handleWrite();
+  void handleRead(const TimeStamp& time_stamp);
+  void handleWrite(const TimeStamp& time_stamp);
 
   void ShutDown();
 
  private:
   int fd_;
-
+  bool closed_;
   EventManager* ev_mgr_;
-  Protocol* protocol_;
+  scoped_ptr<Event> event_;
 
-  class OutQueue;
-  scoped_ptr<OutQueue> out_queue_;
+  Protocol* protocol_;
   scoped_ptr<Attr> attr_;
   scoped_ptr<Closure> close_closure_;
+
+  class OutQueue;
+  scoped_ptr<InputBuf> input_buf_;
+  scoped_ptr<OutQueue> out_queue_;
 
   virtual ~Connection();
 
   DISALLOW_COPY_AND_ASSIGN(Connection);
 };
-
 
 }
 
