@@ -25,7 +25,7 @@ class scoped_ref {
     return ptr;
   }
 
-  void reset(Type* ptr) {
+  void reset(Type* ptr=NULL) {
     if (ptr_ != NULL) {
       ptr_->UnRef();
     }

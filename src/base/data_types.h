@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include <glog/logging.h>
+#include <google/gflags.h>
 
 typedef int8_t  int8;
 typedef int16_t int16;
