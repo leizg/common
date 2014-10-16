@@ -41,7 +41,7 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
     return false;
   }
 
-  ret = ::listen(listen_fd_, 1024); // todo: magic number -> macro def
+  ret = ::listen(listen_fd_, 1024);  // todo: magic number -> macro def
   if (ret != 0) {
     ::close(listen_fd_);
     listen_fd_ = INVALID_FD;
@@ -77,17 +77,20 @@ void Acceptor::Accept() {
     int fd = ::accept4(listen_fd_, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (fd == -1) {
       if (errno == EINTR) continue;
-      else if (errno == EWOULDBLOCK) return;
-
-      PLOG(WARNING)<< "accept error";
+      else if (errno != EWOULDBLOCK && errno != EAGAIN) {
+        PLOG(WARNING)<< "accept error";
+      }
+      return;
     }
 
-    scoped_ref<Connection> conn(new Connection(fd, ev_mgr_));
+    EventManager* ev_mgr = serv_->getPoller();
+    scoped_ref<Connection> conn(new Connection(fd, ev_mgr));
     conn->setProtocol(protocol_);
-    // FIXME: setAttr.
-    if (conn->Init()) {
-      serv_->Add(conn.get());
-    }
+    conn->setAttr(protocol_->NewConnectionAttr());
+    serv_->Add(conn.get());
+    conn->setCloseClosure(
+        NewPermanentCallback(serv_, &TcpServer::Remove, conn.get()));
+    ev_mgr->runInLoop(NewCallback(conn.get(), &Connection::Init));
   }
 }
 }

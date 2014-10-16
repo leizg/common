@@ -59,6 +59,29 @@ class OutVectorObject : public OutputObject {
   DISALLOW_COPY_AND_ASSIGN(OutVectorObject);
 };
 
+class OutQueue : public io::OutputObject {
+ public:
+  OutQueue() {
+  }
+  virtual ~OutQueue() {
+    STLClear(&out_queue_);
+  }
+
+  void Push(io::OutputObject* obj) {
+    out_queue_.push_back(obj);
+  }
+  bool empty() const {
+    return out_queue_.empty();
+  }
+
+  virtual bool Send(int fd, int32* err_no);
+
+ private:
+  std::deque<io::OutputObject*> out_queue_;
+
+  DISALLOW_COPY_AND_ASSIGN(OutQueue);
+};
+
 }
 
 #endif /* IO_BUF_H_ */

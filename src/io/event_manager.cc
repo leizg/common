@@ -7,7 +7,7 @@ scoped_ptr<io::Event> signal_ev;
 void HandleSignal(int fd, void* arg, uint8 revent,
                   const TimeStamp& time_stamp) {
   io::EventManager* ev_mgr = static_cast<io::EventManager*>(arg);
-  ev_mgr->handleClosure();
+  ev_mgr->handlePipeRead();
 }
 }
 
@@ -16,12 +16,16 @@ namespace io {
 EventManager::EventManager()
     : stop_(true) {
   loop_tid_ = ::pthread_self();
+
   event_fd_[0] = INVALID_FD;
   event_fd_[1] = INVALID_FD;
 }
 
 EventManager::~EventManager() {
   if (event_fd_[0] != INVALID_FD) {
+    if (signal_ev != NULL) {
+      Del(*signal_ev);
+    }
     ::close(event_fd_[0]);
   }
   if (event_fd_[1] != INVALID_FD) {
@@ -30,7 +34,7 @@ EventManager::~EventManager() {
 }
 
 bool EventManager::InitPipe() {
-  if (signal_ev.get() != NULL) return false;
+  if (signal_ev.get() != NULL) return true;
 
   timer_queue_.reset(new TimerQueue(this));
   if (!timer_queue_->Init()) {
@@ -39,9 +43,11 @@ bool EventManager::InitPipe() {
 
   int ret = ::pipe2(event_fd_, O_NONBLOCK | FD_CLOEXEC);
   if (ret != 0) {
+    timer_queue_.reset();
     PLOG(WARNING)<< "pipe error";
     return false;
   }
+
   signal_ev.reset(new Event);
   signal_ev->fd = event_fd_[0];
   signal_ev->event = EV_READ;
@@ -62,7 +68,7 @@ void EventManager::runInLoop(Closure* cb) {
   ::send(event_fd_[1], &c, sizeof(c), 0);
 }
 
-void EventManager::handleClosure() {
+void EventManager::handlePipeRead() {
   uint8 c;
   ::recv(event_fd_[0], &c, sizeof(c), 0);
 

@@ -3,6 +3,8 @@
 
 #include "event_manager.h"
 
+struct epoll_event;
+
 namespace io {
 
 class Epoller : public EventManager {
@@ -12,7 +14,7 @@ class Epoller : public EventManager {
   }
   virtual ~Epoller();
 
-  virtual bool Init();
+  virtual void Init();
   virtual void Loop();
   virtual bool LoopInAnotherThread();
   virtual void Stop();
@@ -24,6 +26,7 @@ class Epoller : public EventManager {
  private:
   int ep_fd_;
 
+  // no need lock.
   typedef std::map<int, Event*> EvMap;
   EvMap ev_map_;
 
@@ -32,7 +35,7 @@ class Epoller : public EventManager {
 
   scoped_ptr<StoppableThread> loop_pthread_;
 
-  uint32 ChangeEvent(uint8 event);
+  uint32 ConvertEvent(uint8 event);
 
   DISALLOW_COPY_AND_ASSIGN(Epoller);
 };

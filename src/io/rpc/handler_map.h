@@ -10,8 +10,8 @@ struct MethodHandler {
   // shouldn't delete method.
   const MethodDescriptor* method;
 
-  Message* request;
-  Message* reply;
+  const Message* request;
+  const Message* reply;
 };
 
 // FIXME: RwLock. ??? needed?

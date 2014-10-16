@@ -14,6 +14,7 @@ struct Event {
   int fd;
   void* arg;
   uint8 event;
+
   void (*cb)(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp);
 };
 
@@ -37,7 +38,7 @@ class EventManager {
     CHECK(inLoopThread());
   }
   void runInLoop(Closure* cb);
-  void handleClosure();
+  void handlePipeRead();
 
   TimerQueue* getTimerQueue() const {
     return timer_queue_.get();
@@ -45,6 +46,7 @@ class EventManager {
 
  protected:
   EventManager();
+
   // must be called after initialized successfully.
   bool InitPipe();
 

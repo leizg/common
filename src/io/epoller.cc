@@ -6,15 +6,30 @@ namespace io {
 Epoller::~Epoller() {
   if (ep_fd_ != INVALID_FD) {
     ::close(ep_fd_);
+    ep_fd_ = INVALID_FD;
   }
 }
 
-bool Epoller::Init() {
-  if (ep_fd_ != INVALID_FD) return false;
+void Epoller::Init() {
+  if (ep_fd_ != INVALID_FD) return;
+
+  /*
+   * In the initial epoll_create() implementation, the size argument
+   * informed the kernel of the number of file descriptors that the
+   * caller expected to add to the epoll instance.  The kernel used
+   * this information  as  a  hint  for  the  amount of space to
+   * initially allocate in internal data structures describing events.
+   *  (If necessary, the kernel would allocate more space if the caller's
+   *   usage exceeded the hint given in size.)  Nowadays, this hint is
+   *   no longer required (the kernel dynamically sizes the required data
+   *   structures without needing the hint), but size must still  be
+   *   greater than zero, in order to ensure backward compatibility
+   *   when new epoll applications are run on older kernels.
+   */
   ep_fd_ = ::epoll_create1(EPOLL_CLOEXEC);
   if (ep_fd_ == INVALID_FD) {
     PLOG(WARNING)<< "epoll_create error";
-    return false;
+    return;
   }
 
   SetFdNonBlock(ep_fd_);
@@ -23,13 +38,16 @@ bool Epoller::Init() {
   ::memset(&ev, 0, sizeof(ev));
   events_.resize(kTriggerNumber, ev);
 
-  return InitPipe();
+  if (!InitPipe()) {
+    ::close(ep_fd_);
+    ep_fd_ = INVALID_FD;
+  }
 }
 
 void Epoller::Loop() {
   if (!inLoopThread()) {
     loop_tid_ = ::pthread_self();
-    // FIXME: notify by SyncEvent.
+    // FIXME: notify main thread by SyncEvent.
   }
 
   stop_ = false;
@@ -40,7 +58,7 @@ void Epoller::Loop() {
                                         1);
     if (trigger_number == -1) {
       if (errno != EINTR) {
-        DLOG(WARNING)<< "epoll_wait error";
+        PLOG(WARNING)<< "epoll_wait error";
       }
       continue;
     }
@@ -68,7 +86,7 @@ bool Epoller::LoopInAnotherThread() {
   loop_pthread_.reset(new StoppableThread(NewCallback(this, &Epoller::Loop)));
   if (!loop_pthread_->Start()) return false;
   while (main_tid == loop_tid_) {
-    ::usleep(100);  // FIXME: ugly.
+    ::usleep(100);  // FIXME: so ugly, should notify by SyncEvent.
   }
 
   return true;
@@ -81,7 +99,7 @@ void Epoller::Stop() {
   loop_pthread_.reset();
 }
 
-uint32 Epoller::ChangeEvent(uint8 event) {
+uint32 Epoller::ConvertEvent(uint8 event) {
   uint32 flags = 0;
   if (event & EV_READ) {
     flags |= EPOLLIN;
@@ -103,7 +121,7 @@ bool Epoller::Add(Event* ev) {
 
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
-  event.events = ChangeEvent(ev->event);
+  event.events = ConvertEvent(ev->event);
   event.data.ptr = ev;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_ADD, ev->fd, &event);
@@ -125,33 +143,28 @@ void Epoller::Mod(Event* ev) {
 
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
-  event.events = ChangeEvent(ev->event);
+  event.events = ConvertEvent(ev->event);
   event.data.ptr = ev;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_MOD, ev->fd, &event);
-  if (ret != 0) {
-    PLOG(WARNING)<< "epoll_ctl error";
-  }
+  PLOG_IF(WARNING, ret != 0) << "epoll_ctl error";
 }
 
 void Epoller::Del(const Event& ev) {
   EvMap::iterator it = ev_map_.find(ev.fd);
   if (it == ev_map_.end()) {
-    LOG(WARNING)<< "not registe fd: " << ev.fd;
-    return;
-  }
-
-  epoll_event event;
-  ::memset(&event, 0, sizeof(event));
-  event.events = ChangeEvent(ev.event);
-  event.data.ptr = ev;
-
-  int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_DEL, ev.fd, &event);
-  if (ret != 0) {
-    PLOG(WARNING)<< "EPOLL_CTL_DEL error";
+    DLOG(WARNING)<< "not registe fd: " << ev.fd;
     return;
   }
   ev_map_.erase(it);
+
+  epoll_event event;
+  ::memset(&event, 0, sizeof(event));
+  event.events = ConvertEvent(ev.event);
+  event.data.ptr = ev;
+
+  int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_DEL, ev.fd, &event);
+  PLOG_IF(WARNING, ret != 0) << "EPOLL_CTL_DEL error";
 }
 
 }

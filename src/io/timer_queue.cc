@@ -23,7 +23,14 @@ TimerQueue::~TimerQueue() {
 
 bool TimerQueue::Init() {
   if (timer_fd_ != INVALID_FD) return true;
-
+  /*
+   * The clockid argument specifies the clock that is used to
+   * mark the progress of the timer, and must be either
+   * CLOCK_REALTIME or CLOCK_MONOTONIC.  CLOCK_REALTIME is a
+   * settable system-wide clock.  CLOCK_MONOTONIC is a nonsettable
+   * clock that is not affected by  discontinuous  changes  in  the
+   *  system clock (e.g., manual changes to system time).
+   */
   timer_fd_ = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
   if (timer_fd_ == -1) {
     PLOG(WARNING)<< "timerfd_create error";
@@ -37,9 +44,9 @@ bool TimerQueue::Init() {
   event_->cb = HandleEvent;
 
   if (!ev_mgr_->Add(event_.get())) {
-    event_.reset();
     ::close(timer_fd_);
     timer_fd_ = INVALID_FD;
+    event_.reset();
   }
 
   return true;
@@ -51,6 +58,7 @@ TimerId TimerQueue::AddTimer(Closure* closure, uint32 interval, bool repeated) {
   timer_id.timer = timer;
   timer_id.timer_id = timer->id();
 
+  // FIXME: run in loop thread.
   id_set_.insert(timer->id());
   if (insert(timer)) {
     Reset();
@@ -60,6 +68,7 @@ TimerId TimerQueue::AddTimer(Closure* closure, uint32 interval, bool repeated) {
 }
 
 void TimerQueue::CancelTimer(const TimerId& timer_id) {
+  // FIXME: run in loop thread.
   if (id_set_.count(timer_id.timer_id) == 0) return;
 
   id_set_.erase(timer_id.timer_id);

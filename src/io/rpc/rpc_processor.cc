@@ -95,15 +95,15 @@ void RpcProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
     return;
   }
 
-  // req and reply are released by Closure.
   scoped_ptr<Message> req(method_handler->request->New());
   // TODO: zeroCopyStream.
   bool ret = req->ParseFromArray(input_buf->peekR(), input_buf->size());
   if (!ret) {
-    DLOG(WARNING)<< "parse data error: " << req->DebugString();
+    DLOG(WARNING)<< "parse request error: " << req->DebugString();
     return;
   }
 
+  // reply will be released by Closure.
   Message* reply = method_handler->reply->New();
   method_handler->service->CallMethod(method_handler->method, NULL, req.get(),
                                       reply,

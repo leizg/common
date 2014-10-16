@@ -4,18 +4,19 @@
 
 namespace io {
 
-int Connector::CreateSocket() {
+int Connector::CreateSocket() const {
   int fd = ::socket(AF_INET, SOCK_STREAM, 0);
   if (fd == -1) {
     PLOG(WARNING)<< "socket error";
     return INVALID_FD;
   }
+
   SetFdNonBlock(fd);
 
   return fd;
 }
 
-bool Connector::WaitForConnected(int fd, uint32 time_out) {
+bool Connector::WaitForConnected(int fd, uint32 time_out) const {
   pollfd pfd[1];
   ::memset(&pfd[0], 0, sizeof(pollfd));
 
@@ -37,7 +38,8 @@ bool Connector::WaitForConnected(int fd, uint32 time_out) {
   return false;
 }
 
-int Connector::Connect(const std::string& ip, uint16 port, uint32 time_out) {
+int Connector::Connect(const std::string& ip, uint16 port,
+                       uint32 time_out) const {
   int fd = CreateSocket();
   if (fd == INVALID_FD) return INVALID_FD;
 
@@ -51,6 +53,7 @@ int Connector::Connect(const std::string& ip, uint16 port, uint32 time_out) {
   if (ret == 0) return fd;
   if (errno != EINPROGRESS) {
     ::close(fd);
+    PLOG(WARNING)<< "connect error";
     return INVALID_FD;
   }
 

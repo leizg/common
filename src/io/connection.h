@@ -6,8 +6,9 @@
 namespace io {
 class InputBuf;
 class Protocol;
-
 class EventManager;
+
+class OutQueue;
 class OutputObject;
 
 // Note: Connection shouldn't delete directly.
@@ -25,7 +26,7 @@ class Connection : public RefCounted {
   };
 
   Connection(int fd, EventManager* ev_mgr);
-  bool Init();
+  void Init();
 
   int FileHandle() const {
     return fd_;
@@ -71,7 +72,6 @@ class Connection : public RefCounted {
   scoped_ptr<Attr> attr_;
   scoped_ptr<Closure> close_closure_;
 
-  class OutQueue;
   scoped_ptr<InputBuf> input_buf_;
   scoped_ptr<OutQueue> out_queue_;
 

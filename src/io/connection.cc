@@ -19,43 +19,6 @@ void HandleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
   }
 }
 
-class io::Connection::OutQueue : public io::OutputObject {
- public:
-  OutQueue() {
-  }
-  virtual ~OutQueue() {
-    STLClear(&out_queue_);
-  }
-
-  void Push(io::OutputObject* obj) {
-    out_queue_.push_back(obj);
-  }
-  bool empty() const {
-    return out_queue_.empty();
-  }
-
-  virtual bool Send(int fd, int32* err_no);
-
- private:
-  std::deque<io::OutputObject*> out_queue_;
-
-  DISALLOW_COPY_AND_ASSIGN(OutQueue);
-};
-
-bool io::Connection::OutQueue::Send(int fd, int32* err_no) {
-  while (!out_queue_.empty()) {
-    io::OutputObject* obj = out_queue_.front();
-    if (!obj->Send(fd, err_no)) {
-      return false;
-    }
-
-    delete obj;
-    out_queue_.pop_front();
-  }
-
-  return true;
-}
-
 }
 
 namespace io {
@@ -78,8 +41,8 @@ Connection::~Connection() {
   }
 }
 
-bool Connection::Init() {
-  if (event_.get() != NULL) return true;
+void Connection::Init() {
+  if (event_.get() != NULL) return;
 
   event_.reset(new Event);
   event_->fd = fd_;
@@ -89,13 +52,14 @@ bool Connection::Init() {
 
   if (!ev_mgr_->Add(event_.get())) {
     event_.reset();
-    return false;
+    if (close_closure_.get() != NULL) {
+      close_closure_->Run();
+    }
+    return ;
   }
 
   out_queue_.reset(new OutQueue);
   input_buf_.reset(new InputBuf(FLAGS_input_buf_len));
-
-  return true;
 }
 
 void Connection::Send(OutputObject* out_obj) {

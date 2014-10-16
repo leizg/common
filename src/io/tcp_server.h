@@ -48,6 +48,7 @@ class TcpServer {
   scoped_ptr<Listener> listener_;
   scoped_ptr<EventPooler> event_poller_;
 
+  // FIXME: remove this.
   Mutex mutex_;
   typedef std::map<int, Connection*> ConnMap;
   ConnMap conn_map_;

@@ -51,4 +51,18 @@ bool OutVectorObject::Send(int fd, int32* err_no) {
   return true;
 }
 
+bool OutQueue::Send(int fd, int32* err_no) {
+  while (!out_queue_.empty()) {
+    io::OutputObject* obj = out_queue_.front();
+    if (!obj->Send(fd, err_no)) {
+      return false;
+    }
+
+    delete obj;
+    out_queue_.pop_front();
+  }
+
+  return true;
+}
+
 }

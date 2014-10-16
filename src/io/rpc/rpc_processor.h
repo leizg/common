@@ -12,6 +12,7 @@ class RpcProcessor : public io::Protocol::Processor {
       : handler_map_(handler_map) {
     CHECK_NOTNULL(handler_map);
   }
+
   virtual ~RpcProcessor();
 
  private:
