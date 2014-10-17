@@ -23,10 +23,6 @@ bool RpcProtocol::RpcAttr::Parse(char* buf) {
   return true;
 }
 
-RpcProtocol::RpcProtocol(HandlerMap* handler_map) {
-  SetProcessor(new RpcProcessor(handler_map));
-}
-
 bool RpcProtocol::ParseHeader(io::Connection* conn,
                               io::InputBuf* input_buf) const {
   if (input_buf->size() != RPC_HEADER_LENGTH) {

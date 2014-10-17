@@ -1,11 +1,10 @@
 #ifndef RPC_PROTOCOL_H_
 #define RPC_PROTOCOL_H_
 
-#include "io/protocol.h"
 #include "rpc_def.h"
+#include "io/protocol.h"
 
 namespace rpc {
-class HandlerMap;
 
 class RpcProtocol : public io::Protocol {
  public:
@@ -33,7 +32,8 @@ class RpcProtocol : public io::Protocol {
     DISALLOW_COPY_AND_ASSIGN(RpcAttr);
   };
 
-  explicit RpcProtocol(HandlerMap* handler_map);
+  RpcProtocol() {
+  }
   virtual ~RpcProtocol() {
   }
 

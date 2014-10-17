@@ -86,7 +86,7 @@ class ReplyClosure : public ::google::protobuf::Closure {
 
 namespace rpc {
 
-void RpcProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
+void ServerProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
                             const TimeStamp& time_stamp) {
   const MessageHeader& header = GetRpcHeaderFromConnection(conn);
   MethodHandler * method_handler = handler_map_->FindMehodById(header.fun_id);

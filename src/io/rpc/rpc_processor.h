@@ -3,17 +3,21 @@
 
 #include "io/protocol.h"
 
+namespace io {
+class TcpClient;
+}
+
 namespace rpc {
 class HandlerMap;
 
-class RpcProcessor : public io::Protocol::Processor {
+class ServerProcessor : public io::Protocol::Processor {
  public:
-  explicit RpcProcessor(HandlerMap* handler_map)
+  explicit ServerProcessor(HandlerMap* handler_map)
       : handler_map_(handler_map) {
     CHECK_NOTNULL(handler_map);
   }
 
-  virtual ~RpcProcessor();
+  virtual ~ServerProcessor();
 
  private:
   HandlerMap* handler_map_;
@@ -21,7 +25,49 @@ class RpcProcessor : public io::Protocol::Processor {
   virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
                         const TimeStamp& time_stamp);
 
-  DISALLOW_COPY_AND_ASSIGN(RpcProcessor);
+  DISALLOW_COPY_AND_ASSIGN(ServerProcessor);
+};
+
+class RpcContext : public LinkNode {
+ public:
+  RpcContext(const TimeStamp& time_stamp, uint64 re_id);
+  virtual ~RpcContext();
+
+  uint64 id() const {
+    return req_id_;
+  }
+
+  void SetContext(uint32 method_id, const Message* request, Message* response,
+                  google::protobuf::Closure* done);
+
+ private:
+  const uint64 req_id_;
+
+  uint32 method_id_;
+  const Message* request_;
+  Message* response_;
+  google::protobuf::Closure* done_;
+
+  DISALLOW_COPY_AND_ASSIGN(RpcContext);
+};
+
+class ClientProcessor : public io::Protocol::Processor {
+ public:
+  explicit ClientProcessor(io::TcpClient* client)
+      : request_id_(0),
+        client_(client) {
+  }
+
+  virtual ~ClientProcessor();
+
+ private:
+  uint64 request_id_;
+  io::TcpClient* client_;
+
+  virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
+                        const TimeStamp& time_stamp);
+
+  DISALLOW_COPY_AND_ASSIGN(ClientProcessor);
 };
 
 }

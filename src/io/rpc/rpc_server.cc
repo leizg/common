@@ -16,7 +16,9 @@ void RpcServer::setHandlerMap(HandlerMap* handler_map) {
 
 void RpcServer::Loop(bool in_another_thread) {
   CHECK_NOTNULL(handler_map_.get());
-  protocol_.reset(new RpcProtocol(handler_map_.get()));
+  protocol_.reset(new RpcProtocol);
+  ServerProcessor* p = new ServerProcessor(handler_map_.get());
+  protocol_->SetProcessor(p);
 
   tcp_serv_.reset(new io::TcpServer(ev_mgr_, ip_, port_));
   tcp_serv_->setWorker(worker_);

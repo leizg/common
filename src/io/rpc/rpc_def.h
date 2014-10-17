@@ -1,15 +1,8 @@
 #ifndef RPC_DEF_H_
 #define RPC_DEF_H_
 
-namespace google {
-namespace protobuf {
-class Service;
-class Message;
-class RpcChannel;
-class RpcController;
-class MethodDescriptor;
-}
-}
+#include <google/protobuf/service.h>
+#include <google/protobuf/message.h>
 
 typedef google::protobuf::Service Service;
 typedef google::protobuf::Message Message;
