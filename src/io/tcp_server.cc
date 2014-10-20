@@ -7,11 +7,7 @@
 namespace io {
 
 TcpServer::TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port)
-    : ip_(ip),
-      port_(port),
-      worker_(0),
-      ev_mgr_(ev_mgr),
-      protocol_(NULL) {
+    : ip_(ip), port_(port), worker_(0), ev_mgr_(ev_mgr), protocol_(NULL) {
   CHECK_NOTNULL(ev_mgr);
   CHECK(!ip.empty());
 }

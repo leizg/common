@@ -7,28 +7,26 @@ namespace io {
 class EventManager;
 
 class EventPooler {
- public:
-  EventPooler(EventManager* ev_mgr, uint8 worker)
-      : worker_(worker),
-        ev_mgr_(ev_mgr),
-        index_(0) {
-  }
-  ~EventPooler();
+  public:
+    EventPooler(EventManager* ev_mgr, uint8 worker)
+        : worker_(worker), ev_mgr_(ev_mgr), index_(0) {
+    }
+    ~EventPooler();
 
-  bool Init();
+    bool Init();
 
-  EventManager* getPoller();
+    EventManager* getPoller();
 
- private:
-  uint8 worker_;
-  EventManager* ev_mgr_;
+  private:
+    uint8 worker_;
+    EventManager* ev_mgr_;
 
-  Mutex mutex_;
-  uint8 index_;
-  typedef std::vector<EventManager*> EvVec;
-  EvVec ev_vec_;
+    Mutex mutex_;
+    uint8 index_;
+    typedef std::vector<EventManager*> EvVec;
+    EvVec ev_vec_;
 
-  DISALLOW_COPY_AND_ASSIGN(EventPooler);
+    DISALLOW_COPY_AND_ASSIGN(EventPooler);
 };
 
 }

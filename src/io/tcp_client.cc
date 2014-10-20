@@ -5,10 +5,7 @@
 namespace io {
 
 TcpClient::TcpClient(EventManager* ev_mgr, const std::string& ip, uint16 port)
-    : ip_(ip),
-      port_(port),
-      ev_mgr_(ev_mgr),
-      protocol_(NULL) {
+    : ip_(ip), port_(port), ev_mgr_(ev_mgr), protocol_(NULL) {
   connector_.reset(new io::Connector);
 }
 

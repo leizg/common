@@ -58,7 +58,7 @@ bool EventManager::InitPipe() {
 }
 
 void EventManager::runInLoop(Closure* cb) {
-  if (inLoopThread()) {
+  if (inValidThread()) {
     cb->Run();
     return;
   }

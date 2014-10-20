@@ -24,10 +24,7 @@ void HandleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
 namespace io {
 
 Connection::Connection(int fd, EventManager* ev_mgr)
-    : fd_(fd),
-      closed_(false),
-      ev_mgr_(ev_mgr),
-      protocol_(NULL) {
+    : fd_(fd), closed_(false), ev_mgr_(ev_mgr), protocol_(NULL) {
   DCHECK_NE(fd, INVALID_FD);
   DCHECK_NOTNULL(ev_mgr);
 }
@@ -55,7 +52,7 @@ void Connection::Init() {
     if (close_closure_.get() != NULL) {
       close_closure_->Run();
     }
-    return ;
+    return;
   }
 
   out_queue_.reset(new OutQueue);
