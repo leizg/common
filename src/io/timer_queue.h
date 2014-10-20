@@ -32,7 +32,7 @@ class TimerQueue {
     void CancelTimer(const TimerId& timer);
 
     // only used for trigger expired events
-    // called by event_manager,
+    // called by event_manager, you shouldn't call this method forever.
     // not threadsafe. must in loop thread.
     void handleRead(const TimeStamp& time_stamp);
 

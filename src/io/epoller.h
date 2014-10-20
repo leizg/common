@@ -33,6 +33,7 @@ class Epoller : public EventManager {
     const static uint32 kTriggerNumber = 128;
     std::vector<epoll_event> events_;
 
+    SyncEvent start_event_;
     scoped_ptr<StoppableThread> loop_pthread_;
 
     uint32 ConvertEvent(uint8 event);

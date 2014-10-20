@@ -3,8 +3,6 @@
 
 #include "base/base.h"
 
-#ifndef DEBUG {
-
 class ThreadSafe {
   public:
     virtual ~ThreadSafe() {
@@ -15,8 +13,12 @@ class ThreadSafe {
     }
 
   protected:
-    ThreadSafe()
-        : pid_(::pthread_self()) {
+    ThreadSafe() {
+      update();
+    }
+
+    void update() {
+      pid_ = ::pthread_self();
     }
 
   private:
@@ -24,20 +26,5 @@ class ThreadSafe {
 
     DISALLOW_COPY_AND_ASSIGN(ThreadSafe);
 };
-#else
-
-class ThreadSafe {
-  public:
-  ThreadSafe() {}
-
-  bool inValidThread() const {
-    return true;
-  }
-
-  private:
-  DISALLOW_COPY_AND_ASSIGN(ThreadSafe);
-};
-
-#endif
 
 #endif /* THREAD_SAFE_H_ */
