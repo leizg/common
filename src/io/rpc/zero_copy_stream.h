@@ -8,6 +8,7 @@
 
 namespace rpc {
 
+//todo:
 class InputStream : public ::google::protobuf::io::ZeroCopyInputStream {
   public:
     InputStream(uint32 len)
