@@ -9,77 +9,74 @@
 namespace {
 
 class ReplyObject : public io::OutVectorObject::IoObject {
- public:
-  ReplyObject(const MessageHeader& header, Message* reply)
-      : msg_(reply),
-        offset_(0) {
-    data_.reset(new io::OutputBuf(msg_->ByteSize() + RPC_HEADER_LENGTH));
-    MessageHeader* reply_hdr;
-    uint size = RPC_HEADER_LENGTH;
-    data_->Next((char**) &reply_hdr, &size);
-    CHECK_EQ(size, RPC_HEADER_LENGTH);
+  public:
+    ReplyObject(const MessageHeader& header, Message* reply)
+        : msg_(reply), offset_(0) {
+      data_.reset(new io::OutputBuf(msg_->ByteSize() + RPC_HEADER_LENGTH));
+      MessageHeader* reply_hdr;
+      uint size = RPC_HEADER_LENGTH;
+      data_->Next((char**) &reply_hdr, &size);
+      CHECK_EQ(size, RPC_HEADER_LENGTH);
 
-    reply_hdr->fun_id = header.fun_id;
-    reply_hdr->rpc_type = RPC_RESPONSE;
-    reply_hdr->length = msg_->ByteSize();
-    reply_hdr->id = header.id;
+      reply_hdr->fun_id = header.fun_id;
+      reply_hdr->rpc_type = RPC_RESPONSE;
+      reply_hdr->length = msg_->ByteSize();
+      reply_hdr->id = header.id;
 
-    char* data;
-    size = msg_->ByteSize();
-    data_->Next(&data, &size);
-    // FIXME: ZeroCopyStream.
-    msg_->SerializePartialToArray(data, size);
+      char* data;
+      size = msg_->ByteSize();
+      data_->Next(&data, &size);
+      // FIXME: ZeroCopyStream.
+      msg_->SerializePartialToArray(data, size);
 
-    iovec io;
-    io.iov_base = data_->peekR();
-    io.iov_len = data_->size();
-    iov_.push_back(io);
-  }
+      iovec io;
+      io.iov_base = data_->peekR();
+      io.iov_len = data_->size();
+      iov_.push_back(io);
+    }
 
-  virtual ~ReplyObject() {
-  }
+    virtual ~ReplyObject() {
+    }
 
- private:
-  scoped_ptr<Message> msg_;
+  private:
+    scoped_ptr<Message> msg_;
 
-  uint32 offset_;
-  std::vector<iovec> iov_;
-  scoped_ptr<io::OutputBuf> data_;
+    uint32 offset_;
+    std::vector<iovec> iov_;
+    scoped_ptr<io::OutputBuf> data_;
 
-  virtual const std::vector<iovec>& IoVec() const {
-    return iov_;
-  }
+    virtual const std::vector<iovec>& IoVec() const {
+      return iov_;
+    }
 
-  DISALLOW_COPY_AND_ASSIGN(ReplyObject);
+    DISALLOW_COPY_AND_ASSIGN(ReplyObject);
 };
 
 class ReplyClosure : public ::google::protobuf::Closure {
- public:
-  ReplyClosure(io::Connection* conn, const MessageHeader& header,
-               Message* reply)
-      : hdr_(header),
-        reply_(reply),
-        conn_(conn) {
-    conn->Ref();
-  }
-  virtual ~ReplyClosure() {
-  }
+  public:
+    ReplyClosure(io::Connection* conn, const MessageHeader& header,
+                 Message* reply)
+        : hdr_(header), reply_(reply), conn_(conn) {
+      conn->Ref();
+    }
+    virtual ~ReplyClosure() {
+    }
 
- private:
-  const MessageHeader hdr_;
-  scoped_ptr<Message> reply_;
+  private:
+    const MessageHeader hdr_;
+    scoped_ptr<Message> reply_;
 
-  scoped_ref<io::Connection> conn_;
+    scoped_ref<io::Connection> conn_;
 
-  virtual void Run() {
-    io::OutputObject* obj = new io::OutVectorObject(
-        new ReplyObject(hdr_, reply_.release()), true);
-    conn_->Send(obj);
+    virtual void Run() {
+      io::OutputObject* obj = new io::OutVectorObject(
+          new ReplyObject(hdr_, reply_.release()), true);
+      conn_->Send(obj);
 
-    delete this;
-  }
+      delete this;
+    }
 
-  DISALLOW_COPY_AND_ASSIGN(ReplyClosure);
+    DISALLOW_COPY_AND_ASSIGN(ReplyClosure);
 };
 
 }

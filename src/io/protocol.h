@@ -8,52 +8,50 @@ class InputBuf;
 class Connection;
 
 class Protocol {
- public:
-  virtual ~Protocol() {
-  }
-
-  enum IoStat {
-    IO_HEADER = 0,
-    IO_DATA,
-    IO_END,
-  };
-
-  class Processor {
-   public:
-    virtual ~Processor() {
+  public:
+    virtual ~Protocol() {
     }
 
-    virtual void Dispatch(Connection* conn, InputBuf* input_buf,
-                          const TimeStamp& time_stamp) = 0;
-  };
+    enum IoStat {
+      IO_HEADER = 0, IO_DATA, IO_END,
+    };
 
-  virtual Connection::Attr* NewConnectionAttr() const = 0;
+    class Processor {
+      public:
+        virtual ~Processor() {
+        }
 
-  // not thread safe.
-  // should be called as soon as possible.
-  void SetProcessor(Processor* p) {
-    CHECK(processor_.get() == NULL);
-    processor_.reset(p);
-  }
+        virtual void Dispatch(Connection* conn, InputBuf* input_buf,
+                              const TimeStamp& time_stamp) = 0;
+    };
 
-  void handleRead(Connection* conn, InputBuf* input_buf,
-                  const TimeStamp& time_stamp) const;
+    virtual Connection::Attr* NewConnectionAttr() const = 0;
 
- protected:
-  Protocol() {
-  }
+    // not thread safe.
+    // should be called as soon as possible.
+    void SetProcessor(Processor* p) {
+      CHECK(processor_.get() == NULL);
+      processor_.reset(p);
+    }
 
-  virtual bool ParseHeader(Connection* conn, InputBuf* input_buf) const = 0;
+    void handleRead(Connection* conn, InputBuf* input_buf,
+                    const TimeStamp& time_stamp) const;
 
- private:
-  scoped_ptr<Processor> processor_;
+  protected:
+    Protocol() {
+    }
 
-  // return true iff all data be received.
-  bool RecvData(Connection* conn, InputBuf* input_buf) const;
-  int32 GetNextSegmentLength(Connection* conn, Connection::Attr* attr,
-                             InputBuf* input_buf) const;
+    virtual bool ParseHeader(Connection* conn, InputBuf* input_buf) const = 0;
 
-  DISALLOW_COPY_AND_ASSIGN(Protocol);
+  private:
+    scoped_ptr<Processor> processor_;
+
+    // return true iff all data be received.
+    bool RecvData(Connection* conn, InputBuf* input_buf) const;
+    int32 GetNextSegmentLength(Connection* conn, Connection::Attr* attr,
+                               InputBuf* input_buf) const;
+
+    DISALLOW_COPY_AND_ASSIGN(Protocol);
 };
 }
 

@@ -8,50 +8,50 @@
 
 template<typename Type>
 class scoped_ref {
- public:
-  scoped_ref(Type* ptr)
-      : ptr_(ptr) {
-  }
-  ~scoped_ref() {
-    ptr_->UnRef();
-  }
-
-  Type* get() const {
-    return ptr_;
-  }
-  Type* release() {
-    Type* ptr = ptr_;
-    ptr_ = NULL;
-    return ptr;
-  }
-
-  void reset(Type* ptr=NULL) {
-    if (ptr_ != NULL) {
+  public:
+    scoped_ref(Type* ptr)
+        : ptr_(ptr) {
+    }
+    ~scoped_ref() {
       ptr_->UnRef();
     }
-    ptr_ = ptr;
-  }
 
-  Type* operator->() {
-    assert(ptr_ != NULL);
-    return ptr_;
-  }
-  Type& operator*() {
-    assert(ptr_ != NULL);
-    return *ptr_;
-  }
+    Type* get() const {
+      return ptr_;
+    }
+    Type* release() {
+      Type* ptr = ptr_;
+      ptr_ = NULL;
+      return ptr;
+    }
 
-  bool operator ==(Type* ptr) const {
-    return ptr_ == ptr;
-  }
-  bool operator !=(Type* ptr) const {
-    return ptr_ != ptr;
-  }
+    void reset(Type* ptr = NULL) {
+      if (ptr_ != NULL) {
+        ptr_->UnRef();
+      }
+      ptr_ = ptr;
+    }
 
- private:
-  Type* ptr_;
+    Type* operator->() {
+      assert(ptr_ != NULL);
+      return ptr_;
+    }
+    Type& operator*() {
+      assert(ptr_ != NULL);
+      return *ptr_;
+    }
 
-  DISALLOW_COPY_AND_ASSIGN(scoped_ref);
+    bool operator ==(Type* ptr) const {
+      return ptr_ == ptr;
+    }
+    bool operator !=(Type* ptr) const {
+      return ptr_ != ptr;
+    }
+
+  private:
+    Type* ptr_;
+
+    DISALLOW_COPY_AND_ASSIGN(scoped_ref);
 };
 
 #endif

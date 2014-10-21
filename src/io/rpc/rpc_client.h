@@ -38,6 +38,15 @@ class RpcClient : public google::protobuf::RpcChannel {
   // reconnect_closure_ will be called after tcp reconnect successfully.
   scoped_ptr<Closure> reconnect_closure_;
 
+ private:
+  scoped_ptr<io::TcpClient> client_;
+
+  // by google::protobuf::RpcChannel.
+  virtual void CallMethod(const MethodDescriptor* method,
+                          RpcController* controller, const Message* request,
+                          Message* response, google::protobuf::Closure* done);
+  void Reconnect();
+
   DISALLOW_COPY_AND_ASSIGN(RpcClient);
 };
 

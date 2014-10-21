@@ -10,53 +10,53 @@ class EventManager;
 class OutputObject;
 
 class TcpClient {
- public:
-  class Connector {
-   public:
-    virtual ~Connector() {
+  public:
+    class Connector {
+      public:
+        virtual ~Connector() {
+        }
+
+        // return -1 iff connect fail or timedout.
+        virtual int Connect(const std::string& ip, uint16 port,
+                            uint32 timeout) const = 0;
+    };
+
+    TcpClient(EventManager* ev, const std::string& ip, uint16 port);
+    ~TcpClient();
+
+    // not thread safe.
+    void SetProtocol(Protocol* p) {
+      protocol_ = p;
+    }
+    // not thread safe.
+    void SetCloseClosure(Closure* c) {
+      close_closure_.reset(c);
     }
 
-    // return -1 iff connect fail or timedout.
-    virtual int Connect(const std::string& ip, uint16 port,
-                        uint32 timeout) const = 0;
-  };
+    bool IsConnected() {
+      ScopedMutex l(&mutex_);
+      return connection_.get() != NULL;
+    }
 
-  TcpClient(EventManager* ev, const std::string& ip, uint16 port);
-  ~TcpClient();
+    // please set protocol and closeClosure first.
+    bool Connect(uint32 time_out);
+    void Send(OutputObject* io_obj);
 
-  // not thread safe.
-  void SetProtocol(Protocol* p) {
-    protocol_ = p;
-  }
-  // not thread safe.
-  void SetCloseClosure(Closure* c) {
-    close_closure_.reset(c);
-  }
+  private:
+    const std::string ip_;
+    uint16 port_;
+    EventManager* ev_mgr_;
 
-  bool IsConnected() {
-    ScopedMutex l(&mutex_);
-    return connection_.get() != NULL;
-  }
+    Mutex mutex_;
+    scoped_ptr<Connector> connector_;
+    scoped_ref<Connection> connection_;
 
-  // please set protocol and closeClosure first.
-  bool Connect(uint32 time_out);
-  void Send(OutputObject* io_obj);
+    Protocol* protocol_;
+    scoped_ptr<Closure> close_closure_;
 
- private:
-  const std::string ip_;
-  uint16 port_;
-  EventManager* ev_mgr_;
+    void Remove(Connection* conn);
 
-  Mutex mutex_;
-  scoped_ptr<Connector> connector_;
-  scoped_ref<Connection> connection_;
-
-  Protocol* protocol_;
-  scoped_ptr<Closure> close_closure_;
-
-  void Remove(Connection* conn);
-
-  DISALLOW_COPY_AND_ASSIGN(TcpClient);
+    DISALLOW_COPY_AND_ASSIGN(TcpClient);
 };
 
 }

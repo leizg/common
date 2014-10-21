@@ -7,25 +7,40 @@
 namespace rpc {
 
 class RpcProtocol : public io::Protocol {
- public:
-  class RpcAttr : public io::Connection::Attr {
-   public:
-    RpcAttr() {
-      Init();
-    }
-    virtual ~RpcAttr() {
+  public:
+    class RpcAttr : public io::Connection::Attr {
+      public:
+        RpcAttr() {
+          Init();
+        }
+        virtual ~RpcAttr() {
+        }
+
+        virtual void Init();
+        virtual uint32 HeaderLength() const {
+          return RPC_HEADER_LENGTH;
+        }
+
+        bool Parse(char* buf);
+        const MessageHeader& header() const {
+          return header_;
+        }
+
+      private:
+        MessageHeader header_;
+
+        DISALLOW_COPY_AND_ASSIGN(RpcAttr);
+    };
+
+    explicit RpcProtocol(HandlerMap* handler_map);
+    virtual ~RpcProtocol() {
     }
 
-    virtual void Init();
-    virtual uint32 HeaderLength() const {
-      return RPC_HEADER_LENGTH;
+    virtual io::Connection::Attr* NewConnectionAttr() const {
+      return new RpcAttr;
     }
 
-    bool Parse(char* buf);
-    const MessageHeader& header() const {
-      return header_;
-    }
-
+<<<<<<< HEAD
    private:
     MessageHeader header_;
 
@@ -42,10 +57,14 @@ class RpcProtocol : public io::Protocol {
   }
 
  private:
+=======
+  private:
+>>>>>>> 87b5d7a5435f3213ae9114a3bb5eaff1e61f9d06
 
-  virtual bool ParseHeader(io::Connection* conn, io::InputBuf* input_buf) const;
+    virtual bool ParseHeader(io::Connection* conn,
+                             io::InputBuf* input_buf) const;
 
-  DISALLOW_COPY_AND_ASSIGN(RpcProtocol);
+    DISALLOW_COPY_AND_ASSIGN(RpcProtocol);
 };
 
 inline const MessageHeader& GetRpcHeaderFromConnection(io::Connection* conn) {

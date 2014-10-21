@@ -10,50 +10,50 @@ class EventPooler;
 class EventManager;
 
 class TcpServer {
- public:
-  class Listener {
-   public:
-    virtual ~Listener() {
+  public:
+    class Listener {
+      public:
+        virtual ~Listener() {
+        }
+
+        virtual void Accept() = 0;
+    };
+
+    // event_manager must initialized successfully.
+    TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port);
+    ~TcpServer();
+
+    void setWorker(uint8 worker) {
+      worker_ = worker;
+    }
+    void setProtocol(Protocol* p) {
+      protocol_ = p;
     }
 
-    virtual void Accept() = 0;
-  };
+    EventManager* getPoller();
 
-  // event_manager must initialized successfully.
-  TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port);
-  ~TcpServer();
+    bool Start();
+    void Stop();
 
-  void setWorker(uint8 worker) {
-    worker_ = worker;
-  }
-  void setProtocol(Protocol* p) {
-    protocol_ = p;
-  }
+    void Add(Connection* conn);
+    void Remove(Connection* conn);
 
-  EventManager* getPoller();
+  private:
+    const std::string ip_;
+    uint16 port_;
+    uint8 worker_;
 
-  bool Start();
-  void Stop();
+    EventManager* ev_mgr_;
+    Protocol* protocol_;
+    scoped_ptr<Listener> listener_;
+    scoped_ptr<EventPooler> event_poller_;
 
-  void Add(Connection* conn);
-  void Remove(Connection* conn);
+    // FIXME: remove this.
+    Mutex mutex_;
+    typedef std::map<int, Connection*> ConnMap;
+    ConnMap conn_map_;
 
- private:
-  const std::string ip_;
-  uint16 port_;
-  uint8 worker_;
-
-  EventManager* ev_mgr_;
-  Protocol* protocol_;
-  scoped_ptr<Listener> listener_;
-  scoped_ptr<EventPooler> event_poller_;
-
-  // FIXME: remove this.
-  Mutex mutex_;
-  typedef std::map<int, Connection*> ConnMap;
-  ConnMap conn_map_;
-
-  DISALLOW_COPY_AND_ASSIGN(TcpServer);
+    DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };
 }
 

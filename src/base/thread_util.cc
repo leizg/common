@@ -1,5 +1,6 @@
 #include "thread_util.h"
 
+<<<<<<< HEAD
 void SyncEvent::Signal() {
   ScopedMutex l(&mutex_);
   if (is_signaled_) return;
@@ -52,3 +53,5 @@ bool SyncEvent::TimeWait(uint32 micro_sec) {
   return true;
 }
 
+=======
+>>>>>>> 87b5d7a5435f3213ae9114a3bb5eaff1e61f9d06

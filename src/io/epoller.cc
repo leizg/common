@@ -45,9 +45,9 @@ void Epoller::Init() {
 }
 
 void Epoller::Loop() {
-  if (!inLoopThread()) {
-    loop_tid_ = ::pthread_self();
-    // FIXME: notify main thread by SyncEvent.
+  if (!inValidThread()) {
+    update();
+    start_event_.Signal();
   }
 
   stop_ = false;
@@ -81,14 +81,10 @@ void Epoller::Loop() {
 }
 
 bool Epoller::LoopInAnotherThread() {
-  pthread_t main_tid = loop_tid_;
-
   loop_pthread_.reset(new StoppableThread(NewCallback(this, &Epoller::Loop)));
   if (!loop_pthread_->Start()) return false;
-  while (main_tid == loop_tid_) {
-    ::usleep(100);  // FIXME: so ugly, should notify by SyncEvent.
-  }
-
+  start_event_.Wait();
+  CHECK(!inValidThread());
   return true;
 }
 

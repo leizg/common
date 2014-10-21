@@ -37,18 +37,18 @@ private:
 };
 
 class ScopedMutex {
- public:
-  ScopedMutex(Mutex* mutex)
-      : mutex_(mutex) {
-    mutex_->Lock();
-  }
-  ~ScopedMutex() {
-    mutex_->UnLock();
-  }
- private:
-  Mutex* mutex_;
+  public:
+    ScopedMutex(Mutex* mutex)
+        : mutex_(mutex) {
+      mutex_->Lock();
+    }
+    ~ScopedMutex() {
+      mutex_->UnLock();
+    }
+  private:
+    Mutex* mutex_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScopedMutex);
+    DISALLOW_COPY_AND_ASSIGN(ScopedMutex);
 };
 
 // CLOCK_MONOTONIC: // man clock_getres

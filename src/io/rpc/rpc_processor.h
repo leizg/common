@@ -10,6 +10,7 @@ class TcpClient;
 namespace rpc {
 class HandlerMap;
 
+<<<<<<< HEAD
 class ServerProcessor : public io::Protocol::Processor {
  public:
   explicit ServerProcessor(HandlerMap* handler_map)
@@ -18,13 +19,24 @@ class ServerProcessor : public io::Protocol::Processor {
   }
 
   virtual ~ServerProcessor();
+=======
+class RpcProcessor : public io::Protocol::Processor {
+  public:
+    explicit RpcProcessor(HandlerMap* handler_map)
+        : handler_map_(handler_map) {
+      CHECK_NOTNULL(handler_map);
+    }
 
- private:
-  HandlerMap* handler_map_;
+    virtual ~RpcProcessor();
+>>>>>>> 87b5d7a5435f3213ae9114a3bb5eaff1e61f9d06
 
-  virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                        const TimeStamp& time_stamp);
+  private:
+    HandlerMap* handler_map_;
 
+    virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
+                          const TimeStamp& time_stamp);
+
+<<<<<<< HEAD
   DISALLOW_COPY_AND_ASSIGN(ServerProcessor);
 };
 
@@ -68,6 +80,9 @@ class ClientProcessor : public io::Protocol::Processor {
                         const TimeStamp& time_stamp);
 
   DISALLOW_COPY_AND_ASSIGN(ClientProcessor);
+=======
+    DISALLOW_COPY_AND_ASSIGN(RpcProcessor);
+>>>>>>> 87b5d7a5435f3213ae9114a3bb5eaff1e61f9d06
 };
 
 }

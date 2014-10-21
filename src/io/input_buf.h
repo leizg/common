@@ -2,41 +2,44 @@
 #define INPUT_BUF_H_
 
 #include "memory_block.h"
-#include "include/zero_copy_stream.h"
 
 namespace io {
 
-class InputBuf : public MemoryBlock, public ZeroCopyInputStream {
- public:
-  InputBuf(uint32 size) {
-    size = ALIGN(size);
-    mem_ = ::malloc(size);
-    end_ = mem_ + size;
-    rpos_ = wpos_ = mem_;
-  }
-  virtual ~InputBuf() {
-    ::free(mem_);
-  }
+class InputBuf {
+  public:
+    explicit InputBuf(uint32 size)
+        : index_(0), readn_(0) {
+      MemoryBlock* blk = new MemoryBlock(size);
+      blocks_.push_back(blk);
+    }
+    virtual ~InputBuf() {
+      STLUnRef(&blocks_);
+    }
 
-  // by ZeroCopyInputStream.
-  virtual int32 Next(char** buf, uint32* len);
+    // return false iif no data can be read.
+    // buf and len must be null.
+    bool Next(const char** buf, int* len);
 
-  virtual char* Skip(uint32 len) {
-    rpos_ += len;
-    CHECK_LE(rpos_, wpos_);
-    return rpos_;
-  }
-  virtual void Backup(uint32 len) {
-    rpos_ -= len;
-    CHECK_LE(mem_, rpos_);
-  }
+    void Skip(uint32 len);
+    void Backup(uint32 len);
 
-  int32 ReadFd(int fd, uint32 len, int32* err_no);
+    // return the total number of bytes read since this object was created.
+    int ByteCount() const {
+      return readn_;
+    }
 
- private:
-  void EnsureLeft(uint32 len);
+    int32 ReadFd(int fd, uint32 len, int32* err_no);
 
-  DISALLOW_COPY_AND_ASSIGN(InputBuf);
+  private:
+    int32 index_;
+    uint32 readn_;
+    std::vector<MemoryBlock*> blocks_;
+
+    MemoryBlock* FindDataBlock();
+
+    int32 ReadFdInternal(MemoryBlock*block, int fd, uint32 len, int32* err_no);
+
+    DISALLOW_COPY_AND_ASSIGN(InputBuf);
 };
 }
 

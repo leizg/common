@@ -2,46 +2,42 @@
 #define OUTPUT_BUF_H_
 
 #include "memory_block.h"
-#include "include/zero_copy_stream.h"
 
 namespace io {
 
-class OutputBuf : public MemoryBlock, public ZeroCopyOutputStream {
- public:
-  OutputBuf();
-  virtual ~OutputBuf();
-
-  // not change *len
-  virtual void Next(char** buf, uint32* len) {
-    EnsureLeft(*len);
-    *buf = wpos_;
-    wpos_ += *len;
-    CHECK_LE(wpos_, end_);
-  }
-
-  virtual void Backup(uint32 len) {
-    wpos_ -= len;
-    CHECK_LE(rpos_, wpos_);
-  }
-
- private:
-  void EnsureLeft(uint32 len) {
-    if (left() < len) {
-      uint32 rn = readn(), wn = writen();
-      uint32 new_size = capacity() * 2;
-      uint32 left_size = new_size - wn;
-      if (left_size < len) {
-        new_size += len - left_size;
-      }
-
-      mem_ = ::realloc(mem_, new_size);
-      end_ = mem_ + new_size;
-      rpos_ = mem_ + rn;
-      wpos_ = mem_ + wn;
+class OutputBuf {
+  public:
+    explicit OutputBuf(uint32 size)
+        : index_(0), size_(0) {
+      MemoryBlock* block = new MemoryBlock(size);
+      blocks_.push_back(block);
     }
-  }
+    virtual ~OutputBuf() {
+      STLClear(&blocks_);
+    }
 
-  DISALLOW_COPY_AND_ASSIGN(OutputBuf);
+    void Next(char** buf, int* len);
+    void Backup(uint32 len);
+    uint64 ByteCount() const {
+      return size_;
+    }
+
+    void data(std::vector<iovec>* iov) const {
+      for (uint32 i = 0; i < blocks_.size(); ++i) {
+        MemoryBlock* block = blocks_[i];
+        iovec io;
+        io.iov_base = block->rpos_;
+        io.iov_len = block->size();
+        iov->push_back(io);
+      }
+    }
+
+  private:
+    uint32 index_;
+    uint64 size_;
+    std::vector<MemoryBlock*> blocks_;
+
+    DISALLOW_COPY_AND_ASSIGN(OutputBuf);
 };
 }
 
