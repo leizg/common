@@ -40,27 +40,6 @@ class RpcProtocol : public io::Protocol {
       return new RpcAttr;
     }
 
-<<<<<<< HEAD
-   private:
-    MessageHeader header_;
-
-    DISALLOW_COPY_AND_ASSIGN(RpcAttr);
-  };
-
-  RpcProtocol() {
-  }
-  virtual ~RpcProtocol() {
-  }
-
-  virtual io::Connection::Attr* NewConnectionAttr() const {
-    return new RpcAttr;
-  }
-
- private:
-=======
-  private:
->>>>>>> 87b5d7a5435f3213ae9114a3bb5eaff1e61f9d06
-
     virtual bool ParseHeader(io::Connection* conn,
                              io::InputBuf* input_buf) const;
 

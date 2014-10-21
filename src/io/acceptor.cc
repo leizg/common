@@ -7,8 +7,9 @@ namespace {
 
 void HandleEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
   io::Acceptor* a = static_cast<io::Acceptor*>(arg);
-  a->Accept();
+  a->doAccept();
 }
+
 }
 
 namespace io {
@@ -41,7 +42,8 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
     return false;
   }
 
-  ret = ::listen(listen_fd_, 1024);  // todo: magic number -> macro def
+  // todo: magic number -> macro def
+  ret = ::listen(listen_fd_, 1024);
   if (ret != 0) {
     ::close(listen_fd_);
     listen_fd_ = INVALID_FD;
@@ -72,7 +74,7 @@ bool Acceptor::Init(const std::string& ip, uint16 port) {
   return true;
 }
 
-void Acceptor::Accept() {
+void Acceptor::doAccept() {
   while (true) {
     int fd = ::accept4(listen_fd_, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (fd == -1) {

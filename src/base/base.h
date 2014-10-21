@@ -67,26 +67,26 @@ template<typename T> inline void MapUnRef(T* t) {
 // not held the closure.
 template<typename ClosureType>
 class AutoRunner {
- public:
-  explicit AutoRunner(ClosureType* closure)
-      : closure_(closure) {
-  }
-  ~AutoRunner() {
-    if (closure_ != NULL) {
-      closure_->Run();
+  public:
+    explicit AutoRunner(ClosureType* closure)
+        : closure_(closure) {
     }
-  }
+    ~AutoRunner() {
+      if (closure_ != NULL) {
+        closure_->Run();
+      }
+    }
 
-  ClosureType* release() {
-    ClosureType* tmp = closure_;
-    closure_ = NULL;
-    return tmp;
-  }
+    ClosureType* release() {
+      ClosureType* tmp = closure_;
+      closure_ = NULL;
+      return tmp;
+    }
 
- private:
-  ClosureType* closure_;
+  private:
+    ClosureType* closure_;
 
-  DISALLOW_COPY_AND_ASSIGN(AutoRunner);
+    DISALLOW_COPY_AND_ASSIGN(AutoRunner);
 };
 
 #endif

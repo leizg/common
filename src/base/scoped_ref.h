@@ -1,19 +1,19 @@
 #ifndef SCOPED_REF_H_
 #define SCOPED_REF_H_
 
-#include "macro_def.h"
-#include "ref_counted.h"
-
 #include <stddef.h>
+#include "macro_def.h"
 
 template<typename Type>
 class scoped_ref {
   public:
-    scoped_ref(Type* ptr)
+    scoped_ref(Type* ptr = NULL)
         : ptr_(ptr) {
     }
     ~scoped_ref() {
-      ptr_->UnRef();
+      if (ptr_ != NULL) {
+        ptr_->UnRef();
+      }
     }
 
     Type* get() const {

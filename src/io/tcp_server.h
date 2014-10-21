@@ -16,7 +16,7 @@ class TcpServer {
         virtual ~Listener() {
         }
 
-        virtual void Accept() = 0;
+        virtual void doAccept() = 0;
     };
 
     // event_manager must initialized successfully.

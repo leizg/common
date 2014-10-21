@@ -16,16 +16,21 @@ class EventManager;
 namespace rpc {
 class HandlerMap;
 
+// thread model: master + workers.
+//              one (and only one) event loop per thread.
+// master accept new connection and dispach it to work thread.
 class RpcServer {
   public:
     // ev_mgr must be initialized first.
+    // ip: it's caller's responsibility that make sure ip's format is OK.
+    // worker: default is 0, means that all events managed by master.
     RpcServer(io::EventManager* ev_mgr, const std::string& ip, uint16 port,
-              uint8 worker)
+              uint8 worker = 0)
         : ip_(ip), port_(port), ev_mgr_(ev_mgr), worker_(worker) {
     }
     ~RpcServer();
 
-    // hander_map will released by RpcServer.
+    // hander_map will be released by RpcServer.
     void setHandlerMap(HandlerMap* handler_map);
 
     // must set handler map first.

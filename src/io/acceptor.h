@@ -22,7 +22,7 @@ class Acceptor : public TcpServer::Listener {
 
     bool Init(const std::string& ip, uint16 port);
 
-    void Accept();
+    void doAccept();
 
   private:
     int listen_fd_;

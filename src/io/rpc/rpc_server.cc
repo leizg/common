@@ -1,6 +1,7 @@
 #include "rpc_server.h"
 #include "handler_map.h"
 #include "rpc_protocol.h"
+#include "server_processor.h"
 
 #include "io/tcp_server.h"
 #include "io/event_manager.h"
@@ -29,11 +30,11 @@ void RpcServer::Loop(bool in_another_thread) {
     return;
   }
 
-  if (!in_another_thread) {
-    ev_mgr_->Loop();
+  if (in_another_thread) {
+    ev_mgr_->LoopInAnotherThread();
     return;
   }
-  ev_mgr_->LoopInAnotherThread();
+  ev_mgr_->Loop();
 }
 
 }

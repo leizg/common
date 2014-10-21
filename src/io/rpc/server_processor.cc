@@ -1,5 +1,6 @@
 #include "handler_map.h"
-#include "rpc_processor.h"
+#include "zero_copy_stream.h"
+#include "server_processor.h"
 
 #include "io/io_buf.h"
 #include "io/input_buf.h"
@@ -8,13 +9,14 @@
 
 namespace {
 
+// FIXME: zerocopy output stream.
 class ReplyObject : public io::OutVectorObject::IoObject {
   public:
     ReplyObject(const MessageHeader& header, Message* reply)
         : msg_(reply), offset_(0) {
       data_.reset(new io::OutputBuf(msg_->ByteSize() + RPC_HEADER_LENGTH));
       MessageHeader* reply_hdr;
-      uint size = RPC_HEADER_LENGTH;
+      int size = RPC_HEADER_LENGTH;
       data_->Next((char**) &reply_hdr, &size);
       CHECK_EQ(size, RPC_HEADER_LENGTH);
 
@@ -84,7 +86,7 @@ class ReplyClosure : public ::google::protobuf::Closure {
 namespace rpc {
 
 void ServerProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                            const TimeStamp& time_stamp) {
+                               const TimeStamp& time_stamp) {
   const MessageHeader& header = GetRpcHeaderFromConnection(conn);
   MethodHandler * method_handler = handler_map_->FindMehodById(header.fun_id);
   if (method_handler == NULL) {
@@ -93,8 +95,8 @@ void ServerProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
   }
 
   scoped_ptr<Message> req(method_handler->request->New());
-  // TODO: zeroCopyStream.
-  bool ret = req->ParseFromArray(input_buf->peekR(), input_buf->size());
+  scoped_ptr<InputStream> input_stream(new InputStream(input_buf));
+  bool ret = req->ParseFromZeroCopyStream(input_stream.get());
   if (!ret) {
     DLOG(WARNING)<< "parse request error: " << req->DebugString();
     return;
