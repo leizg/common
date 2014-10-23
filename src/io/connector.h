@@ -5,17 +5,14 @@
 
 namespace io {
 
-class Connector : public TcpClient::Connector {
+class Connector {
   public:
     Connector() {
-    }
-    virtual ~Connector() {
     }
 
     // return INVALID_FD if connected failed.
     // timeout: wait for seconds.
-    virtual int Connect(const std::string& ip, uint16 port,
-                        uint32 time_out) const;
+    int Connect(const std::string& ip, uint16 port, uint32 time_out) const;
 
   private:
     int CreateSocket() const;

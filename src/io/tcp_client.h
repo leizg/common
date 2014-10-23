@@ -7,20 +7,11 @@ namespace io {
 class Protocol;
 class EventManager;
 
+class Connector;
 class OutputObject;
 
 class TcpClient {
   public:
-    class Connector {
-      public:
-        virtual ~Connector() {
-        }
-
-        // return -1 iff connect fail or timedout.
-        virtual int Connect(const std::string& ip, uint16 port,
-                            uint32 timeout) const = 0;
-    };
-
     TcpClient(EventManager* ev, const std::string& ip, uint16 port);
     ~TcpClient();
 
