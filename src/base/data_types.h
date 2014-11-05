@@ -31,6 +31,6 @@ class StaticAssert {
 
 // like assert.
 #define COMPLILE_ASSERT(expr, msg) \
-  typedef detail<bool(expr)> msg[bool(expr) ? 1 : -1]
+  typedef detail::StaticAssert<bool(expr)> msg[bool(expr) ? 1 : -1]
 
 #endif

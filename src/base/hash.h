@@ -5,8 +5,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "data_types.h"
 #include <string>
+#include "data_types.h"
 
 // From http://www.azillionmonkeys.com/qed/hash.html
 // This is the hash used on WebCore/platform/stringhash

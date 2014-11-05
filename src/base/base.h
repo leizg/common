@@ -32,33 +32,35 @@
 #include <string>
 #include <algorithm>
 
-#define SetFdBlock(fd) \
+#define setFdBlock(fd) \
   ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_NONBLOCK)
-#define SetFdNonBlock(fd) \
+#define setFdNonBlock(fd) \
   ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) & ~O_NONBLOCK)
+#define setFdCloExec(fd) \
+  ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_EXCL)
 
 // stl utilites
 template<typename T> inline void STLClear(T* t) {
-  for (typename T::iterator it = t->begin(); it != t->end(); ++it) {
+  for (auto it = t->begin(); it != t->end(); ++it) {
     delete *it;
   }
   t->clear();
 }
 template<typename T> inline void MapClear(T* t) {
-  for (typename T::iterator it = t->begin(); it != t->end(); ++it) {
+  for (auto it = t->begin(); it != t->end(); ++it) {
     delete it->second;
   }
   t->clear();
 }
 
 template<typename T> inline void STLUnRef(T* t) {
-  for (typename T::iterator it = t->begin(); it != t->end(); ++it) {
+  for (auto it = t->begin(); it != t->end(); ++it) {
     (*it)->Ref();
   }
   t->clear();
 }
 template<typename T> inline void MapUnRef(T* t) {
-  for (typename T::iterator it = t->begin(); it != t->end(); ++it) {
+  for (auto it = t->begin(); it != t->end(); ++it) {
     (it->second)->UnRef();
   }
   t->clear();
@@ -68,6 +70,7 @@ template<typename T> inline void MapUnRef(T* t) {
 template<typename ClosureType>
 class AutoRunner {
   public:
+    // closure maybe NULL.
     explicit AutoRunner(ClosureType* closure)
         : closure_(closure) {
     }

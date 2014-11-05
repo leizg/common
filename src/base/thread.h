@@ -9,7 +9,20 @@
 
 class Thread {
   public:
-    Thread(Closure* closure)
+    struct Option {
+        // static size is 0 means default static size.
+        explicit Option(uint32 size)
+            : stack_size(size), joinable(true) {
+        }
+        Option(uint32 size, bool join_able)
+            : stack_size(size), joinable(join_able) {
+        }
+
+        uint32 stack_size;
+        bool joinable;
+    };
+
+    explicit Thread(Closure* closure)
         : tid_(INVALID_TID), closure_(closure) {
       CHECK_NOTNULL(closure);
     }
@@ -18,23 +31,20 @@ class Thread {
     }
 
     virtual void Join() {
-      if (tid_ == INVALID_TID) return;
-      ::pthread_join(tid_, NULL);
-      tid_ = INVALID_TID;
-    }
-    bool Start() {
-      if (tid_ != INVALID_TID) return true;
-      int ret = ::pthread_create(&tid_, NULL, &Thread::ThreadMain,
-                                 closure_.get());
-      if (tid_ != 0) {
-        LOG(WARNING)<< "pthread_create error: " << ::strerror(ret);
-        return false;
+      if (option_.joinable && tid_ != INVALID_TID) {
+        ::pthread_join(tid_, NULL);
+        tid_ = INVALID_TID;
       }
-      return true;
+    }
+
+    bool StartWithOption(const Option& option);
+    bool Start() {
+      return Start(Option());
     }
 
   private:
     pthread_t tid_;
+    Option option_;
     scoped_ptr<Closure> closure_;
 
     static void* ThreadMain(void* c) {
@@ -46,6 +56,42 @@ class Thread {
     DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
+inline bool Thread::Start(const Option& option) {
+  if (tid_ == INVALID_TID) return true;
+
+  ::pthread_attr_t attr;
+  int ret = ::pthread_attr_init(&attr);
+  if (ret != 0) {
+    LOG(WARNING)<< "pthread_attr_init error";
+    return false;
+  }
+  if (option.stack_size != 0) {
+    ret = ::pthread_attr_setstacksize(&attr, option.stack_size);
+    if (ret != 0) {
+      ::pthread_attr_destroy(&attr);
+      LOG(WARNING)<< "pthread_attr_setstacksize error";
+      return false;
+    }
+  }
+  if (!option.joinable) {
+    ret = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if (ret != 0) {
+      ::pthread_attr_destroy(&attr);
+      LOG(WARNING)<< "pthread_attr_setdetachstate error";
+      return false;
+    }
+  }
+
+  int ret = ::pthread_create(&tid_, &attr, &Thread::ThreadMain, closure_.get());
+  ::pthread_attr_destroy(&attr);
+  if (tid_ != 0) {
+    LOG(WARNING)<< "pthread_create error: " << ::strerror(ret);
+    return false;
+  }
+  option_ = option;
+  return true;
+}
+
 class StoppableClosure : public Closure {
   public:
     StoppableClosure(Closure* closure)
@@ -55,12 +101,6 @@ class StoppableClosure : public Closure {
       Stop();
     }
 
-    void Run() {
-      while (!stop_) {
-        closure_->Run();
-      }
-    }
-
     void Stop() {
       stop_ = true;
     }
@@ -68,6 +108,12 @@ class StoppableClosure : public Closure {
   private:
     bool stop_;
     scoped_ptr<Closure> closure_;
+
+    void Run() {
+      while (!stop_) {
+        closure_->Run();
+      }
+    }
 
     DISALLOW_COPY_AND_ASSIGN(StoppableClosure);
 };

@@ -7,10 +7,37 @@ class Closure {
   public:
     virtual ~Closure() {
     }
+
     virtual void Run() = 0;
+};
+
+class CancelClosure : public Closure {
+  public:
+    virtual ~CancelClosure() {
+    }
+
+    void cancel() {
+      cancel_ = true;
+    }
+    bool isCancel() const {
+      return cancel_;
+    }
+
+  protected:
+    CancelClosure()
+        : cancel_(false) {
+    }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(Closure);
+    bool cancel_;
+};
+
+class CompleteClosure {
+  public:
+    virtual ~CompleteClosure() {
+    }
+
+    virtual void Run(int result) = 0;
 };
 
 class FunctionClosure0 : public Closure {
@@ -158,76 +185,53 @@ class MethodClosure2 : public Closure {
     Arg2 arg2_;
 };
 
-// See Closure.
 inline Closure* NewCallback(void (*function)()) {
   return new FunctionClosure0(function, true);
 }
-
-// See Closure.
 inline Closure* NewPermanentCallback(void (*function)()) {
   return new FunctionClosure0(function, false);
 }
-
-// See Closure.
 template<typename Class>
 inline Closure* NewCallback(Class* object, void (Class::*method)()) {
   return new MethodClosure0<Class>(object, method, true);
 }
-
-// See Closure.
 template<typename Class>
 inline Closure* NewPermanentCallback(Class* object, void (Class::*method)()) {
   return new MethodClosure0<Class>(object, method, false);
 }
-
-// See Closure.
 template<typename Arg1>
 inline Closure* NewCallback(void (*function)(Arg1), Arg1 arg1) {
   return new FunctionClosure1<Arg1>(function, true, arg1);
 }
-
-// See Closure.
 template<typename Arg1>
 inline Closure* NewPermanentCallback(void (*function)(Arg1), Arg1 arg1) {
   return new FunctionClosure1<Arg1>(function, false, arg1);
 }
-
-// See Closure.
 template<typename Class, typename Arg1>
 inline Closure* NewCallback(Class* object, void (Class::*method)(Arg1),
                             Arg1 arg1) {
   return new MethodClosure1<Class, Arg1>(object, method, true, arg1);
 }
-
-// See Closure.
 template<typename Class, typename Arg1>
 inline Closure* NewPermanentCallback(Class* object, void (Class::*method)(Arg1),
                                      Arg1 arg1) {
   return new MethodClosure1<Class, Arg1>(object, method, false, arg1);
 }
-
-// See Closure.
 template<typename Arg1, typename Arg2>
 inline Closure* NewCallback(void (*function)(Arg1, Arg2), Arg1 arg1,
                             Arg2 arg2) {
   return new FunctionClosure2<Arg1, Arg2>(function, true, arg1, arg2);
 }
-
-// See Closure.
 template<typename Arg1, typename Arg2>
 inline Closure* NewPermanentCallback(void (*function)(Arg1, Arg2), Arg1 arg1,
                                      Arg2 arg2) {
   return new FunctionClosure2<Arg1, Arg2>(function, false, arg1, arg2);
 }
-
-// See Closure.
 template<typename Class, typename Arg1, typename Arg2>
 inline Closure* NewCallback(Class* object, void (Class::*method)(Arg1, Arg2),
                             Arg1 arg1, Arg2 arg2) {
   return new MethodClosure2<Class, Arg1, Arg2>(object, method, true, arg1, arg2);
 }
-
-// See Closure.
 template<typename Class, typename Arg1, typename Arg2>
 inline Closure* NewPermanentCallback(Class* object,
                                      void (Class::*method)(Arg1, Arg2),

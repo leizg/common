@@ -6,51 +6,51 @@
 
 class TimeStamp {
   public:
-    TimeStamp() {
-      timeval tv;
-      ::gettimeofday(&tv, NULL);
-      stamp_ = tv.tv_sec * 1000 + tv.tv_usec;
+    explicit TimeStamp(const timeval& tv)
+        : stamp_(tv) {
     }
-    explicit TimeStamp(time_t tm)
-        : stamp_(tm) {
+    explicit TimeStamp(uint64 micro_secs) {
+      stamp_.tv_sec = micro_secs / 1000;
+      stamp_.tv_usec = micro_secs % 1000;
     }
 
-    time_t MicroSecs() const {
+    uint64 microSecs() const {
+      return stamp_.tv_sec * 1000 + stamp_.tv_usec;
+    }
+
+    const timeval& timeVal() const {
       return stamp_;
     }
-    timespec TimeSpec() const {
+    timespec gimeSpec() const {
       timespec ts = { 0 };
-      ts.tv_sec = stamp_ / 1000;
-      ts.tv_nsec = (stamp_ % 1000) * 1000;
+      ts.tv_sec = stamp_.tv_sec;
+      ts.tv_nsec = stamp_.tv_usec * 1000;
       return ts;
     }
 
-    bool operator <(time_t t) const {
-      return stamp_ < t;
+    bool operator <(const TimeStamp& t) const {
+      if (stamp_.tv_sec < t.stamp_.tv_sec) return true;
+      return stamp_.tv_usec < t.stamp_.tv_usec;
     }
-    bool operator >(time_t t) const {
+    bool operator >(const TimeStamp& t) const {
       return !operator <(t);
     }
 
   private:
-    time_t stamp_;
+    timeval stamp_;
 };
 
-bool operator <(const TimeStamp& t1, const TimeStamp& t2) {
-  return t1 < t2.MicroSecs();
-}
-bool operator >(const TimeStamp& t1, const TimeStamp& t2) {
-  return !operator <(t1, t2);
+inline TimeStamp Now() {
+  timeval tv;
+  ::gettimeofday(&tv, NULL);
+  return TimeStamp(tv);
 }
 
-inline TimeStamp Now() {
-  return TimeStamp();
-}
 inline TimeStamp TimeAdd(const TimeStamp& t, uint sec) {
-  return TimeStamp(t.MicroSecs() + sec * 1000);
+  return TimeStamp(t.microSecs() + sec * 1000);
 }
 inline uint64 TimeDiff(const TimeStamp& t1, const TimeStamp& t2) {
-  return t1.MicroSecs() - t2.MicroSecs();
+  return t1.microSecs() - t2.microSecs();
 }
 
 #endif /* TIME_STAMP_H_ */
