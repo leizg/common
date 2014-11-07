@@ -7,7 +7,7 @@ namespace {
 
 void HandleEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
   io::Acceptor* a = static_cast<io::Acceptor*>(arg);
-  a->doAccept();
+  a->handleAccept();
 }
 
 }
@@ -27,7 +27,8 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
     PLOG(WARNING)<< "socket error";
     return false;
   }
-  SetFdNonBlock(listen_fd_);
+  setFdNonBlock(listen_fd_);
+  setFdCloExec(listen_fd_);
 
   sockaddr_in addr;
   ::memset(&addr, 0, sizeof(addr));
@@ -54,7 +55,7 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
   return true;
 }
 
-bool Acceptor::Init(const std::string& ip, uint16 port) {
+bool Acceptor::doBind(const std::string& ip, uint16 port) {
   if (listen_fd_ != INVALID_FD) return true;
   if (!CreateListenFd(ip, port)) return false;
 
@@ -74,7 +75,7 @@ bool Acceptor::Init(const std::string& ip, uint16 port) {
   return true;
 }
 
-void Acceptor::doAccept() {
+void Acceptor::handleAccept() {
   while (true) {
     int fd = ::accept4(listen_fd_, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (fd == -1) {

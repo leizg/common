@@ -12,7 +12,7 @@ class Connector {
 
     // return INVALID_FD if connected failed.
     // timeout: wait for seconds.
-    int Connect(const std::string& ip, uint16 port, uint32 time_out) const;
+    int Connect(const std::string& ip, uint16 port, uint32 timeout) const;
 
   private:
     int CreateSocket() const;

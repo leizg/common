@@ -1,57 +1,47 @@
 #ifndef TCP_SERVER_H_
 #define TCP_SERVER_H_
 
-#include "base/base.h"
+#include "io/connection.h"
+#include "include/object_saver.h"
 
 namespace io {
 class Protocol;
 class Connection;
+
 class EventPooler;
 class EventManager;
 
-class TcpServer {
+class TcpServer : public ObjectMapSaver<int, Connection> {
   public:
     class Listener {
       public:
         virtual ~Listener() {
         }
 
-        virtual void doAccept() = 0;
+        virtual bool doBind(const std::string& ip, uint16 port) = 0;
     };
 
     // event_manager must initialized successfully.
-    TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port);
+    TcpServer(EventManager* ev_mgr, uint8 worker);
     ~TcpServer();
 
-    void setWorker(uint8 worker) {
-      worker_ = worker;
-    }
     void setProtocol(Protocol* p) {
       protocol_ = p;
     }
 
     EventManager* getPoller();
 
-    bool Start();
-    void Stop();
-
-    void Add(Connection* conn);
-    void Remove(Connection* conn);
+    bool bindIp(const std::string& ip, uint16 port);
+    void unBindIp(const std::string& ip);
+    void unBindAll();
 
   private:
-    const std::string ip_;
-    uint16 port_;
     uint8 worker_;
+    Protocol* protocol_;
 
     EventManager* ev_mgr_;
-    Protocol* protocol_;
-    scoped_ptr<Listener> listener_;
     scoped_ptr<EventPooler> event_poller_;
-
-    // FIXME: remove this.
-    Mutex mutex_;
-    typedef std::map<int, Connection*> ConnMap;
-    ConnMap conn_map_;
+    std::map<std::string, Listener*> listeners_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };

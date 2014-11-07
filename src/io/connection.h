@@ -31,6 +31,9 @@ class Connection : public RefCounted {
     int FileHandle() const {
       return fd_;
     }
+    int Key() const {
+      return fd_;
+    }
     EventManager* getEventLoop() const {
       return ev_mgr_;
     }

@@ -6,10 +6,12 @@
 
 namespace io {
 
-TcpServer::TcpServer(EventManager* ev_mgr, const std::string& ip, uint16 port)
-    : ip_(ip), port_(port), worker_(0), ev_mgr_(ev_mgr), protocol_(NULL) {
+TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
+    : ObjectMapSaver<int, Connection>(
+        new RefCountedObjectSavePolicy<Connection>()), worker_(worker), ev_mgr_(
+        ev_mgr), protocol_(
+    NULL) {
   CHECK_NOTNULL(ev_mgr);
-  CHECK(!ip.empty());
 }
 
 TcpServer::~TcpServer() {
@@ -45,24 +47,6 @@ void TcpServer::Stop() {
 EventManager* TcpServer::getPoller() {
   CHECK_NOTNULL(event_poller_.get());
   return event_poller_->getPoller();
-}
-
-void TcpServer::Add(Connection* conn) {
-  conn->Ref();
-
-  ScopedMutex l(&mutex_);
-  CHECK_EQ(conn_map_.count(conn->FileHandle()), 0);
-  conn_map_[conn->FileHandle()] = conn;
-}
-
-void TcpServer::Remove(Connection* conn) {
-  {
-    ScopedMutex l(&mutex_);
-    CHECK_EQ(conn_map_.count(conn->FileHandle()), 1);
-    conn_map_.erase(conn->FileHandle());
-  }
-
-  conn->UnRef();
 }
 
 }

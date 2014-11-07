@@ -11,8 +11,9 @@ class Acceptor : public TcpServer::Listener {
     // not hold ev_mgr.
     Acceptor(EventManager* ev_mgr, TcpServer* serv)
         : listen_fd_(INVALID_FD), serv_(serv), ev_mgr_(ev_mgr), protocol_(NULL) {
-      CHECK_NOTNULL(serv);
-      CHECK_NOTNULL(ev_mgr);
+      DCHECK_NOTNULL(serv);
+      DCHECK_NOTNULL(ev_mgr);
+      port_ = 0;
     }
     virtual ~Acceptor();
 
@@ -20,12 +21,13 @@ class Acceptor : public TcpServer::Listener {
       protocol_ = p;
     }
 
-    bool Init(const std::string& ip, uint16 port);
-
-    void doAccept();
+    void handleAccept();
 
   private:
     int listen_fd_;
+
+    std::string ip_;
+    uint16 port_;
 
     TcpServer* serv_;
     EventManager* ev_mgr_;
@@ -34,6 +36,8 @@ class Acceptor : public TcpServer::Listener {
     scoped_ptr<Event> event_;
 
     bool CreateListenFd(const std::string& ip, uint16 port);
+
+    virtual bool doBind(const std::string& ip, uint16 port);
 
     DISALLOW_COPY_AND_ASSIGN(Acceptor);
 };

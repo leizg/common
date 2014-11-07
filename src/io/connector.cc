@@ -11,7 +11,8 @@ int Connector::CreateSocket() const {
     return INVALID_FD;
   }
 
-  SetFdNonBlock(fd);
+  setFdNonBlock(fd);
+  setFdCloExec(fd);
 
   return fd;
 }

@@ -5,16 +5,16 @@
 
 namespace {
 
-void HandleEvent(int fd, void* arg, int event, const TimeStamp& time_stamp) {
+void handleTimerQueueEvent(int fd, void* arg, int event, const TimeStamp& time_stamp) {
   io::TimerQueue* q = static_cast<io::TimerQueue*>(arg);
   q->handleRead(time_stamp);
 }
 
-class TimerList : public io::TimerQueue::Delegate {
+class TimerListImpl : public io::TimerQueue::Delegate {
   public:
-    TimerList() {
+    TimerListImpl() {
     }
-    virtual ~TimerList() {
+    virtual ~TimerListImpl() {
       for (auto it = entries_.begin(); it != entries_.end(); ++it) {
         const Entry& entry = *it;
         delete entry.second;
@@ -31,10 +31,10 @@ class TimerList : public io::TimerQueue::Delegate {
     virtual bool fireActivedTimer(const TimeStamp& time_stamp,
                                   TimeStamp* next_expired);
 
-    DISALLOW_COPY_AND_ASSIGN(TimerList);
+    DISALLOW_COPY_AND_ASSIGN(TimerListImpl);
 };
 
-TimeStamp TimerList::insert(const TimeStamp time_stamp, Closure* cb) {
+TimeStamp TimerListImpl::insert(const TimeStamp time_stamp, Closure* cb) {
   EntryList::iterator pos;
   for (pos = entries_.begin(); pos != entries_.end(); ++pos) {
     const TimeStamp& ts = (*pos).first;
@@ -48,7 +48,7 @@ TimeStamp TimerList::insert(const TimeStamp time_stamp, Closure* cb) {
   return entries_.begin()->first;
 }
 
-bool TimerList::fireActivedTimer(const TimeStamp& time_stamp,
+bool TimerListImpl::fireActivedTimer(const TimeStamp& time_stamp,
                                  TimeStamp* next_expired) {
   while (!entries_.empty()) {
     const Entry& entry = *entries_.begin();
@@ -98,7 +98,7 @@ bool TimerQueue::Init() {
   event_->fd = timer_fd_;
   event_->arg = this;
   event_->event = EV_READ;
-  event_->cb = HandleEvent;
+  event_->cb = handleTimerQueueEvent;
 
   if (!ev_mgr_->Add(event_.get())) {
     ::close(timer_fd_);
@@ -106,6 +106,7 @@ bool TimerQueue::Init() {
     event_.reset();
   }
 
+  delegate_.reset(new TimerListImpl);
   return true;
 }
 
