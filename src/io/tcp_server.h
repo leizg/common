@@ -11,6 +11,9 @@ class Connection;
 class EventPooler;
 class EventManager;
 
+// master + workers.
+// master accept new connection, and dispatch it to worker.
+// thread pool + event loop per thread.
 class TcpServer : public ObjectMapSaver<int, Connection> {
   public:
     class Listener {
@@ -25,12 +28,15 @@ class TcpServer : public ObjectMapSaver<int, Connection> {
     TcpServer(EventManager* ev_mgr, uint8 worker);
     ~TcpServer();
 
-    void setProtocol(Protocol* p) {
+    bool Init();
+    void setProtocol(Protocol* p) { // not threadsafe.
       protocol_ = p;
     }
 
+    // thread safe.
     EventManager* getPoller();
 
+    // threadsafe, can be called from any thread.
     bool bindIp(const std::string& ip, uint16 port);
     void unBindIp(const std::string& ip);
     void unBindAll();
@@ -41,6 +47,8 @@ class TcpServer : public ObjectMapSaver<int, Connection> {
 
     EventManager* ev_mgr_;
     scoped_ptr<EventPooler> event_poller_;
+
+    Mutex mutex_;
     std::map<std::string, Listener*> listeners_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpServer);

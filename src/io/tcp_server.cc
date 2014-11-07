@@ -17,9 +17,8 @@ TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
 TcpServer::~TcpServer() {
 }
 
-bool TcpServer::Start() {
-  CHECK_NOTNULL(protocol_);
-  if (listener_.get() != NULL) return true;
+bool TcpServer::Init() {
+  if (event_poller_.get() != NULL) return false;
 
   event_poller_.reset(new EventPooler(ev_mgr_, worker_));
   if (!event_poller_->Init()) {
@@ -27,21 +26,33 @@ bool TcpServer::Start() {
     return false;
   }
 
+  return true;
+}
+
+bool TcpServer::bindIp(const std::string& ip, uint16 port) {
+  CHECK_NOTNULL(protocol_);
+  ScopedMutex l(&mutex_);
+  if (listeners_.count(ip) != 0) return true;
+
   Acceptor* a = new Acceptor(ev_mgr_, this);
   a->setProtocol(protocol_);
-  if (!a->Init(ip_, port_)) {
+  if (!a->doBind(ip, port)) {
     delete a;
-    event_poller_.reset();
     return false;
   }
-  listener_.reset(a);
+  listeners_[ip] = a;
 
   return true;
 }
 
-void TcpServer::Stop() {
-  listener_.reset();
-  event_poller_.reset();
+void TcpServer::unBindIp(const std::string& ip) {
+  ScopedMutex l(&mutex_);
+  //FIXME:
+}
+
+void TcpServer::unBindAll() {
+  ScopedMutex l(&mutex_);
+  //FIXME:
 }
 
 EventManager* TcpServer::getPoller() {
