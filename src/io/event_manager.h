@@ -36,31 +36,24 @@ class EventManager : public ThreadSafe {
         virtual ~Delegate() {
         }
 
+        // called by EventManager::Init.
         virtual bool Init() = 0;
+
         // must be threadsafe.
         virtual void runInLoop(Closure* cb) = 0;
-
         virtual void runAt(Closure* cb, const TimeStamp& ts) = 0;
-        virtual void runAfter(Closure* cb, uint64 micro_secs) = 0;
-        virtual void runInterval(Closure* cb, uint64 micro_secs) = 0;
     };
     // these methods are threadsafe,
     // can be called from any thread.
     void runInLoop(Closure* cb) {
+      DCHECK_NOTNULL(cb);
       DCHECK_NOTNULL(delegate_.get());
       delegate_->runInLoop(cb);
     }
     void runAt(Closure* cb, const TimeStamp& ts) {
+      DCHECK_NOTNULL(cb);
       DCHECK_NOTNULL(delegate_.get());
       delegate_->runAt(cb, ts);
-    }
-    void runAfter(Closure* cb, uint64 micro_secs) {
-      DCHECK_NOTNULL(delegate_.get());
-      delegate_->runAfter(cb, micro_secs);
-    }
-    void runInterval(Closure* cb, uint64 micro_secs) {
-      DCHECK_NOTNULL(delegate_.get());
-      delegate_->runInterval(cb, micro_secs);
     }
 
   protected:

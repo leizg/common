@@ -35,10 +35,7 @@ class EventPipe : public io::EventManager::Delegate {
 
     virtual bool Init();
     virtual void runInLoop(Closure* cb);
-
     virtual void runAt(Closure* cb, const TimeStamp& ts);
-    virtual void runAfter(Closure* cb, uint64 micro_secs);
-    virtual void runInterval(Closure* cb, uint64 micro_secs);
 
     DISALLOW_COPY_AND_ASSIGN(EventPipe);
 };
@@ -95,13 +92,6 @@ void EventPipe::handlePipeRead() {
 void EventPipe::runAt(Closure* cb, const TimeStamp& ts) {
 }
 
-// TODO: later.
-void EventPipe::runAfter(Closure* cb, uint64 micro_secs) {
-}
-
-// TODO: later.
-void EventPipe::runInterval(Closure* cb, uint64 micro_secs) {
-}
 }
 
 namespace io {

@@ -4,19 +4,26 @@
 #include "base/base.h"
 
 namespace io {
-class Timer;
 struct Event;
 class EventManager;
 
-struct TimerId {
-    uint64 timer_id;
-    Timer* timer;
-};
-
 class TimerQueue {
   public:
+    class Delegate {
+      public:
+        virtual ~Delegate() {
+        }
+
+        // return expired time
+        virtual TimeStamp insert(const TimeStamp time_stamp, Closure* cb) = 0;
+
+        // return false iif release all timers.
+        virtual bool fireActivedTimer(const TimeStamp& time_stamp,
+                                      TimeStamp* next_expired) = 0;
+    };
+
     explicit TimerQueue(EventManager* ev_mgr)
-        : timer_fd_(INVALID_FD), ev_mgr_(ev_mgr) {
+        : timer_fd_(INVALID_FD), actived_(false), ev_mgr_(ev_mgr) {
       CHECK_NOTNULL(ev_mgr);
     }
     ~TimerQueue();
@@ -25,11 +32,7 @@ class TimerQueue {
 
     // thread safe.
     // you can call this methord from any thread.
-    TimerId AddTimer(Closure* closure, uint32 interval, bool repeated);
-
-    // thread safe.
-    // you can call this methord from any thread.
-    void CancelTimer(const TimerId& timer);
+    void runAt(Closure* closure, const TimeStamp& time_stamp);
 
     // only used for trigger expired events
     // called by event_manager, you shouldn't call this method forever.
@@ -38,22 +41,16 @@ class TimerQueue {
 
   private:
     int timer_fd_;
+    bool actived_;
 
     EventManager* ev_mgr_;
     scoped_ptr<Event> event_;
 
-    typedef std::pair<TimeStamp, Timer*> Entry;
-    typedef std::list<Entry> EntryList;
-    EntryList entries_;
+    TimeStamp expired_time_;
+    scoped_ptr<Delegate> delegate_;
 
-    typedef std::set<uint64> IdSet;
-    IdSet id_set_;
-
-    // return true if first changed.
-    bool insert(Timer* timer);
-    void Reset();
-    void ReleaseActiveTimer(uint32 trigger_count,
-                            std::vector<Timer*>* timer_vec);
+    void reset(const TimeStamp time_stamp);
+    void runAtInternal(Closure* closure, const TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(TimerQueue);
 };

@@ -14,6 +14,9 @@ class TimeStamp {
       stamp_.tv_usec = micro_secs % 1000;
     }
 
+    static TimeStamp afterSeconds(uint64 secs);
+    static TimeStamp afterMicroSeconds(uint64 micro_secs);
+
     uint64 microSecs() const {
       return stamp_.tv_sec * 1000 + stamp_.tv_usec;
     }
@@ -21,7 +24,7 @@ class TimeStamp {
     const timeval& timeVal() const {
       return stamp_;
     }
-    timespec gimeSpec() const {
+    timespec timeSpec() const {
       timespec ts = { 0 };
       ts.tv_sec = stamp_.tv_sec;
       ts.tv_nsec = stamp_.tv_usec * 1000;
@@ -44,6 +47,13 @@ inline TimeStamp Now() {
   timeval tv;
   ::gettimeofday(&tv, NULL);
   return TimeStamp(tv);
+}
+
+inline TimeStamp TimeStamp::afterMicroSeconds(uint64 micro_secs) {
+  return TimeStamp(Now().microSecs() + micro_secs);
+}
+inline TimeStamp TimeStamp::afterSeconds(uint64 secs) {
+  return TimeStamp(Now().microSecs() + secs * 1000);
 }
 
 inline TimeStamp TimeAdd(const TimeStamp& t, uint sec) {
