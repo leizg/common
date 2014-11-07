@@ -1,64 +1,71 @@
-#include "epoller.h"
+#include "epoller.h" // included event_manager.h
 #include "timer_queue.h"
 
 namespace {
-scoped_ptr<io::Event> signal_ev;
+
+void HandleSignal(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp);
+
+class EventPipe : public io::EventManager::Delegate {
+  public:
+    explicit EventPipe(io::EventManager* ev_mgr)
+        : ev_mgr_(ev_mgr) {
+      event_fd_[0] = INVALID_FD;
+      event_fd_[1] = INVALID_FD;
+    }
+    virtual ~EventPipe() {
+      if (event_fd_[0] != INVALID_FD) {
+        ev_mgr_->Del(event_);
+        ::close(event_fd_[0]);
+      }
+
+      if (event_fd_[1] != INVALID_FD) {
+        ::close(event_fd_[1]);
+      }
+    }
+
+    void handlePipeRead();
+
+  private:
+    io::Event event_;
+    io::EventManager* ev_mgr_;
+
+    Mutex mutex_;
+    int event_fd_[2];
+    std::deque<Closure*> cb_queue_;
+
+    virtual bool Init();
+    virtual void runInLoop(Closure* cb);
+
+    virtual void runAt(Closure* cb, const TimeStamp& ts);
+    virtual void runAfter(Closure* cb, uint64 micro_secs);
+    virtual void runInterval(Closure* cb, uint64 micro_secs);
+
+    DISALLOW_COPY_AND_ASSIGN(EventPipe);
+};
 
 void HandleSignal(int fd, void* arg, uint8 revent,
                   const TimeStamp& time_stamp) {
-  io::EventManager* ev_mgr = static_cast<io::EventManager*>(arg);
-  ev_mgr->handlePipeRead();
-}
-}
-
-namespace io {
-
-EventManager::EventManager()
-    : stop_(true) {
-  loop_tid_ = ::pthread_self();
-
-  event_fd_[0] = INVALID_FD;
-  event_fd_[1] = INVALID_FD;
+  EventPipe* p = static_cast<EventPipe*>(arg);
+  p->handlePipeRead();
 }
 
-EventManager::~EventManager() {
-  if (event_fd_[0] != INVALID_FD) {
-    if (signal_ev != NULL) {
-      Del(*signal_ev);
-    }
-    ::close(event_fd_[0]);
-  }
-  if (event_fd_[1] != INVALID_FD) {
-    ::close(event_fd_[1]);
-  }
-}
-
-bool EventManager::InitPipe() {
-  if (signal_ev.get() != NULL) return true;
-
-  timer_queue_.reset(new TimerQueue(this));
-  if (!timer_queue_->Init()) {
-    return false;
-  }
-
+bool EventPipe::Init() {
   int ret = ::pipe2(event_fd_, O_NONBLOCK | FD_CLOEXEC);
   if (ret != 0) {
-    timer_queue_.reset();
     PLOG(WARNING)<< "pipe error";
     return false;
   }
 
-  signal_ev.reset(new Event);
-  signal_ev->fd = event_fd_[0];
-  signal_ev->event = EV_READ;
-  signal_ev->arg = this;
-  signal_ev->cb = HandleSignal;
+  event_.fd = event_fd_[0];
+  event_.event = EV_READ;
+  event_.arg = this;
+  event_.cb = HandleSignal;
 
-  return Add(signal_ev.get());
+  return ev_mgr_->Add(&event_);
 }
 
-void EventManager::runInLoop(Closure* cb) {
-  if (inValidThread()) {
+void EventPipe::runInLoop(Closure* cb) {
+  if (ev_mgr_->inValidThread()) {
     cb->Run();
     return;
   }
@@ -68,8 +75,8 @@ void EventManager::runInLoop(Closure* cb) {
   ::send(event_fd_[1], &c, sizeof(c), 0);
 }
 
-void EventManager::handlePipeRead() {
-  uint8 c;
+void EventPipe::handlePipeRead() {
+  uint64 c;
   ::recv(event_fd_[0], &c, sizeof(c), 0);
 
   std::deque<Closure*> cbs;
@@ -78,11 +85,30 @@ void EventManager::handlePipeRead() {
     cbs.swap(cb_queue_);
   }
 
-  while (!cbs.empty()) {
-    Closure* cb = cbs.front();
+  for (uint32 i = 0; i < cbs.size(); ++i) {
+    Closure* cb = cbs[i];
     cb->Run();
-    cbs.pop_front();
   }
+}
+
+// TODO: later.
+void EventPipe::runAt(Closure* cb, const TimeStamp& ts) {
+}
+
+// TODO: later.
+void EventPipe::runAfter(Closure* cb, uint64 micro_secs) {
+}
+
+// TODO: later.
+void EventPipe::runInterval(Closure* cb, uint64 micro_secs) {
+}
+}
+
+namespace io {
+
+bool EventManager::Init() {
+  delegate_.reset(new EventPipe(this));
+  return delegate_->Init();
 }
 
 EventManager* CreateEventManager() {

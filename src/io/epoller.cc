@@ -32,22 +32,24 @@ void Epoller::Init() {
     return;
   }
 
-  SetFdNonBlock(ep_fd_);
+  setFdNonBlock(ep_fd_);
 
   epoll_event ev;
   ::memset(&ev, 0, sizeof(ev));
   events_.resize(kTriggerNumber, ev);
 
-  if (!InitPipe()) {
+  if (!EventManager::Init()) {
     ::close(ep_fd_);
     ep_fd_ = INVALID_FD;
   }
 }
 
-void Epoller::Loop() {
+void Epoller::Loop(SyncEvent* start_event) {
   if (!inValidThread()) {
     update();
-    start_event_.Signal();
+    if (start_event != NULL) {
+      start_event->Signal();
+    }
   }
 
   stop_ = false;
@@ -81,11 +83,16 @@ void Epoller::Loop() {
 }
 
 bool Epoller::LoopInAnotherThread() {
-  loop_pthread_.reset(new StoppableThread(NewCallback(this, &Epoller::Loop)));
-  if (!loop_pthread_->Start()) return false;
-  start_event_.Wait();
-  CHECK(!inValidThread());
-  return true;
+  SyncEvent start_event(false, false);
+  loop_pthread_.reset(
+      new StoppableThread(
+          NewPermanentCallback(this, &Epoller::Loop, &start_event)));
+  if (loop_pthread_->Start()) {
+    start_event.Wait();
+    DCHECK(!inValidThread());
+    return true;
+  }
+  return false;
 }
 
 void Epoller::Stop() {
@@ -95,7 +102,7 @@ void Epoller::Stop() {
   loop_pthread_.reset();
 }
 
-uint32 Epoller::ConvertEvent(uint8 event) {
+uint32 Epoller::convertEvent(uint8 event) {
   uint32 flags = 0;
   if (event & EV_READ) {
     flags |= EPOLLIN;
@@ -117,7 +124,7 @@ bool Epoller::Add(Event* ev) {
 
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
-  event.events = ConvertEvent(ev->event);
+  event.events = convertEvent(ev->event);
   event.data.ptr = ev;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_ADD, ev->fd, &event);
@@ -139,7 +146,7 @@ void Epoller::Mod(Event* ev) {
 
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
-  event.events = ConvertEvent(ev->event);
+  event.events = convertEvent(ev->event);
   event.data.ptr = ev;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_MOD, ev->fd, &event);
@@ -156,7 +163,7 @@ void Epoller::Del(const Event& ev) {
 
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
-  event.events = ConvertEvent(ev.event);
+  event.events = convertEvent(ev.event);
   event.data.ptr = ev;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_DEL, ev.fd, &event);

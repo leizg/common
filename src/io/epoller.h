@@ -10,12 +10,12 @@ namespace io {
 class Epoller : public EventManager {
   public:
     Epoller()
-        : ep_fd_(INVALID_FD) {
+        : ep_fd_(INVALID_FD), stop_(true) {
     }
     virtual ~Epoller();
 
     virtual void Init();
-    virtual void Loop();
+    virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
     virtual void Stop();
 
@@ -25,6 +25,7 @@ class Epoller : public EventManager {
 
   private:
     int ep_fd_;
+    bool stop_;
 
     // no need lock.
     typedef std::map<int, Event*> EvMap;
@@ -33,10 +34,9 @@ class Epoller : public EventManager {
     const static uint32 kTriggerNumber = 128;
     std::vector<epoll_event> events_;
 
-    SyncEvent start_event_;
     scoped_ptr<StoppableThread> loop_pthread_;
 
-    uint32 ConvertEvent(uint8 event);
+    uint32 convertEvent(uint8 event);
 
     DISALLOW_COPY_AND_ASSIGN(Epoller);
 };

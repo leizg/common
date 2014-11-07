@@ -3,12 +3,11 @@
 
 #include "include/thread_safe.h"
 
-#define EV_READ (1<<0)
-#define EV_WRITE (1<<1)
-#define EV_ERROR (1<<2)
+#define EV_READ   (1<<1)
+#define EV_WRITE  (1<<2)
+#define EV_ERROR  (1<<3)
 
 namespace io {
-class TimerQueue;
 
 struct Event {
     int fd;
@@ -20,10 +19,11 @@ struct Event {
 
 class EventManager : public ThreadSafe {
   public:
-    virtual ~EventManager();
+    virtual ~EventManager() {
+    }
 
     virtual bool Init() = 0;
-    virtual void Loop() = 0;
+    virtual void Loop(SyncEvent* start_event = NULL) = 0;
     virtual bool LoopInAnotherThread() = 0;
     virtual void Stop() = 0;
 
@@ -31,30 +31,44 @@ class EventManager : public ThreadSafe {
     virtual void Mod(Event* ev) = 0;
     virtual void Del(const Event& ev) = 0;
 
-    void assertInLoopThread() const {
-      CHECK(inValidThread());
-    }
-    void runInLoop(Closure* cb);
-    void handlePipeRead();
+    class Delegate {
+      public:
+        virtual ~Delegate() {
+        }
 
-    TimerQueue* getTimerQueue() const {
-      return timer_queue_.get();
+        virtual bool Init() = 0;
+        // must be threadsafe.
+        virtual void runInLoop(Closure* cb) = 0;
+
+        virtual void runAt(Closure* cb, const TimeStamp& ts) = 0;
+        virtual void runAfter(Closure* cb, uint64 micro_secs) = 0;
+        virtual void runInterval(Closure* cb, uint64 micro_secs) = 0;
+    };
+    // these methods are threadsafe,
+    // can be called from any thread.
+    void runInLoop(Closure* cb) {
+      DCHECK_NOTNULL(delegate_.get());
+      delegate_->runInLoop(cb);
+    }
+    void runAt(Closure* cb, const TimeStamp& ts) {
+      DCHECK_NOTNULL(delegate_.get());
+      delegate_->runAt(cb, ts);
+    }
+    void runAfter(Closure* cb, uint64 micro_secs) {
+      DCHECK_NOTNULL(delegate_.get());
+      delegate_->runAfter(cb, micro_secs);
+    }
+    void runInterval(Closure* cb, uint64 micro_secs) {
+      DCHECK_NOTNULL(delegate_.get());
+      delegate_->runInterval(cb, micro_secs);
     }
 
   protected:
-    EventManager();
-
-    // must be called after initialized successfully.
-    bool InitPipe();
-
-    bool stop_;
-    pthread_t loop_tid_;
+    EventManager() {
+    }
 
   private:
-    int event_fd_[2];
-    Mutex mutex_;
-    std::deque<Closure*> cb_queue_;
-    scoped_ptr<TimerQueue> timer_queue_;
+    scoped_ptr<Delegate> delegate_;
 
     DISALLOW_COPY_AND_ASSIGN(EventManager);
 };

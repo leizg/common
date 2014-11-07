@@ -11,6 +11,9 @@ class ThreadSafe {
     bool inValidThread() const {
       return pthread_self() == pid_;
     }
+    void assertThreadSafe() const {
+      CHECK(inValidThread());
+    }
 
   protected:
     ThreadSafe() {

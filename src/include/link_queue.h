@@ -10,20 +10,20 @@ struct LinkNode {
     LinkNode* prev;
     LinkNode* next;
 
-    void Remove() {
+    void remove() {
       if (prev != next) {
         prev->next = next;
         next->prev = prev;
         prev = next = this;
       }
     }
-    void InertAfter(LinkNode* node) {
+    void inertAfter(LinkNode* node) {
       node->prev = this;
       node->next = next;
       next->prev = node;
       next = node;
     }
-    void InertBefore(LinkNode* node) {
+    void inertBefore(LinkNode* node) {
       node->next = this;
       node->prev = prev;
       prev->next = node;
@@ -42,7 +42,7 @@ struct LinkNode {
 class LinkQueue : public LinkNode {
   public:
     virtual ~LinkQueue() {
-      CHECK(empty());
+      DCHECK(empty());
     }
 
     bool empty() const {
@@ -52,7 +52,7 @@ class LinkQueue : public LinkNode {
     void clear() {
       while (!empty()) {
         LinkNode* node = next;
-        node->Remove();
+        node->remove();
         delete node;
       }
     }
