@@ -8,7 +8,7 @@ DEFINE_int32(input_buf_len, 128, "the size of inputbuf");
 
 namespace {
 
-void HandleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
+void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
   io::Connection* conn = static_cast<io::Connection*>(arg);
 
   if (revent & EV_WRITE) {
@@ -22,6 +22,14 @@ void HandleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
 }
 
 namespace io {
+
+// default implemetion.
+void Connection::Attr::Init() {
+  io_stat = 0;
+  pending_size = 0;
+  data_len = 0;
+  is_last_pkg = false;
+}
 
 Connection::Connection(int fd, EventManager* ev_mgr)
     : fd_(fd), closed_(false), ev_mgr_(ev_mgr), protocol_(NULL) {
@@ -45,7 +53,7 @@ void Connection::Init() {
   event_->fd = fd_;
   event_->event = EV_READ;
   event_->arg = this;
-  event_->cb = HandleEvent;
+  event_->cb = handleEvent;
 
   if (!ev_mgr_->Add(event_.get())) {
     event_.reset();
@@ -67,28 +75,29 @@ void Connection::Send(OutputObject* out_obj) {
 
   int32 err_no;
   if (out_queue_->empty()) {
-    if (out_obj->Send(fd_, &err_no)) {
+    if (out_obj->send(fd_, &err_no)) {
       delete out_obj;
       return;
     } else if (err_no != EWOULDBLOCK) {
+      delete out_obj;
       ShutDown();
       return;
     }
   }
 
-  out_queue_->Push(out_obj);
+  out_queue_->push(out_obj);
   if (!(event_->event & EV_WRITE)) {
     event_->event |= EV_WRITE;
     ev_mgr_->Mod(event_.get());
   }
 }
 
-int32 Connection::Recv(uint32 len) {
+int32 Connection::Recv(uint32 len, int* err_no) {
   if (fd_ == INVALID_FD || closed_) return 0;
 
-  int32 err_no, ret, left = len;
+  int32 ret, left = len;
   while (left != 0) {
-    ret = input_buf_->ReadFd(fd_, left, &err_no);
+    ret = input_buf_->ReadFd(fd_, left, err_no);
     if (ret == 0) {
       ShutDown();
       return 0;
@@ -115,20 +124,21 @@ void Connection::handleRead(const TimeStamp& time_stamp) {
 void Connection::handleWrite(const TimeStamp& time_stamp) {
   if (fd_ == INVALID_FD || closed_) return;
 
-  int32 err_no;
-  if (!out_queue_->empty()) {
-    if (out_queue_->Send(fd_, &err_no)) {
-      event_->event &= ~EV_WRITE;
-      ev_mgr_->Mod(event_.get());
-      return;
-    }
+  if (out_queue_->empty()) {
+    event_->event &= ~EV_WRITE;
+    ev_mgr_->Mod(event_.get());
+    return;
+  }
 
-    if (err_no != EWOULDBLOCK) {
-      // remove writeable event.
-      event_->event &= ~EV_WRITE;
-      ev_mgr_->Mod(event_.get());
-      ShutDown();
-    }
+  int err_no;
+  if (out_queue_->send(fd_, &err_no)) {
+    event_->event &= ~EV_WRITE;
+    ev_mgr_->Mod(event_.get());
+    return;
+  }
+
+  if (err_no != EWOULDBLOCK) {
+    ShutDown();
   }
 }
 

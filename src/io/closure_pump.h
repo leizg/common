@@ -1,11 +1,35 @@
-#ifndef TIMER_QUEUE_H_
-#define TIMER_QUEUE_H_
+#ifndef CLOSURE_PUMP_H_
+#define CLOSURE_PUMP_H_
 
-#include "base/base.h"
+#include "event_manager.h"
 
 namespace io {
-struct Event;
-class EventManager;
+namespace detail {
+
+class EventPipe {
+  public:
+    explicit EventPipe(io::EventManager* ev_mgr)
+        : ev_mgr_(ev_mgr) {
+      event_fd_[0] = INVALID_FD;
+      event_fd_[1] = INVALID_FD;
+    }
+    virtual ~EventPipe();
+
+    bool Init();
+    void runInLoop(Closure* cb);
+
+    void handlePipeRead();
+
+  private:
+    io::Event event_;
+    io::EventManager* ev_mgr_;
+
+    Mutex mutex_;
+    int event_fd_[2];
+    std::deque<Closure*> cb_queue_;
+
+    DISALLOW_COPY_AND_ASSIGN(EventPipe);
+};
 
 class TimerQueue {
   public:
@@ -56,4 +80,31 @@ class TimerQueue {
 };
 }
 
-#endif /* TIMER_QUEUE_H_ */
+class ClosurePump : public EventManager::Delegate {
+  public:
+    explicit ClosurePump(EventManager* ev_mgr)
+        : ev_mgr_(ev_mgr) {
+      DCHECK_NOTNULL(ev_mgr);
+    }
+    virtual ~ClosurePump() {
+    }
+
+  private:
+    virtual bool Init();
+
+    virtual void runInLoop(Closure* cb) {
+      ev_pipe_->runInLoop(cb);
+    }
+    virtual void runAt(Closure* closure, const TimeStamp& time_stamp) {
+      timer_queue_->runAt(closure, time_stamp);
+    }
+
+    EventManager* ev_mgr_;
+
+    scoped_ptr<detail::EventPipe> ev_pipe_;
+    scoped_ptr<detail::TimerQueue> timer_queue_;
+
+    DISALLOW_COPY_AND_ASSIGN(ClosurePump);
+};
+}
+#endif  /*  CLOSURE_PUMP_H_*/

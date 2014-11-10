@@ -47,7 +47,7 @@ class ReplyObject : public io::OutVectorObject::IoObject {
     std::vector<iovec> iov_;
     scoped_ptr<io::OutputBuf> data_;
 
-    virtual const std::vector<iovec>& IoVec() const {
+    virtual const std::vector<iovec>& ioVec() const {
       return iov_;
     }
 

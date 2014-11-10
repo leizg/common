@@ -11,7 +11,7 @@ class OutputObject {
     }
 
     // return true iif no data need to send.
-    virtual bool Send(int fd, int32* err_no) = 0;
+    virtual bool send(int fd, int32* err_no) = 0;
 
   protected:
     OutputObject()
@@ -32,27 +32,23 @@ class OutVectorObject : public OutputObject {
         virtual ~IoObject() {
         }
 
-        virtual const std::vector<iovec>& IoVec() const = 0;
+        virtual const std::vector<iovec>& ioVec() const = 0;
     };
 
-    explicit OutVectorObject(IoObject* obj, bool self_delete = true)
-        : obj_(obj), self_delete_(self_delete) {
-      const std::vector<iovec>& data = obj->IoVec();
-      for (uint32 i = 0; i < data.size(); ++i) {
-        left_ += data[i].iov_len;
-      }
-    }
+    explicit OutVectorObject(IoObject* obj, bool self_delete = true);
     virtual ~OutVectorObject() {
-      if (self_delete_) delete obj_;
+      if (self_delete_) {
+        delete obj_;
+      }
     }
 
   private:
     IoObject* obj_;
     bool self_delete_;
 
-    void BuildData(std::vector<iovec>* io_vec) const;
+    void buildData(std::vector<iovec>* io_vec) const;
 
-    virtual bool Send(int fd, int32* err_no);
+    virtual bool send(int fd, int32* err_no);
 
     DISALLOW_COPY_AND_ASSIGN(OutVectorObject);
 };
@@ -65,14 +61,15 @@ class OutQueue : public io::OutputObject {
       STLClear(&out_queue_);
     }
 
-    void Push(io::OutputObject* obj) {
+    void push(io::OutputObject* obj) {
       out_queue_.push_back(obj);
     }
+
     bool empty() const {
       return out_queue_.empty();
     }
 
-    virtual bool Send(int fd, int32* err_no);
+    virtual bool send(int fd, int32* err_no);
 
   private:
     std::deque<io::OutputObject*> out_queue_;

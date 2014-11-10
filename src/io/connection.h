@@ -16,22 +16,21 @@ class Connection : public RefCounted {
   public:
     struct Attr {
         virtual void Init() = 0;
-        virtual uint32 HeaderLength() const = 0;
 
         uint32 io_stat;
         uint32 pending_size;
+        uint32 data_len;
 
-        // FIXME: unsed, todo.
         bool is_last_pkg;
     };
 
     Connection(int fd, EventManager* ev_mgr);
     void Init();
 
-    int FileHandle() const {
+    int Key() const {
       return fd_;
     }
-    int Key() const {
+    int FileHandle() const {
       return fd_;
     }
     EventManager* getEventLoop() const {
@@ -48,8 +47,8 @@ class Connection : public RefCounted {
       protocol_ = p;
     }
 
-    void setCloseClosure(Closure* cb) {
-      if (close_closure_.get() != NULL) {
+    void setCloseClosure(Closure* cb, bool run_old_if_exist = false) {
+      if (run_old_if_exist && close_closure_.get() != NULL) {
         close_closure_->Run();
       }
       close_closure_.reset(cb);
@@ -58,7 +57,7 @@ class Connection : public RefCounted {
     // out_obj will deleted by connection.
     // Note: not thread safe.
     void Send(OutputObject* out_obj);
-    int32 Recv(uint32 len);
+    int32 Recv(uint32 len, int* err_no);
 
     void handleRead(const TimeStamp& time_stamp);
     void handleWrite(const TimeStamp& time_stamp);

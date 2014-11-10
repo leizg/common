@@ -56,6 +56,8 @@ class EventManager : public ThreadSafe {
       delegate_->runAt(cb, ts);
     }
 
+    static EventManager* current();
+
   protected:
     EventManager() {
     }

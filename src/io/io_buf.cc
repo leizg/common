@@ -2,10 +2,18 @@
 
 namespace io {
 
-void OutVectorObject::BuildData(std::vector<iovec>* io_vec) const {
+OutVectorObject::OutVectorObject(IoObject* obj, bool self_delete)
+    : obj_(obj), self_delete_(self_delete) {
+  const std::vector<iovec>& data = obj->ioVec();
+  for (uint32 i = 0; i < data.size(); ++i) {
+    left_ += data[i].iov_len;
+  }
+}
+
+void OutVectorObject::buildData(std::vector<iovec>* io_vec) const {
   io_vec->clear();
   if (left_ == 0) return;
-  const std::vector<iovec>& data = obj_->IoVec();
+  const std::vector<iovec>& data = obj_->ioVec();
 
   uint32 skip_size = offset_;
   for (uint32 i = 0; i < data.size(); ++i) {
@@ -28,12 +36,12 @@ void OutVectorObject::BuildData(std::vector<iovec>* io_vec) const {
   }
 }
 
-bool OutVectorObject::Send(int fd, int32* err_no) {
+bool OutVectorObject::send(int fd, int32* err_no) {
   if (left_ == 0) return true;
   std::vector<iovec> io_vec;
 
   while (left_ != 0) {
-    BuildData(&io_vec);
+    buildData(&io_vec);
     CHECK(!io_vec.empty());
 
     int32 writen = ::writev(fd, io_vec.data(), io_vec.size());
@@ -51,10 +59,10 @@ bool OutVectorObject::Send(int fd, int32* err_no) {
   return true;
 }
 
-bool OutQueue::Send(int fd, int32* err_no) {
+bool OutQueue::send(int fd, int32* err_no) {
   while (!out_queue_.empty()) {
     io::OutputObject* obj = out_queue_.front();
-    if (!obj->Send(fd, err_no)) {
+    if (!obj->send(fd, err_no)) {
       return false;
     }
 
