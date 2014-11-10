@@ -7,13 +7,10 @@ namespace io {
 
 class InputBuf {
   public:
-    explicit InputBuf(uint32 size)
-        : index_(0), readn_(0) {
-      MemoryBlock* blk = new MemoryBlock(size);
-      blocks_.push_back(blk);
+    explicit InputBuf(uint32 size) {
+      block_.reset(new MemoryBlock(size));
     }
     virtual ~InputBuf() {
-      STLUnRef(&blocks_);
     }
 
     // return false iif no data can be read.
@@ -24,23 +21,16 @@ class InputBuf {
     void Backup(uint32 len);
 
     // return the total number of bytes read since this object was created.
-    int ByteCount() const {
-      return readn_;
+    int ByteCount() {
+      return block_->readn();
     }
 
     int32 ReadFd(int fd, uint32 len, int32* err_no);
 
   private:
-    int32 index_;
-    uint32 readn_;
-    std::vector<MemoryBlock*> blocks_;
-
-    MemoryBlock* FindDataBlock();
-
-    int32 ReadFdInternal(MemoryBlock*block, int fd, uint32 len, int32* err_no);
+    scoped_ref<MemoryBlock> block_;
 
     DISALLOW_COPY_AND_ASSIGN(InputBuf);
 };
 }
-
 #endif /* INPUT_BUF_H_ */

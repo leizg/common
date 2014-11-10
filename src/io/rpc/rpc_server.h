@@ -34,7 +34,7 @@ class RpcServer {
     void setHandlerMap(HandlerMap* handler_map);
 
     // must set handler map first.
-    void Loop(bool in_another_thread);
+    bool loop(bool in_another_thread = false);
 
   private:
     const std::string ip_;

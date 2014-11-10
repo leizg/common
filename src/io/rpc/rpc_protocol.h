@@ -6,49 +6,65 @@
 
 namespace rpc {
 
+namespace detail {
+class RpcAttr : public io::Connection::Attr {
+  public:
+    RpcAttr() {
+      Init();
+    }
+    virtual ~RpcAttr() {
+    }
+
+    virtual void Init() {
+      io::Connection::Attr::Init();
+      ::memset(&header_, 0, sizeof(header_));
+    }
+
+    MessageHeader* header() const {
+      return &header_;
+    }
+
+  private:
+    MessageHeader header_;
+
+    DISALLOW_COPY_AND_ASSIGN(RpcAttr);
+};
+
+class RpcParser : io::Protocol::Parser {
+  public:
+    RpcParser() {
+    }
+    virtual ~RpcParser() {
+    }
+
+  private:
+    virtual uint32 headerLength() const {
+      return RPC_HEADER_LENGTH;
+    }
+
+    virtual bool parse(io::Connection* const conn,
+                       io::InputBuf* const input_buf) const;
+
+    DISALLOW_COPY_AND_ASSIGN(RpcParser);
+};
+}
+
 class RpcProtocol : public io::Protocol {
   public:
-    class RpcAttr : public io::Connection::Attr {
-      public:
-        RpcAttr() {
-          Init();
-        }
-        virtual ~RpcAttr() {
-        }
-
-        virtual void Init();
-        virtual uint32 HeaderLength() const {
-          return RPC_HEADER_LENGTH;
-        }
-
-        bool Parse(char* buf);
-        const MessageHeader& header() const {
-          return header_;
-        }
-
-      private:
-        MessageHeader header_;
-
-        DISALLOW_COPY_AND_ASSIGN(RpcAttr);
-    };
-
     explicit RpcProtocol(HandlerMap* handler_map);
     virtual ~RpcProtocol() {
     }
 
+  private:
     virtual io::Connection::Attr* NewConnectionAttr() const {
-      return new RpcAttr;
+      return new detail::RpcAttr;
     }
-
-    virtual bool ParseHeader(io::Connection* conn,
-                             io::InputBuf* input_buf) const;
 
     DISALLOW_COPY_AND_ASSIGN(RpcProtocol);
 };
 
-inline const MessageHeader& GetRpcHeaderFromConnection(io::Connection* conn) {
-  RpcProtocol::RpcAttr* attr =
-      dynamic_cast<RpcProtocol::RpcAttr*>(conn->getAttr());
+inline MessageHeader* GetRpcHeaderFromConnection(io::Connection* conn) {
+  detail::RpcAttr* attr = dynamic_cast<detail::RpcAttr*>(conn->getAttr());
   return attr->header();
 }
 }

@@ -5,7 +5,7 @@ namespace rpc {
 HandlerMap::~HandlerMap() {
   for (ServMap::const_iterator it = serv_map_.begin(); it != serv_map_.end();
       ++it) {
-    MethodHandler* h = it->second;
+    const MethodHandler* const h = it->second;
     delete h->request;
     delete h->reply;
     delete h;
@@ -14,11 +14,12 @@ HandlerMap::~HandlerMap() {
 }
 
 void HandlerMap::AddService(Service* serv) {
-  const google::protobuf::ServiceDescriptor* serv_desc = serv->GetDescriptor();
+  const google::protobuf::ServiceDescriptor* const serv_desc =
+      serv->GetDescriptor();
 
   int method_count = serv_desc->method_count();
   for (int i = 0; i < method_count; ++i) {
-    const MethodDescriptor* method_desc = serv_desc->method(i);
+    const MethodDescriptor* const method_desc = serv_desc->method(i);
 
     MethodHandler* handler = new MethodHandler;
     handler->service = serv;

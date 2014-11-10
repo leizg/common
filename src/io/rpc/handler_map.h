@@ -5,6 +5,7 @@
 #include "base/base.h"
 
 namespace rpc {
+
 struct MethodHandler {
     Service* service;
     // shouldn't delete method.
@@ -14,7 +15,6 @@ struct MethodHandler {
     const Message* reply;
 };
 
-// FIXME: RwLock. ??? needed?
 class HandlerMap {
   public:
     HandlerMap() {
@@ -31,7 +31,6 @@ class HandlerMap {
 
   private:
     typedef std::map<uint32, MethodHandler*> ServMap;
-    ServMap serv_map_;
 
     bool AddHandler(uint32 hash_id, MethodHandler* handler) {
       MethodHandler* old = FindMehodById(hash_id);
@@ -39,6 +38,8 @@ class HandlerMap {
 
       return serv_map_.insert(std::make_pair(hash_id, handler)).second;
     }
+
+    ServMap serv_map_;
 
     DISALLOW_COPY_AND_ASSIGN(HandlerMap);
 };

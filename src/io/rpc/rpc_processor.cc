@@ -1,6 +1,6 @@
 #include "handler_map.h"
 #include "zero_copy_stream.h"
-#include "server_processor.h"
+#include "rpc_processor.h"
 
 #include "io/io_buf.h"
 #include "io/input_buf.h"
@@ -85,7 +85,7 @@ class ReplyClosure : public ::google::protobuf::Closure {
 
 namespace rpc {
 
-void ServerProcessor::Dispatch(io::Connection* conn, io::InputBuf* input_buf,
+void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
                                const TimeStamp& time_stamp) {
   const MessageHeader& header = GetRpcHeaderFromConnection(conn);
   MethodHandler * method_handler = handler_map_->FindMehodById(header.fun_id);

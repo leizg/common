@@ -15,6 +15,7 @@ TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
 }
 
 TcpServer::~TcpServer() {
+  unBindAll();
 }
 
 bool TcpServer::Init() {
@@ -47,12 +48,12 @@ bool TcpServer::bindIp(const std::string& ip, uint16 port) {
 
 void TcpServer::unBindIp(const std::string& ip) {
   ScopedMutex l(&mutex_);
-  //FIXME:
+  MapEarseAndDelete(&listeners_, ip);
 }
 
 void TcpServer::unBindAll() {
   ScopedMutex l(&mutex_);
-  //FIXME:
+  MapClear(&listeners_);
 }
 
 EventManager* TcpServer::getPoller() {

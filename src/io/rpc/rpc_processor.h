@@ -1,29 +1,28 @@
-#ifndef SERVER_PROCESSOR_H_
-#define SERVER_PROCESSOR_H_
+#ifndef RPC_PROCESSOR_H_
+#define RPC_PROCESSOR_H_
 
 #include "io/protocol.h"
 
 namespace rpc {
 class HandlerMap;
 
-class ServerProcessor : public io::Protocol::Processor {
+class RpcProcessor : public io::Protocol::Processor {
   public:
-    explicit ServerProcessor(HandlerMap* handler_map)
+    explicit RpcProcessor(HandlerMap* handler_map)
         : handler_map_(handler_map) {
-      CHECK_NOTNULL(handler_map);
+      DCHECK_NOTNULL(handler_map);
     }
-
-    virtual ~ServerProcessor();
+    virtual ~RpcProcessor();
 
   private:
     HandlerMap* handler_map_;
 
-    virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
+    virtual void dispatch(io::Connection* conn, io::InputBuf* input_buf,
                           const TimeStamp& time_stamp);
 
-    DISALLOW_COPY_AND_ASSIGN(ServerProcessor);
+    DISALLOW_COPY_AND_ASSIGN(RpcProcessor);
 };
 
 }
 
-#endif /* SERVER_PROCESSOR_H_ */
+#endif /* RPC_PROCESSOR_H_ */

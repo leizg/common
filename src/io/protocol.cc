@@ -64,7 +64,7 @@ void Protocol::handleRead(Connection* conn, InputBuf* input_buf,
 
       case IO_HEADER:
         attr->io_stat = IO_DATA;
-        if (!parser_->parseHeader(conn, input_buf)) {
+        if (!parser_->parse(conn, input_buf)) {
           reporter_->report(conn);
           return;
         }
@@ -74,7 +74,7 @@ void Protocol::handleRead(Connection* conn, InputBuf* input_buf,
 
       case IO_DATA:
         if (attr->is_last_pkg) {
-          processor_->Dispatch(conn, input_buf, time_stamp);
+          processor_->dispatch(conn, input_buf, time_stamp);
           attr->Init();
           // FIXME: reset input buffer.
           return;

@@ -20,7 +20,7 @@ class Protocol {
         virtual ~Processor() {
         }
 
-        virtual void Dispatch(Connection* conn, InputBuf* input_buf,
+        virtual void dispatch(Connection* conn, InputBuf* input_buf,
                               const TimeStamp& time_stamp) = 0;
     };
 
@@ -30,7 +30,7 @@ class Protocol {
         }
 
         virtual uint32 headerLength() const = 0;
-        virtual bool parseHeader(Connection* const conn,
+        virtual bool parse(Connection* const conn,
                                  InputBuf* const input_buf) const = 0;
     };
 
