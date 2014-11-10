@@ -66,6 +66,38 @@ template<typename T> inline void MapUnRef(T* t) {
   t->clear();
 }
 
+template<typename T, typename K> inline void STLEarseAndDelete(T*t,
+                                                               const K& k) {
+  auto item = t->find(k);
+  if (item != t->end()) {
+    delete (*item);
+    t->earse(item);
+  }
+}
+template<typename T, typename K> inline void MapEarseAndDelete(T*t,
+                                                               const K& k) {
+  auto item = t->find(k);
+  if (item != t->end()) {
+    delete item->second;
+    t->earse(item);
+  }
+}
+
+template<typename T, typename K> inline void STLEarseAndUnRef(T*t, const K& k) {
+  auto it = t->find(k);
+  if (it != t->end()) {
+    (*it)->UnRef();
+    t->earse(it);
+  }
+}
+template<typename T, typename K> inline void MapEarseAndUnRef(T*t, const K& k) {
+  auto it = t->find(k);
+  if (it != t->end()) {
+    it->second->UnRef();
+    t->earse(it);
+  }
+}
+
 // not held the closure.
 template<typename ClosureType>
 class AutoRunner {

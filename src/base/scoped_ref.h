@@ -32,7 +32,7 @@ class scoped_ref {
       ptr_ = ptr;
     }
 
-    Type* operator->() {
+    Type* operator->() const {
       assert(ptr_ != NULL);
       return ptr_;
     }
