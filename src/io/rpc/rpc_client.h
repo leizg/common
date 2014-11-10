@@ -12,20 +12,22 @@ class EventManager;
 }
 
 namespace rpc {
+class HandlerMap;
 
 // todo: multi-tcp-Connection per Channel.
 // RpcClient called by Service::Stub.
 class RpcClient : public google::protobuf::RpcChannel {
   public:
-    // ev_mgr should be initialized successfully.
-    // ip: it's caller's responsity that make sure ip is good format.
-    RpcClient(io::EventManager* ev_mgr, const std::string& ip, uint16 port);
+    // ev_mgr should have been initialized successfully.
+    RpcClient(io::EventManager* ev_mgr, HandlerMap* handler_map);
     virtual ~RpcClient();
 
     // return false iif timedout or error orrcurred.
     // time_out: seconds
-    bool Connect(uint32 time_out);
+    // ip: it's caller's responsity that make sure ip is good format.
+    bool Connect(const std::string& ip, uint16 port, uint32 time_out);
 
+    // not threadsafe.
     // cb will be released by RpcClient.
     void SetReconnectClosure(Closure* cb) {
       reconnect_closure_.reset(cb);

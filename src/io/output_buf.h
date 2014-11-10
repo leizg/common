@@ -20,6 +20,10 @@ class OutputBuf {
       return block_->writen();
     }
 
+    void ensureLeft(int64 size) {
+      block_->ensureLeft(size);
+    }
+
   private:
     scoped_ref<MemoryBlock> block_;
 

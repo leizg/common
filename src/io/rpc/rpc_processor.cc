@@ -9,31 +9,33 @@
 
 namespace {
 
-// FIXME: zerocopy output stream.
 class ReplyObject : public io::OutVectorObject::IoObject {
   public:
     ReplyObject(const MessageHeader& header, Message* reply)
-        : msg_(reply), offset_(0) {
-      data_.reset(new io::OutputBuf(msg_->ByteSize() + RPC_HEADER_LENGTH));
+        : msg_(reply) {
+      DCHECK_NOTNULL(reply);
+      uint32 total_len = msg_->ByteSize() + RPC_HEADER_LENGTH;
+      data_.reset(new io::OutputBuf(total_len));
       MessageHeader* reply_hdr;
       int size = RPC_HEADER_LENGTH;
       data_->Next((char**) &reply_hdr, &size);
       CHECK_EQ(size, RPC_HEADER_LENGTH);
 
       reply_hdr->fun_id = header.fun_id;
-      reply_hdr->rpc_type = RPC_RESPONSE;
+      SET_LAST_TAG(*reply_hdr);
+      SET_RESPONSE_TAG(*reply_hdr);
       reply_hdr->length = msg_->ByteSize();
       reply_hdr->id = header.id;
 
       char* data;
       size = msg_->ByteSize();
       data_->Next(&data, &size);
-      // FIXME: ZeroCopyStream.
+      // TODO: ZeroCopyStream.
       msg_->SerializePartialToArray(data, size);
 
       iovec io;
-      io.iov_base = data_->peekR();
-      io.iov_len = data_->size();
+      io.iov_base = reply_hdr;
+      io.iov_len = total_len;
       iov_.push_back(io);
     }
 
@@ -43,7 +45,6 @@ class ReplyObject : public io::OutVectorObject::IoObject {
   private:
     scoped_ptr<Message> msg_;
 
-    uint32 offset_;
     std::vector<iovec> iov_;
     scoped_ptr<io::OutputBuf> data_;
 
@@ -85,8 +86,8 @@ class ReplyClosure : public ::google::protobuf::Closure {
 
 namespace rpc {
 
-void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                               const TimeStamp& time_stamp) {
+void RpcProcessor::handleRequest(io::Connection* conn, io::InputBuf* input_buf,
+                                 const TimeStamp& time_stamp) {
   const MessageHeader& header = GetRpcHeaderFromConnection(conn);
   MethodHandler * method_handler = handler_map_->FindMehodById(header.fun_id);
   if (method_handler == NULL) {
@@ -94,6 +95,7 @@ void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
     return;
   }
 
+  DCHECK_EQ(input_buf->ByteCount(), RPC_HEADER_LENGTH);
   scoped_ptr<Message> req(method_handler->request->New());
   scoped_ptr<InputStream> input_stream(new InputStream(input_buf));
   bool ret = req->ParseFromZeroCopyStream(input_stream.get());
@@ -107,6 +109,17 @@ void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
   method_handler->service->CallMethod(method_handler->method, NULL, req.get(),
                                       reply,
                                       new ReplyClosure(conn, header, reply));
+}
+
+void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
+                            const TimeStamp& time_stamp) {
+  const MessageHeader& header = GetRpcHeaderFromConnection(conn);
+  if (IS_RESPONSE(header)) {
+    reply_delegate_->handleResponse(conn, input_buf, time_stamp);
+    return;
+  }
+
+  handleRequest(conn, input_buf, time_stamp);
 }
 
 }

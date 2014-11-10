@@ -1,7 +1,7 @@
 #ifndef RPC_PROCESSOR_H_
 #define RPC_PROCESSOR_H_
 
-#include "io/protocol.h"
+#include "rpc_processor.h"
 
 namespace io {
 class TcpClient;
@@ -32,22 +32,19 @@ class RpcContext : public LinkNode {
     DISALLOW_COPY_AND_ASSIGN(RpcContext);
 };
 
-class ClientProcessor : public io::Protocol::Processor {
+class RpcResponser : public RpcProcessor::ReplyDelegate {
   public:
-    explicit ClientProcessor(io::TcpClient* client)
-        : request_id_(0), client_(client) {
+    RpcResponser() {
     }
-
-    virtual ~ClientProcessor();
+    virtual ~RpcResponser();
 
   private:
-    uint64 request_id_;
-    io::TcpClient* client_;
+    virtual void handleResponse(io::Connection* conn, io::InputBuf* input_buf,
+                                const TimeStamp& time_stamp);
 
-    virtual void Dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                          const TimeStamp& time_stamp);
+    void checkTimedout(const TimeStamp& time_stamp);
 
-    DISALLOW_COPY_AND_ASSIGN(ClientProcessor);
+    DISALLOW_COPY_AND_ASSIGN(RpcResponser);
 };
 
 }
