@@ -33,7 +33,4 @@ bool detail::RpcParser::parse(io::Connection* const conn,
   return true;
 }
 
-RpcProtocol::RpcProtocol(HandlerMap* handler_map)
-    : io::Protocol(new RpcProcessor(handler_map), new detail::RpcParser) {
-}
 }

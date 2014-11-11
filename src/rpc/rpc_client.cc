@@ -3,10 +3,10 @@
 
 namespace rpc {
 
-RpcClient::RpcClient(io::EventManager* ev_mgr, const std::string& ip,
-                     uint16 port) {
-  protocol_.reset(new RpcProtocol);
-  protocol_->SetProcessor(new ClientProcessor);
+RpcClient::RpcClient(io::EventManager* ev_mgr, HandlerMap* handler_map) {
+  RpcProcessor* p = new RpcProcessor(new RpcRequestHandler(handler_map),
+                                     new RpcResponseHandler);
+  protocol_.reset(new RpcProtocol(p));
 
   client_.reset(new io::TcpClient(ev_mgr, ip, port));
   client_->SetProtocol(protocol_.get());

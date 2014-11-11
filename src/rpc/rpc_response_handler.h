@@ -32,19 +32,19 @@ class RpcContext : public LinkNode {
     DISALLOW_COPY_AND_ASSIGN(RpcContext);
 };
 
-class RpcResponser : public RpcProcessor::ReplyDelegate {
+class RpcResponseHandler : public RpcProcessor::Delegate {
   public:
-    RpcResponser() {
+    RpcResponseHandler() {
     }
-    virtual ~RpcResponser();
+    virtual ~RpcResponseHandler();
 
   private:
-    virtual void handleResponse(io::Connection* conn, io::InputBuf* input_buf,
+    virtual void process(io::Connection* conn, io::InputBuf* input_buf,
                                 const TimeStamp& time_stamp);
 
     void checkTimedout(const TimeStamp& time_stamp);
 
-    DISALLOW_COPY_AND_ASSIGN(RpcResponser);
+    DISALLOW_COPY_AND_ASSIGN(RpcResponseHandler);
 };
 
 }

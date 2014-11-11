@@ -1,11 +1,12 @@
-#include "handler_map.h"
-#include "zero_copy_stream.h"
-#include "rpc_processor.h"
-
 #include "io/io_buf.h"
 #include "io/input_buf.h"
 #include "io/output_buf.h"
 #include "io/connection.h"
+
+#include "handler_map.h"
+#include "rpc_processor.h"
+#include "zero_copy_stream.h"
+#include "rpc_request_handler.h"
 
 namespace {
 
@@ -83,11 +84,10 @@ class ReplyClosure : public ::google::protobuf::Closure {
 };
 
 }
-
 namespace rpc {
 
-void RpcProcessor::handleRequest(io::Connection* conn, io::InputBuf* input_buf,
-                                 const TimeStamp& time_stamp) {
+void RpcRequestHandler::process(io::Connection* conn, io::InputBuf* input_buf,
+                                const TimeStamp& time_stamp) {
   const MessageHeader& header = GetRpcHeaderFromConnection(conn);
   MethodHandler * method_handler = handler_map_->FindMehodById(header.fun_id);
   if (method_handler == NULL) {
@@ -109,17 +109,6 @@ void RpcProcessor::handleRequest(io::Connection* conn, io::InputBuf* input_buf,
   method_handler->service->CallMethod(method_handler->method, NULL, req.get(),
                                       reply,
                                       new ReplyClosure(conn, header, reply));
-}
-
-void RpcProcessor::dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                            const TimeStamp& time_stamp) {
-  const MessageHeader& header = GetRpcHeaderFromConnection(conn);
-  if (IS_RESPONSE(header)) {
-    reply_delegate_->handleResponse(conn, input_buf, time_stamp);
-    return;
-  }
-
-  handleRequest(conn, input_buf, time_stamp);
 }
 
 }

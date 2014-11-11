@@ -23,7 +23,7 @@ class RpcClient : public google::protobuf::RpcChannel {
     virtual ~RpcClient();
 
     // return false iif timedout or error orrcurred.
-    // time_out: seconds
+    // time_out: unit: seconds
     // ip: it's caller's responsity that make sure ip is good format.
     bool Connect(const std::string& ip, uint16 port, uint32 time_out);
 

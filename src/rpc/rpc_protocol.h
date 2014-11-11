@@ -51,7 +51,9 @@ class RpcParser : io::Protocol::Parser {
 
 class RpcProtocol : public io::Protocol {
   public:
-    explicit RpcProtocol(HandlerMap* handler_map);
+    explicit RpcProtocol(Processor* p)
+        : io::Protocol(p, new detail::RpcParser) {
+    }
     virtual ~RpcProtocol() {
     }
 
