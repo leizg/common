@@ -1,11 +1,18 @@
 #include "rpc_client.h"
+#include "rpc_response_handler.h"
+
 #include "io/tcp_client.h"
+#include "io/event_manager.h"
 
 namespace rpc {
 
-RpcClient::RpcClient(io::EventManager* ev_mgr, HandlerMap* handler_map) {
+RpcClient::RpcClient(io::EventManager* ev_mgr, HandlerMap* handler_map,
+                     const std::string& ip, uint16 port)
+    : ev_mgr_(ev_mgr) {
+  DCHECK_NOTNULL(ev_mgr);
+
   RpcProcessor* p = new RpcProcessor(new RpcRequestHandler(handler_map),
-                                     new RpcResponseHandler);
+                                     new RpcClientChannel);
   protocol_.reset(new RpcProtocol(p));
 
   client_.reset(new io::TcpClient(ev_mgr, ip, port));
@@ -18,14 +25,13 @@ RpcClient::~RpcClient() {
 }
 
 bool RpcClient::Connect(uint32 time_out) {
-  CHECK(!client_->IsConnected());
-  client_->SetCloseClosure(::NewPermanentCallback(this, &RpcClient::Reconnect));
-
+  if (client_->IsConnected()) return true;
   if (!client_->Connect(time_out)) {
     // TODO:
     return false;
   }
 
+  client_->SetCloseClosure(::NewPermanentCallback(this, &RpcClient::Reconnect));
   return true;
 }
 
@@ -36,7 +42,11 @@ void RpcClient::CallMethod(const MethodDescriptor* method,
   DCHECK_NOTNULL(cb);
   cb->SetContext(method, request, response);
 
-  // FIXME:
+  // client_channel_->
+}
+
+void RpcClient::send(io::OutputObject* object) {
+  client_->Send(object);
 }
 
 void RpcClient::Reconnect() {
