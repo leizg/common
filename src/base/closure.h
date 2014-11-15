@@ -32,9 +32,9 @@ class CancelClosure : public Closure {
     bool cancel_;
 };
 
-class CompleteClosure {
+class CompletedClosure {
   public:
-    virtual ~CompleteClosure() {
+    virtual ~CompletedClosure() {
     }
 
     virtual void Run(int result) = 0;

@@ -11,7 +11,7 @@ class Thread {
   public:
     struct Option {
         // static size is 0 means default static size.
-        explicit Option(uint32 size)
+        explicit Option(uint32 size = 0)
             : stack_size(size), joinable(true) {
         }
         Option(uint32 size, bool join_able)
@@ -39,7 +39,7 @@ class Thread {
 
     bool StartWithOption(const Option& option);
     bool Start() {
-      return Start(Option());
+      return StartWithOption(Option());
     }
 
   private:
@@ -56,8 +56,8 @@ class Thread {
     DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
-inline bool Thread::Start(const Option& option) {
-  if (tid_ == INVALID_TID) return true;
+inline bool Thread::StartWithOption(const Option& option) {
+  if (tid_ != INVALID_TID) return true;
 
   ::pthread_attr_t attr;
   int ret = ::pthread_attr_init(&attr);

@@ -92,6 +92,8 @@ class ClosurePump : public EventManager::Delegate {
   private:
     virtual bool Init();
 
+    // only called by EventManager.
+    // can be called by any thread.
     virtual void runInLoop(Closure* cb) {
       ev_pipe_->runInLoop(cb);
     }
