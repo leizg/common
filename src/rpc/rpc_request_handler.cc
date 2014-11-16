@@ -56,33 +56,6 @@ class ReplyObject : public io::OutVectorObject::IoObject {
     DISALLOW_COPY_AND_ASSIGN(ReplyObject);
 };
 
-class ReplyClosure : public ::google::protobuf::Closure {
-  public:
-    ReplyClosure(io::Connection* conn, const MessageHeader& header,
-                 Message* reply)
-        : hdr_(header), reply_(reply), conn_(conn) {
-      conn->Ref();
-    }
-    virtual ~ReplyClosure() {
-    }
-
-  private:
-    const MessageHeader hdr_;
-    scoped_ptr<Message> reply_;
-
-    scoped_ref<io::Connection> conn_;
-
-    virtual void Run() {
-      io::OutputObject* obj = new io::OutVectorObject(
-          new ReplyObject(hdr_, reply_.release()), true);
-      conn_->Send(obj);
-
-      delete this;
-    }
-
-    DISALLOW_COPY_AND_ASSIGN(ReplyClosure);
-};
-
 }
 namespace rpc {
 
@@ -109,6 +82,24 @@ void RpcRequestHandler::process(io::Connection* conn, io::InputBuf* input_buf,
   method_handler->service->CallMethod(method_handler->method, NULL, req.get(),
                                       reply,
                                       new ReplyClosure(conn, header, reply));
+}
+
+RpcRequestHandler::ReplyClosure::ReplyClosure(io::Connection* conn,
+                                              const MessageHeader& header,
+                                              Message* reply)
+    : hdr_(header), reply_(reply), conn_(conn) {
+  conn->Ref();
+}
+
+RpcRequestHandler::ReplyClosure::~ReplyClosure() {
+}
+
+void RpcRequestHandler::ReplyClosure::Run() {
+  io::OutputObject* obj = new io::OutVectorObject(
+      new ReplyObject(hdr_, reply_.release()), true);
+  conn_->Send(obj);
+
+  delete this;
 }
 
 }

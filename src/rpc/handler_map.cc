@@ -2,22 +2,20 @@
 
 namespace rpc {
 
+MethodHandler::~MethodHandler() {
+  delete request;
+  delete reply;
+}
+
 HandlerMap::~HandlerMap() {
-  for (ServMap::const_iterator it = serv_map_.begin(); it != serv_map_.end();
-      ++it) {
-    const MethodHandler* const h = it->second;
-    delete h->request;
-    delete h->reply;
-    delete h;
-  }
-  serv_map_.clear();
+  STLMapClear(&serv_map_);
 }
 
 void HandlerMap::AddService(Service* serv) {
   const google::protobuf::ServiceDescriptor* const serv_desc =
       serv->GetDescriptor();
 
-  int method_count = serv_desc->method_count();
+  const int method_count = serv_desc->method_count();
   for (int i = 0; i < method_count; ++i) {
     const MethodDescriptor* const method_desc = serv_desc->method(i);
 
@@ -30,10 +28,8 @@ void HandlerMap::AddService(Service* serv) {
     const std::string& method_name = method_desc->full_name();
     uint32 hash_id = Hash(method_name);
     if (!AddHandler(hash_id, handler)) {
-      delete handler->request;
-      delete handler->reply;
       delete handler;
-      LOG(WARNING)<<"add handler error, name: " << method_name;
+      LOG(WARNING)<<"duplicate handler, name: " << method_name;
     }
   }
 }

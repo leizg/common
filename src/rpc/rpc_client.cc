@@ -10,11 +10,10 @@ RpcClient::RpcClient(io::EventManager* ev_mgr, HandlerMap* handler_map,
                      const std::string& ip, uint16 port)
     : ev_mgr_(ev_mgr) {
   DCHECK_NOTNULL(ev_mgr);
-
-  RpcProcessor* p = new RpcProcessor(new RpcRequestHandler(handler_map),
-                                     new RpcClientChannel);
-  protocol_.reset(new RpcProtocol(p));
-
+  protocol_.reset(
+      new RpcProtocol(
+          new RpcProcessor(new RpcRequestHandler(handler_map),
+                           new RpcClientChannel)));
   client_.reset(new io::TcpClient(ev_mgr, ip, port));
   client_->SetProtocol(protocol_.get());
 }
@@ -38,30 +37,32 @@ bool RpcClient::Connect(uint32 time_out) {
 void RpcClient::CallMethod(const MethodDescriptor* method,
                            RpcController* controller, const Message* request,
                            Message* response, google::protobuf::Closure* done) {
-  ClientCallback* cb = dynamic_cast<ClientCallback*>(done);
-  DCHECK_NOTNULL(cb);
-  cb->SetContext(method, request, response);
+  if (client_.get() == NULL || !client_->IsConnected()) {
+    // cancel rpc directly.
+    return;
+  }
 
-  // client_channel_->
+  channel_impl_->CallMethod(method, controller, request, response, done);
 }
 
 void RpcClient::send(io::OutputObject* object) {
-  client_->Send(object);
+  if (client_.get() != NULL && client_->IsConnected()) {
+    client_->Send(object);
+  }
 }
 
 void RpcClient::Reconnect() {
   while (!client_->IsConnected()) {
-    if (client_->Connect(3)) {
-      LOG(WARNING)<<"reconnect master successfully";
-      if (reconnect_closure_ != NULL) {
-        reconnect_closure_->Run();
-      }
-      break;
+    if (!client_->Connect(3)) {
+      continue;
     }
 
-    DLOG(INFO) << "connect master failed...";
+    LOG(WARNING)<<"reconnect master successfully";
+    if (reconnect_closure_ != NULL) {
+      reconnect_closure_->Run();
+    }
+    break;
   }
 }
-
 }
 

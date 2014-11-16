@@ -97,8 +97,8 @@ class ClosurePump : public EventManager::Delegate {
     virtual void runInLoop(Closure* cb) {
       ev_pipe_->runInLoop(cb);
     }
-    virtual void runAt(Closure* closure, const TimeStamp& time_stamp) {
-      timer_queue_->runAt(closure, time_stamp);
+    virtual void runAt(Closure* cb, const TimeStamp& ts) {
+      timer_queue_->runAt(cb, ts);
     }
 
     EventManager* ev_mgr_;

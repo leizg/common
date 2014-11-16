@@ -46,7 +46,7 @@ template<typename T> inline void STLClear(T* t) {
   }
   t->clear();
 }
-template<typename T> inline void MapClear(T* t) {
+template<typename T> inline void STLMapClear(T* t) {
   for (auto it = t->begin(); it != t->end(); ++it) {
     delete it->second;
   }

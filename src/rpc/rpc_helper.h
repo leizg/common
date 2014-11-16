@@ -10,7 +10,7 @@ class ClientCallback : public ::google::protobuf::Closure {
   public:
     explicit ClientCallback(const TimeStamp& time_stamp)
         : time_stamp_(time_stamp), fail_(false), method_(NULL), request_(NULL), response_(
-            NULL) {
+        NULL) {
     }
     virtual ~ClientCallback() {
     }
@@ -25,7 +25,7 @@ class ClientCallback : public ::google::protobuf::Closure {
     const MethodDescriptor* getMethod() const {
       return method_;
     }
-    const Message* getRequest() const {
+    Message* getRequest() const {
       return request_;
     }
     Message* getResponse() const {

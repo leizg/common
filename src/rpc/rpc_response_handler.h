@@ -1,7 +1,6 @@
-#ifndef RPC_PROCESSOR_H_
-#define RPC_PROCESSOR_H_
+#ifndef RPC_RESPONSE_PROCESSOR_H_
+#define RPC_RESPONSE_PROCESSOR_H_
 
-#include "rpc_def.h"
 #include "rpc_processor.h"
 
 namespace io {
@@ -14,8 +13,6 @@ namespace rpc {
 class RpcClientChannel : public RpcProcessor::Delegate,
     public google::protobuf::RpcChannel {
   public:
-    virtual ~RpcClientChannel();
-
     class Sender {
       public:
         virtual ~Sender() {
@@ -23,13 +20,26 @@ class RpcClientChannel : public RpcProcessor::Delegate,
 
         virtual void send(io::OutputObject* object) = 0;
     };
-    RpcClientChannel(Sender* sender)
-        : sender_(sender) {
-      DCHECK_NOTNULL(sender);
-    }
+    explicit RpcClientChannel(Sender* sender);
+    virtual ~RpcClientChannel();
 
   private:
     Sender* sender_;
+
+    uint64 id_;
+    Mutex mutex_;
+    typedef std::map<uint64, ClientCallback*> CallbackMap;
+    CallbackMap call_back_map_;
+
+    class Serializer {
+      public:
+        virtual ~Serializer() {
+        }
+
+        io::OutputObject* Serialize(uint64 id, const std::string& fun_name,
+                                    const Message& msg) const = 0;
+    };
+    scoped_ptr<Serializer> serializer_;
 
     // handle response.
     virtual void process(io::Connection* conn, io::InputBuf* input_buf,
@@ -41,9 +51,9 @@ class RpcClientChannel : public RpcProcessor::Delegate,
 
     void checkTimedout(const TimeStamp& time_stamp);
 
-    DISALLOW_COPY_AND_ASSIGN(RpcClientChannel);
+    DISALLOW_COPY_AND_ASSIGN (RpcClientChannel);
 };
 
 }
 
-#endif /* RPC_PROCESSOR_H_ */
+#endif /* RPC_RESPONSE_PROCESSOR_H_ */

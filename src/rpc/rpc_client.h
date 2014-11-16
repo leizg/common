@@ -10,7 +10,6 @@ class TcpClient;
 
 namespace rpc {
 class HandlerMap;
-class RpcClientChannel;
 
 // todo: multi-tcp-Connection per Channel.
 // RpcClient called by Service::Stub.
@@ -35,10 +34,11 @@ class RpcClient : public google::protobuf::RpcChannel,
 
   private:
     io::EventManager* ev_mgr_;
-    scoped_ptr<RpcClientChannel> client_channel_;
 
     scoped_ptr<io::TcpClient> client_;
     scoped_ptr<io::Protocol> protocol_;
+
+    scoped_ptr<google::protobuf::RpcChannel> channel_impl_;
 
     // by google::protobuf::RpcChannel.
     // called by Service::Stub.
@@ -54,7 +54,5 @@ class RpcClient : public google::protobuf::RpcChannel,
 
     DISALLOW_COPY_AND_ASSIGN(RpcClient);
 };
-
 }
-
 #endif /* RPC_CLIENT_H_ */

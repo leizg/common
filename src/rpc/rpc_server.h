@@ -34,7 +34,7 @@ class RpcServer {
     void setHandlerMap(HandlerMap* handler_map);
 
     // must set handler map first.
-    bool loop(bool in_another_thread = false);
+    bool start();
 
   private:
     const std::string ip_;
@@ -42,13 +42,12 @@ class RpcServer {
     uint8 worker_;
 
     io::EventManager* ev_mgr_;
+
     scoped_ptr<io::Protocol> protocol_;
     scoped_ptr<HandlerMap> handler_map_;
     scoped_ptr<io::TcpServer> tcp_serv_;
 
     DISALLOW_COPY_AND_ASSIGN(RpcServer);
 };
-
 }
-
 #endif /* RPC_SERVER_H_ */

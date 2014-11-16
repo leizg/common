@@ -1,7 +1,7 @@
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
 
-#include  "connection.h"
+#include  "connection.h" // Connection::Attr
 
 namespace io {
 class InputBuf;
@@ -31,7 +31,7 @@ class Protocol {
 
         virtual uint32 headerLength() const = 0;
         virtual bool parse(Connection* const conn,
-                                 InputBuf* const input_buf) const = 0;
+                           InputBuf* const input_buf) const = 0;
     };
 
     class ErrorReporter {
