@@ -14,8 +14,8 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 
 #define ALIGN_SIZE (4)
-#define Align_SIZE(v, a) \
-  (v + a - 1) & (~(a -1))
-#define ALIGN(val) ALIGN_SIZE(val, ALIGN_SIZE)
+#define alignSize(v, a) \
+  (((v) + (a) - 1) & (~((a) -1)))
+#define ALIGN(val) alignSize(val, ALIGN_SIZE)
 
 #endif

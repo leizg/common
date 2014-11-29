@@ -33,7 +33,7 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
   sockaddr_in addr;
   ::memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_port = ::htons(port);
+  addr.sin_port = htons(port);
   addr.sin_addr.s_addr = ::inet_addr(ip.c_str());
   int ret = ::bind(listen_fd_, (sockaddr*) &addr, sizeof(addr));
   if (ret != 0) {
@@ -76,8 +76,13 @@ bool Acceptor::doBind(const std::string& ip, uint16 port) {
 }
 
 void Acceptor::handleAccept() {
+  int fd;
   while (true) {
-    int fd = ::accept4(listen_fd_, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+#if __linux__
+    fd = ::accept4(listen_fd_, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+#else
+    fd = ::accept(listen_fd_, NULL, NULL);
+#endif
     if (fd == -1) {
       if (errno == EINTR) continue;
       else if (errno != EWOULDBLOCK && errno != EAGAIN) {
@@ -86,13 +91,17 @@ void Acceptor::handleAccept() {
       return;
     }
 
+#if not __linux__
+    setFdNonBlock(fd);
+    setFdCloExec(fd);
+#endif
     EventManager* ev_mgr = serv_->getPoller();
     scoped_ref<Connection> conn(new Connection(fd, ev_mgr));
     conn->setProtocol(protocol_);
     conn->setAttr(protocol_->NewConnectionAttr());
     serv_->Add(conn.get());
     conn->setCloseClosure(
-        NewPermanentCallback(serv_, &TcpServer::Remove, conn.get()));
+        NewPermanentCallback(serv_, &TcpServer::Remove, conn.get()), false);
     ev_mgr->runInLoop(NewCallback(conn.get(), &Connection::Init));
   }
 }

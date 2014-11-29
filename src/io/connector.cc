@@ -47,7 +47,7 @@ int Connector::Connect(const std::string& ip, uint16 port,
   sockaddr_in addr;
   ::memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_port = ::htons(port);
+  addr.sin_port = htons(port);
   addr.sin_addr.s_addr = ::inet_addr(ip.c_str());
 
   int ret = ::connect(fd, (sockaddr*) &addr, sizeof(addr));
@@ -58,13 +58,14 @@ int Connector::Connect(const std::string& ip, uint16 port,
     return INVALID_FD;
   }
 
-  TimeStamp time_stamp;
+  TimeStamp time_stamp(Now());
   while (time_out > 0) {
     if (WaitForConnected(fd, time_out)) {
       return fd;
     }
 
-    time_out -= (Now() - time_stamp) / 1000;
+    TimeStamp now(Now());
+    time_out -= TimeDiff(now, time_stamp) / 1000;
   }
 
   ::close(fd);

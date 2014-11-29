@@ -24,6 +24,6 @@ EventManager* current() {
 }
 
 EventManager* CreateEventManager() {
-  return new Epoller();
+  return new EpollerImpl();
 }
 }

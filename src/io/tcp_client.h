@@ -8,6 +8,7 @@ class Protocol;
 class EventManager;
 
 class Connector;
+class Connection;
 class OutputObject;
 
 class TcpClient {

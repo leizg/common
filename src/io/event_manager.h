@@ -41,7 +41,9 @@ class EventManager : public ThreadSafe {
 
         // must be threadsafe.
         virtual void runInLoop(Closure* cb) = 0;
+#if __linux__
         virtual void runAt(Closure* cb, const TimeStamp& ts) = 0;
+#endif
     };
     // these methods are threadsafe,
     // can be called from any thread.
@@ -50,11 +52,13 @@ class EventManager : public ThreadSafe {
       DCHECK_NOTNULL(delegate_.get());
       delegate_->runInLoop(cb);
     }
+#if __linux__
     void runAt(Closure* cb, const TimeStamp& ts) {
       DCHECK_NOTNULL(cb);
       DCHECK_NOTNULL(delegate_.get());
       delegate_->runAt(cb, ts);
     }
+#endif
 
     static EventManager* current();
 

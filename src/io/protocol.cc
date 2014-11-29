@@ -81,8 +81,8 @@ void Protocol::handleRead(Connection* conn, InputBuf* input_buf,
         }
         handlePackage(conn, attr, input_buf);
         attr->io_stat = IO_START;
-      }
     }
   }
+}
 
 }

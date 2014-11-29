@@ -9,37 +9,34 @@
 class Mutex {
   public:
     Mutex() {
-      int ret = ::pthread_mutex_init(&mutex_, NULL);
-      CHECK_EQ(ret, 0)<< "pthread_mutex_init error: " << strerror(ret);
+      ::pthread_mutex_init(&mutex_, NULL);
     }
     ~Mutex() {
-      int ret = ::pthread_mutex_destroy(&mutex_);
-      CHECK_EQ(ret, 0) << "pthread_mutex_destroy error: " << strerror(ret);
+      ::pthread_mutex_destroy(&mutex_);
     }
 
     void Lock() {
-      int ret = ::pthread_mutex_lock(&mutex_);
-      CHECK_EQ(ret, 0) << "pthread_mutex_lock error: " << strerror(ret);
+      ::pthread_mutex_lock(&mutex_);
     }
     void UnLock() {
-      int ret = ::pthread_mutex_unlock(&mutex_);
-      CHECK_EQ(ret, 0) << "pthread_mutex_unlock error: " << strerror(ret);
+      ::pthread_mutex_unlock(&mutex_);
     }
 
-    pthread_mutex_t* mutex() const {
+    pthread_mutex_t* mutex() {
       return &mutex_;
     }
 
-    private:
+  private:
     pthread_mutex_t mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(Mutex);
-  };
+};
 
 class ScopedMutex {
   public:
     ScopedMutex(Mutex* mutex)
         : mutex_(mutex) {
+      DCHECK_NOTNULL(mutex);
       mutex_->Lock();
     }
     ~ScopedMutex() {
@@ -69,8 +66,10 @@ class SyncEvent {
         : manual_set_(manual_set), is_signaled_(is_signaled) {
       pthread_condattr_t attr;
       ::pthread_condattr_init(&attr);
+#if __linux__
       ::pthread_condattr_setclock(&attr, CLOCK_MONOTONIC_RAW);
       ::pthread_condattr_destroy(&attr);
+#endif
       ::pthread_cond_init(&cond_, &attr);
     }
     ~SyncEvent() {

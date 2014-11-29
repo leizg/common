@@ -36,8 +36,11 @@ class ObjectSaver {
 template<typename Key, typename Object>
 class ObjectMapSaver : ObjectSaver<Object> {
   public:
-    explicit ObjectMapSaver(Policy<Object>* policy)
-        : ObjectSaver<Object>(policy) {
+    typedef ObjectSaver<Object> ObjectSaver;
+    typedef typename ObjectSaver::Policy Policy;
+
+    explicit ObjectMapSaver(Policy* policy)
+        : ObjectSaver(policy) {
     }
     virtual ~ObjectMapSaver() {
       DCHECK(object_map_.empty());
@@ -48,7 +51,7 @@ class ObjectMapSaver : ObjectSaver<Object> {
       auto it = object_map_.find(key);
       if (it != object_map_.end()) {
         auto obj = it->second;
-        delegate_->Ref(obj);
+        ObjectSaver::delegate_->Ref(obj);
         return obj;
       }
       return NULL;
@@ -58,18 +61,18 @@ class ObjectMapSaver : ObjectSaver<Object> {
       ScopedMutex l(&mutex_);
       Key k = obj->Key();
       if (object_map_.count(k) == 0) {
-        delegate_->Ref(obj);
+        ObjectSaver::delegate_->Ref(obj);
         object_map_[k] = obj;
         return true;
       }
       return false;
     }
-    virtual void Remove(Object* Obj) {
+    void Remove(Object* obj) {
       ScopedMutex l(&mutex_);
       Key k = obj->Key();
       auto it = object_map_.find(k);
       if (it != object_map_.end()) {
-        delegate_->UnRef(obj);
+        ObjectSaver::delegate_->UnRef(obj);
         object_map_.erase(it);
       }
     }
@@ -87,8 +90,11 @@ class ObjectMapSaver : ObjectSaver<Object> {
 template<typename Key, typename Object>
 class ObjectVectorSaver : ObjectSaver<Object> {
   public:
-    explicit ObjectVectorSaver(Policy<Object>* policy)
-        : ObjectSaver<Object>(policy) {
+    typedef ObjectSaver<Object> ObjectSaver;
+    typedef typename ObjectSaver::Policy Policy;
+
+    explicit ObjectVectorSaver(Policy* policy)
+        : ObjectSaver(policy) {
     }
     virtual ~ObjectVectorSaver() {
       DCHECK(object_vector_.empty());
@@ -96,13 +102,13 @@ class ObjectVectorSaver : ObjectSaver<Object> {
 
     Object* Find(Key key) const {
       ScopedMutex l(&mutex_);
-      if (object_vector_.size() <= k) {
+      if (object_vector_.size() <= key) {
         return NULL;
       }
 
       auto it = object_vector_[key];
       if (it != NULL) {
-        delegate_->Ref(it);
+        ObjectSaver::delegate_->Ref(it);
         return it;
       }
       return NULL;
@@ -118,18 +124,18 @@ class ObjectVectorSaver : ObjectSaver<Object> {
       auto o = object_vector_[k];
       if (o != NULL) return false;
 
-      delegate_->Ref(obj);
+      ObjectSaver::delegate_->Ref(obj);
       object_vector_[k] = obj;
       return true;
     }
 
-    virtual void Remove(Object* Obj) {
+    virtual void Remove(Object* obj) {
       ScopedMutex l(&mutex_);
       Key k = obj->Key();
       if (object_vector_.size() >= k) {
         auto it = object_vector_[k];
         if (it != NULL) {
-          delegate_->UnRef(obj);
+          ObjectSaver::delegate_->UnRef(obj);
           object_vector_[k] = NULL;
         }
       }

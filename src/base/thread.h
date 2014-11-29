@@ -4,6 +4,7 @@
 #include "closure.h"
 #include "scoped_ptr.h"
 #include "data_types.h"
+#include "macro_def.h"
 
 #include <pthread.h>
 
@@ -23,18 +24,20 @@ class Thread {
     };
 
     explicit Thread(Closure* closure)
-        : tid_(INVALID_TID), closure_(closure) {
+        : started_(false), closure_(closure) {
       CHECK_NOTNULL(closure);
+      ::memset(&tid_, 0, sizeof(tid_));
     }
     virtual ~Thread() {
       Join();
     }
 
     virtual void Join() {
-      if (option_.joinable && tid_ != INVALID_TID) {
+      if (option_.joinable && started_) {
         ::pthread_join(tid_, NULL);
-        tid_ = INVALID_TID;
+        ::memset(&tid_, 0, sizeof(tid_));
       }
+      started_ = false;
     }
 
     bool StartWithOption(const Option& option);
@@ -44,11 +47,13 @@ class Thread {
 
   private:
     pthread_t tid_;
+    bool started_;
+
     Option option_;
     scoped_ptr<Closure> closure_;
 
     static void* ThreadMain(void* c) {
-      Closure* closure = static_cast<Closure>(c);
+      Closure* closure = static_cast<Closure*>(c);
       closure->Run();
       return NULL;
     }
@@ -57,7 +62,7 @@ class Thread {
 };
 
 inline bool Thread::StartWithOption(const Option& option) {
-  if (tid_ != INVALID_TID) return true;
+  if (!started_) return true;
 
   ::pthread_attr_t attr;
   int ret = ::pthread_attr_init(&attr);
@@ -82,13 +87,14 @@ inline bool Thread::StartWithOption(const Option& option) {
     }
   }
 
-  int ret = ::pthread_create(&tid_, &attr, &Thread::ThreadMain, closure_.get());
+  ret = ::pthread_create(&tid_, &attr, &Thread::ThreadMain, closure_.get());
   ::pthread_attr_destroy(&attr);
   if (tid_ != 0) {
     LOG(WARNING)<< "pthread_create error: " << ::strerror(ret);
     return false;
   }
   option_ = option;
+  started_ = true;
   return true;
 }
 

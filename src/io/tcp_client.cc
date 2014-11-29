@@ -1,4 +1,5 @@
 #include "connector.h"
+#include "connection.h"
 #include "tcp_client.h"
 #include "event_manager.h"
 

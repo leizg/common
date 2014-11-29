@@ -67,6 +67,10 @@ void Connection::Init() {
   input_buf_.reset(new InputBuf(FLAGS_input_buf_len));
 }
 
+void Connection::setAttr(Attr* attr) {
+  attr_.reset(attr);
+}
+
 void Connection::Send(OutputObject* out_obj) {
   if (fd_ == INVALID_FD || closed_) {
     delete out_obj;
@@ -102,7 +106,7 @@ int32 Connection::Recv(uint32 len, int* err_no) {
       ShutDown();
       return 0;
     } else if (ret == -1) {
-      if (err_no == EWOULDBLOCK) {
+      if (*err_no == EWOULDBLOCK) {
         continue;
       }
       ShutDown();

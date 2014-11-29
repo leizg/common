@@ -7,6 +7,8 @@
 #include "macro_def.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
+#include "ref_counted.h"
+#include "time_stamp.h"
 #include "data_types.h"
 
 #include "thread.h"
@@ -17,6 +19,7 @@
 #include <fcntl.h>              /* Obtain O_* constant definitions */
 #include <unistd.h>
 
+#include <errno.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>

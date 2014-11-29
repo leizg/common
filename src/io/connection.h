@@ -6,6 +6,8 @@
 namespace io {
 class InputBuf;
 class Protocol;
+
+struct Event;
 class EventManager;
 
 class OutQueue;
@@ -15,6 +17,8 @@ class OutputObject;
 class Connection : public RefCounted {
   public:
     struct Attr {
+        virtual ~Attr() {
+        }
         virtual void Init() = 0;
 
         uint32 io_stat;
@@ -37,9 +41,7 @@ class Connection : public RefCounted {
       return ev_mgr_;
     }
 
-    void setAttr(Attr* attr) {
-      attr_.reset(attr);
-    }
+    void setAttr(Attr* attr);
     Attr* getAttr() const {
       return attr_.get();
     }
