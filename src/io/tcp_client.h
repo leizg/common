@@ -7,11 +7,10 @@ namespace io {
 class Protocol;
 class EventManager;
 
-class Connector;
 class Connection;
 class OutputObject;
 
-class TcpClient {
+class TcpClient {  // todo: object_saver.h
   public:
     TcpClient(EventManager* ev, const std::string& ip, uint16 port);
     ~TcpClient();
@@ -32,15 +31,16 @@ class TcpClient {
 
     // please set protocol and closeClosure first.
     bool Connect(uint32 time_out);
+    // threadsafe, can be called from any thread.
     void Send(OutputObject* io_obj);
 
   private:
     const std::string ip_;
     uint16 port_;
+
     EventManager* ev_mgr_;
 
     Mutex mutex_;
-    scoped_ptr<Connector> connector_;
     scoped_ref<Connection> connection_;
 
     Protocol* protocol_;

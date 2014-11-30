@@ -11,11 +11,11 @@ namespace {
 void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
   io::Connection* conn = static_cast<io::Connection*>(arg);
 
-  if (revent & EV_WRITE) {
-    conn->handleWrite(time_stamp);
-  }
   if (revent & EV_READ) {
     conn->handleRead(time_stamp);
+  }
+  if (revent & EV_WRITE) {
+    conn->handleWrite(time_stamp);
   }
 }
 
@@ -38,12 +38,10 @@ Connection::Connection(int fd, EventManager* ev_mgr)
 }
 
 Connection::~Connection() {
-  if (fd_ != INVALID_FD) {
-    if (event_.get() != NULL) {
-      ev_mgr_->Del(*event_);
-    }
-    ::close(fd_);
+  if (event_.get() != NULL) {
+    ev_mgr_->Del(*event_);
   }
+  closeWrapper(fd_);
 }
 
 void Connection::Init() {

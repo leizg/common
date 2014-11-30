@@ -27,8 +27,9 @@ class TcpServer {
     TcpServer(EventManager* ev_mgr, uint8 worker);
     ~TcpServer();
 
-    bool Init();
+    bool Init();  // set protocol first.
     void setProtocol(Protocol* p) {  // not threadsafe.
+      DCHECK_NOTNULL(p);
       protocol_ = p;
     }
 

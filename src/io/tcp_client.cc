@@ -9,25 +9,25 @@ namespace io {
 
 TcpClient::TcpClient(EventManager* ev_mgr, const std::string& ip, uint16 port)
     : ip_(ip), port_(port), ev_mgr_(ev_mgr), protocol_(NULL) {
-  connector_.reset(new io::Connector);
 }
 
 TcpClient::~TcpClient() {
 }
 
 bool TcpClient::Connect(uint32 time_out) {
-  ScopedMutex l(&mutex_);
-
   CHECK_NOTNULL(protocol_);
-  int fd = connector_->Connect(ip_, port_, time_out);
-  if (fd == INVALID_FD) return false;
+  Connector connector;
+  int fd = connector.Connect(ip_, port_, time_out);
 
-  connection_.reset(new Connection(fd, ev_mgr_));
-  connection_->setProtocol(protocol_);
-  connection_->setAttr(protocol_->NewConnectionAttr());
-  connection_->setCloseClosure(
-      NewPermanentCallback(this, &TcpClient::Remove, connection_.get()));
-  connection_->Init();
+  ScopedMutex l(&mutex_);
+  if (fd != INVALID_FD) {
+    connection_.reset(new Connection(fd, ev_mgr_));
+    connection_->setProtocol(protocol_);
+    connection_->setAttr(protocol_->NewConnectionAttr());
+    connection_->setCloseClosure(
+        NewPermanentCallback(this, &TcpClient::Remove, connection_.get()));
+    connection_->Init();
+  }
 
   return true;
 }
