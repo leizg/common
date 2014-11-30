@@ -2,7 +2,7 @@
 
 namespace {
 
-void handleTimerQueueEvent(int fd, void* arg, int event,
+void handleTimerQueueEvent(int fd, void* arg, uint8 event,
                            const TimeStamp& time_stamp) {
   io::TimerQueue* q = static_cast<io::TimerQueue*>(arg);
   q->handleRead(time_stamp);

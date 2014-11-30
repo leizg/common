@@ -1,6 +1,6 @@
-#include "event_manager.h"
-#include "epoller_impl.h"
 #include "kqueue_impl.h"
+#include "epoller_impl.h"
+
 #include "event_pipe.h"
 
 namespace {
@@ -13,15 +13,17 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
       public:
         PipeDelegate(Mutex* mutex, std::deque<Closure*>* cb_queue)
             : mutex_(mutex), cb_queue_(cb_queue) {
+          DCHECK_NOTNULL(mutex);
+          DCHECK_NOTNULL(cb_queue);
         }
         virtual ~PipeDelegate() {
         }
 
-        virtual void handlevent();
-
       private:
         Mutex* mutex_;
         std::deque<Closure*>* cb_queue_;
+
+        virtual void handlevent();
 
         DISALLOW_COPY_AND_ASSIGN(PipeDelegate);
     };
@@ -30,8 +32,6 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
     explicit ThreadsafePipe(io::EventManager* ev_mgr)
         : io::EventPipe(new PipeDelegate(&mutex_, &cb_queue_)), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(ev_mgr);
-      event_fd_[0] = INVALID_FD;
-      event_fd_[1] = INVALID_FD;
     }
     virtual ~ThreadsafePipe() {
       ScopedMutex l(&mutex_);
@@ -105,7 +105,7 @@ bool EventManager::Init() {
   return true;
 }
 
-EventManager* current() {
+EventManager* EventManager::current() {
   return ev_store.get();
 }
 

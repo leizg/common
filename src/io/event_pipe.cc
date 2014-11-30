@@ -24,14 +24,8 @@ bool EventPipe::initPipe() {
 }
 
 void EventPipe::destory() {
-  if (event_fd_[0] != INVALID_FD) {
-    ::close(event_fd_[0]);
-    event_fd_[0] = INVALID_FD;
-  }
-
-  if (event_fd_[1] != INVALID_FD) {
-    ::close(event_fd_[1]);
-    event_fd_[1] = INVALID_FD;
+  for (uint32 i = 0; i < 2; ++i) {
+    closeWrapper(event_fd_[i]);
   }
 }
 
@@ -50,13 +44,14 @@ void EventPipe::handlePipeRead() {
         case EINTR:
           continue;
         case EWOULDBLOCK:
-          break;
+          return;
         default:
-          PLOG(WARNING)<< "read pipe error";
           break;
-        }
       }
+      PLOG(WARNING)<< "read pipe error";
+      return;
     }
+  }
 
   deletate_->handlevent();
 }

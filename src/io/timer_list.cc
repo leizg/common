@@ -2,11 +2,11 @@
 
 namespace io {
 
-TimeStamp TimerListImpl::insert(const TimeStamp time_stamp, Closure* cb) {
+TimeStamp TimerListImpl::insert(const TimeStamp& time_stamp, Closure* cb) {
   EntryList::iterator pos;
   for (pos = entries_.begin(); pos != entries_.end(); ++pos) {
     const TimeStamp& ts = (*pos).first;
-    if (ts >= time_stamp) {
+    if (!(ts < time_stamp)) {
       break;
     }
   }

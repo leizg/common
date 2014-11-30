@@ -5,7 +5,7 @@
 
 namespace io {
 
-class TimerListImpl : public io::TimerQueuePosix::Delegate {
+class TimerListImpl : public TimerQueue::Delegate {
   public:
     TimerListImpl() {
     }
@@ -22,7 +22,7 @@ class TimerListImpl : public io::TimerQueuePosix::Delegate {
     typedef std::list<Entry> EntryList;
     EntryList entries_;
 
-    virtual TimeStamp insert(const TimeStamp time_stamp, Closure* cb);
+    virtual TimeStamp insert(const TimeStamp& time_stamp, Closure* cb);
     virtual bool fireActivedTimer(const TimeStamp& time_stamp,
                                   TimeStamp* next_expired);
 

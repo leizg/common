@@ -13,14 +13,14 @@ TimerQueuePosix::~TimerQueuePosix() {
 }
 
 bool TimerQueuePosix::Init() {
-  if (timer_fd_ != INVALID_FD) return true;
+  if (timer_fd_ != INVALID_FD) return false;
   /*
    * The clockid argument specifies the clock that is used to
    * mark the progress of the timer, and must be either
    * CLOCK_REALTIME or CLOCK_MONOTONIC.  CLOCK_REALTIME is a
    * settable system-wide clock.  CLOCK_MONOTONIC is a nonsettable
    * clock that is not affected by  discontinuous  changes  in  the
-   *  system clock (e.g., manual changes to system time).
+   * system clock (e.g., manual changes to system time).
    */
   timer_fd_ = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
   if (timer_fd_ == -1) {
@@ -31,8 +31,7 @@ bool TimerQueuePosix::Init() {
   TimerQueue::Init();
   event_->fd = timer_fd_;
   if (!ev_mgr_->Add(event_.get())) {
-    ::close(timer_fd_);
-    timer_fd_ = INVALID_FD;
+    closeWrapper(timer_fd_);
     event_.reset();
   }
 
@@ -42,7 +41,7 @@ bool TimerQueuePosix::Init() {
 void TimerQueuePosix::reset(const TimeStamp time_stamp) {
   itimerspec ts;
   ::memset(&ts, 0, sizeof(ts));
-  ts.it_value.tv_sec = time_stamp.timeSpec();
+  ts.it_value = time_stamp.timeSpec();
 
   int ret = ::timerfd_settime(timer_fd_, 0, &ts, NULL);
   if (ret != 0) {

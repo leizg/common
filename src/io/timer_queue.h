@@ -21,7 +21,8 @@ class TimerQueue : public EventManager::TimerDelegate {
     };
 
     TimerQueue(EventManager* ev_mgr, Delegate* delegate)
-        : actived_(false), ev_mgr_(ev_mgr), delegate_(delegate) {
+        : actived_(false), ev_mgr_(ev_mgr), expired_time_(Now()), delegate_(
+            delegate) {
       DCHECK_NOTNULL(ev_mgr);
       DCHECK_NOTNULL(delegate);
     }

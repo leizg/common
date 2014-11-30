@@ -1,18 +1,13 @@
 #include "timer_queue_mac.h"
 
+#ifdef __APPLE__
+
 namespace io {
 
 const std::string TimerQueueMac::dummy_path_ = std::string("/dev/zero");
 
 TimerQueueMac::TimerQueueMac(KqueueImpl* kq, Delegate* delegate)
     : TimerQueue(kq, delegate), kq_(kq), dummy_(INVALID_FD) {
-}
-
-TimerQueueMac::~TimerQueueMac() {
-  if (dummy_ != INVALID_FD) {
-    ::close(dummy_);
-    dummy_ = INVALID_FD;
-  }
 }
 
 bool TimerQueueMac::Init() {
@@ -22,8 +17,7 @@ bool TimerQueueMac::Init() {
     return false;
   }
   if (!TimerQueue::Init()) {
-    ::close(dummy_);
-    dummy_ = INVALID_FD;
+    closeWrapper(dummy_);
     return false;
   }
 
@@ -39,3 +33,5 @@ void TimerQueueMac::reset(const TimeStamp time_stamp) {
   kq_->setTimer(event_.get(), time_stamp.microSecs());
 }
 }
+
+#endif

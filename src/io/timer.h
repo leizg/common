@@ -117,10 +117,10 @@ class OneshotTimer : public detail::TimerAbstruct<false> {
 class RepeatTimer : public detail::TimerAbstruct<true> {
   public:
     RepeatTimer(uint64 micro_secs, Closure* closure)
-        : detail::TimerAbstruct<false>(micro_secs, closure) {
+        : detail::TimerAbstruct<true>(micro_secs, closure) {
     }
     RepeatTimer(uint64 micro_secs, EventManager* ev_mgr, Closure* closure)
-        : detail::TimerAbstruct<false>(micro_secs, ev_mgr, closure) {
+        : detail::TimerAbstruct<true>(micro_secs, ev_mgr, closure) {
     }
     virtual ~RepeatTimer() {
     }

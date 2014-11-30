@@ -36,11 +36,10 @@ class ObjectSaver {
 template<typename Key, typename Object>
 class ObjectMapSaver : ObjectSaver<Object> {
   public:
-    typedef ObjectSaver<Object> ObjectSaver;
-    typedef typename ObjectSaver::Policy Policy;
+    typedef typename ObjectSaver<Object>::Policy Policy;
 
     explicit ObjectMapSaver(Policy* policy)
-        : ObjectSaver(policy) {
+        : ObjectSaver<Object>(policy) {
     }
     virtual ~ObjectMapSaver() {
       DCHECK(object_map_.empty());
@@ -51,7 +50,7 @@ class ObjectMapSaver : ObjectSaver<Object> {
       auto it = object_map_.find(key);
       if (it != object_map_.end()) {
         auto obj = it->second;
-        ObjectSaver::delegate_->Ref(obj);
+        ObjectSaver<Object>::delegate_->Ref(obj);
         return obj;
       }
       return NULL;
@@ -61,7 +60,7 @@ class ObjectMapSaver : ObjectSaver<Object> {
       ScopedMutex l(&mutex_);
       Key k = obj->Key();
       if (object_map_.count(k) == 0) {
-        ObjectSaver::delegate_->Ref(obj);
+        ObjectSaver<Object>::delegate_->Ref(obj);
         object_map_[k] = obj;
         return true;
       }
@@ -72,7 +71,7 @@ class ObjectMapSaver : ObjectSaver<Object> {
       Key k = obj->Key();
       auto it = object_map_.find(k);
       if (it != object_map_.end()) {
-        ObjectSaver::delegate_->UnRef(obj);
+        ObjectSaver<Object>::delegate_->UnRef(obj);
         object_map_.erase(it);
       }
     }
@@ -90,11 +89,10 @@ class ObjectMapSaver : ObjectSaver<Object> {
 template<typename Key, typename Object>
 class ObjectVectorSaver : ObjectSaver<Object> {
   public:
-    typedef ObjectSaver<Object> ObjectSaver;
-    typedef typename ObjectSaver::Policy Policy;
+    typedef typename ObjectSaver<Object>::Policy Policy;
 
     explicit ObjectVectorSaver(Policy* policy)
-        : ObjectSaver(policy) {
+        : ObjectSaver<Object>(policy) {
     }
     virtual ~ObjectVectorSaver() {
       DCHECK(object_vector_.empty());
@@ -108,7 +106,7 @@ class ObjectVectorSaver : ObjectSaver<Object> {
 
       auto it = object_vector_[key];
       if (it != NULL) {
-        ObjectSaver::delegate_->Ref(it);
+        ObjectSaver<Object>::delegate_->Ref(it);
         return it;
       }
       return NULL;
@@ -124,7 +122,7 @@ class ObjectVectorSaver : ObjectSaver<Object> {
       auto o = object_vector_[k];
       if (o != NULL) return false;
 
-      ObjectSaver::delegate_->Ref(obj);
+      ObjectSaver<Object>::delegate_->Ref(obj);
       object_vector_[k] = obj;
       return true;
     }
@@ -135,7 +133,7 @@ class ObjectVectorSaver : ObjectSaver<Object> {
       if (object_vector_.size() >= k) {
         auto it = object_vector_[k];
         if (it != NULL) {
-          ObjectSaver::delegate_->UnRef(obj);
+          ObjectSaver<Object>::delegate_->UnRef(obj);
           object_vector_[k] = NULL;
         }
       }

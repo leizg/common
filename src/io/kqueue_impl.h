@@ -1,6 +1,7 @@
 #ifndef KQUEUE_IMPL_H_
 #define KQUEUE_IMPL_H_
 
+#ifdef __APPALE__
 #include "event_manager.h"
 #include <sys/event.h> // for kevent.
 
@@ -40,7 +41,6 @@ class KqueueImpl : public EventManager {
 
     DISALLOW_COPY_AND_ASSIGN(KqueueImpl);
 };
-
 }
-
+#endif  // end for __APPALE__
 #endif /* KQUEUE_IMPL_H_ */

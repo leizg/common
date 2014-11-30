@@ -18,4 +18,20 @@
   (((v) + (a) - 1) & (~((a) -1)))
 #define ALIGN(val) alignSize(val, ALIGN_SIZE)
 
+#define closeWrapper(fd) \
+  do { \
+    if (fd == INVALID_FD) break; \
+    while (true) { \
+      int __ret = ::close(fd); \
+      if (__ret != -1) break ; \
+      switch(errno) { \
+        case EINTR: \
+          continue; \
+        default: \
+          PLOG(WARNING) << "close error"; \
+      } \
+    } \
+    fd = INVALID_FD; \
+  } while(0)
+
 #endif

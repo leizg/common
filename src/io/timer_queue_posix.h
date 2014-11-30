@@ -18,9 +18,9 @@ class TimerQueuePosix : public TimerQueue {
     int timer_fd_;
 
     virtual bool Init();
-    virtual void reset(const TimeStamp time_stamp);
 
     virtual void clearData();
+    virtual void reset(const TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(TimerQueuePosix);
 };

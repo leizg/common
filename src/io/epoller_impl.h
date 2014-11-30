@@ -3,15 +3,16 @@
 
 #ifdef __linux__
 
+#include <sys/epoll.h>
 #include "event_manager.h"
-
-struct epoll_event;
 
 namespace io {
 
 class EpollerImpl : public EventManager {
   public:
-    EpollerImpl();
+    EpollerImpl()
+        : ep_fd_(INVALID_FD), stop_(true) {
+    }
     virtual ~EpollerImpl();
 
   private:

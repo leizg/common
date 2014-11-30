@@ -46,7 +46,6 @@ class EventManager : public ThreadSafe {
     // can be called from any thread.
     void runInLoop(Closure* cb) {
       DCHECK_NOTNULL(cb);
-      DCHECK_NOTNULL(thread_safe_delegate_.get());
       thread_safe_delegate_->runInLoop(cb);
     }
 
@@ -62,7 +61,6 @@ class EventManager : public ThreadSafe {
     };
     void runAt(Closure* cb, const TimeStamp& ts) {
       DCHECK_NOTNULL(cb);
-      DCHECK_NOTNULL(timer_delegate_.get());
       timer_delegate_->runAt(cb, ts);
     }
 
@@ -72,9 +70,9 @@ class EventManager : public ThreadSafe {
     EventManager() {
     }
 
-  private:
     scoped_ptr<TimerDelegate> timer_delegate_;
     scoped_ptr<ThreadSafeDelegate> thread_safe_delegate_;
+  private:
 
     DISALLOW_COPY_AND_ASSIGN(EventManager);
 };

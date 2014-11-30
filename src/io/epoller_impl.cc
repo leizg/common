@@ -1,24 +1,18 @@
 #include "epoller_impl.h"
-#include "timer_queue_posix.h"
 
 #ifdef __linux__
-#include <sys/epoll.h>
+
+#include "timer_list.h"
+#include "timer_queue_posix.h"
 
 namespace io {
 
-EpollerImpl::EpollerImpl()
-    : ep_fd_(INVALID_FD), stop_(true) {
-}
-
 EpollerImpl::~EpollerImpl() {
-  if (ep_fd_ != INVALID_FD) {
-    ::close(ep_fd_);
-    ep_fd_ = INVALID_FD;
-  }
+  closeWrapper(ep_fd_);
 }
 
-void EpollerImpl::Init() {
-  if (ep_fd_ != INVALID_FD) return;
+bool EpollerImpl::Init() {
+  if (ep_fd_ != INVALID_FD) return false;
 
   /*
    * In the initial epoll_create() implementation, the size argument
@@ -26,17 +20,17 @@ void EpollerImpl::Init() {
    * caller expected to add to the epoll instance.  The kernel used
    * this information  as  a  hint  for  the  amount of space to
    * initially allocate in internal data structures describing events.
-   *  (If necessary, the kernel would allocate more space if the caller's
-   *   usage exceeded the hint given in size.)  Nowadays, this hint is
-   *   no longer required (the kernel dynamically sizes the required data
-   *   structures without needing the hint), but size must still  be
-   *   greater than zero, in order to ensure backward compatibility
-   *   when new epoll applications are run on older kernels.
+   * (If necessary, the kernel would allocate more space if the caller's
+   * usage exceeded the hint given in size.)  Nowadays, this hint is
+   * no longer required (the kernel dynamically sizes the required data
+   * structures without needing the hint), but size must still  be
+   * greater than zero, in order to ensure backward compatibility
+   * when new epoll applications are run on older kernels.
    */
   ep_fd_ = ::epoll_create1(EPOLL_CLOEXEC);
   if (ep_fd_ == INVALID_FD) {
     PLOG(WARNING)<< "epoll_create error";
-    return;
+    return false;
   }
 
   setFdNonBlock(ep_fd_);
@@ -46,23 +40,27 @@ void EpollerImpl::Init() {
   events_.resize(kTriggerNumber, ev);
 
   if (!EventManager::Init()) {
-    ::close(ep_fd_);
-    ep_fd_ = INVALID_FD;
+    closeWrapper(ep_fd_);
   }
-  timer_delegate_.reset(new TimerQueue(this));
-  CHECK(timer_delegate_->Init());
+  timer_delegate_.reset(new TimerQueuePosix(this, new TimerListImpl));
+  if (!timer_delegate_->Init()) {
+    closeWrapper(ep_fd_);
+    thread_safe_delegate_.reset();
+    return false;
+  }
+
+  return true;
 }
 
 void EpollerImpl::Loop(SyncEvent* start_event) {
+  stop_ = false;
+  DCHECK_NE(ep_fd_, INVALID_FD);
   if (!inValidThread()) {
     update();
     if (start_event != NULL) {
       start_event->Signal();
     }
   }
-
-  stop_ = false;
-  CHECK_NE(ep_fd_, INVALID_FD);
 
   while (!stop_) {
     int32 trigger_number = ::epoll_wait(ep_fd_, events_.data(), events_.size(),
@@ -95,12 +93,13 @@ bool EpollerImpl::LoopInAnotherThread() {
   SyncEvent start_event(false, false);
   loop_pthread_.reset(
       new StoppableThread(
-          NewPermanentCallback(this, &EpollerImpl::Loop, &start_event)));
+          ::NewPermanentCallback(this, &EpollerImpl::Loop, &start_event)));
   if (loop_pthread_->Start()) {
     start_event.Wait();
     DCHECK(!inValidThread());
     return true;
   }
+  loop_pthread_.reset();
   return false;
 }
 
@@ -173,7 +172,7 @@ void EpollerImpl::Del(const Event& ev) {
   epoll_event event;
   ::memset(&event, 0, sizeof(event));
   event.events = convertEvent(ev.event);
-  event.data.ptr = ev;
+  event.data.ptr = NULL;
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_DEL, ev.fd, &event);
   PLOG_IF(WARNING, ret != 0) << "EPOLL_CTL_DEL error";

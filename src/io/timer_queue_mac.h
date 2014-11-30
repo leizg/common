@@ -1,6 +1,7 @@
 #ifndef TIMER_QUEUE_MAC_H_
 #define TIMER_QUEUE_MAC_H_
 
+#ifdef __APPLE__
 #include "timer_queue.h"
 
 namespace io {
@@ -9,7 +10,9 @@ class KqueueImpl;
 class TimerQueueMac : public TimerQueue {
   public:
     TimerQueueMac(KqueueImpl* kq, Delegate* delegate);
-    virtual ~TimerQueueMac();
+    virtual ~TimerQueueMac() {
+      closeWrapper(dummy_);
+    }
 
   private:
     KqueueImpl* kq_;
@@ -26,4 +29,5 @@ class TimerQueueMac : public TimerQueue {
     DISALLOW_COPY_AND_ASSIGN(TimerQueueMac);
 };
 }
-#endif /* TIMER_QUEUE_MAC_H_ */
+#endif  // end for __APPLE__
+#endif  /* TIMER_QUEUE_MAC_H_ */

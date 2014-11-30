@@ -1,3 +1,5 @@
+#ifdef __APPALE__
+
 #include "kqueue_impl.h"
 
 namespace {
@@ -189,5 +191,5 @@ void KqueueImpl::setTimer(Event* ev, uint32 exipred) {
     PLOG(WARNING)<<"kevent error";
   }
 }
-
 }
+#endif
