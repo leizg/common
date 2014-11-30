@@ -1,7 +1,6 @@
 #ifndef TCP_SERVER_H_
 #define TCP_SERVER_H_
 
-#include "io/connection.h"
 #include "include/object_saver.h"
 
 namespace io {
@@ -41,12 +40,8 @@ class TcpServer {
     void unBindIp(const std::string& ip);
     void unBindAll();
 
-    void Add(Connection* conn) {
-      saver_.Add(conn);
-    }
-    void Remove(Connection* conn) {
-      saver_.Remove(conn);
-    }
+    void Add(Connection* conn);
+    void Remove(Connection* conn);
 
   private:
     uint8 worker_;

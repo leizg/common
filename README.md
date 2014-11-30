@@ -1,10 +1,16 @@
-rpc
+dreamio
 ===
+library about network programing(c++ implement).
 
 depends:
   glog 
   gflags
   protobuf
+  google-perftools
+
+install libraries under ubuntu:
+  script/install_depend.sh
 
 
-only support linux.
+platform:
+  support linux and mac.

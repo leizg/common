@@ -60,4 +60,11 @@ EventManager* TcpServer::getPoller() {
   return event_poller_->getPoller();
 }
 
+void TcpServer::Add(Connection* conn) {
+  saver_.Add(conn);
+}
+void TcpServer::Remove(Connection* conn) {
+  saver_.Remove(conn);
+}
+
 }
