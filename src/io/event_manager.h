@@ -31,9 +31,9 @@ class EventManager : public ThreadSafe {
     virtual void Mod(Event* ev) = 0;
     virtual void Del(const Event& ev) = 0;
 
-    class Delegate {
+    class ThreadSafeDelegate {
       public:
-        virtual ~Delegate() {
+        virtual ~ThreadSafeDelegate() {
         }
 
         // called by EventManager::Init.
@@ -41,24 +41,30 @@ class EventManager : public ThreadSafe {
 
         // must be threadsafe.
         virtual void runInLoop(Closure* cb) = 0;
-#if __linux__
-        virtual void runAt(Closure* cb, const TimeStamp& ts) = 0;
-#endif
     };
     // these methods are threadsafe,
     // can be called from any thread.
     void runInLoop(Closure* cb) {
       DCHECK_NOTNULL(cb);
-      DCHECK_NOTNULL(delegate_.get());
-      delegate_->runInLoop(cb);
+      DCHECK_NOTNULL(thread_safe_delegate_.get());
+      thread_safe_delegate_->runInLoop(cb);
     }
-#if __linux__
+
+    class TimerDelegate {
+      public:
+        virtual ~TimerDelegate() {
+        }
+
+        // called by EventManager::Init.
+        virtual bool Init() = 0;
+
+        virtual void runAt(Closure* cb, const TimeStamp& ts) = 0;
+    };
     void runAt(Closure* cb, const TimeStamp& ts) {
       DCHECK_NOTNULL(cb);
-      DCHECK_NOTNULL(delegate_.get());
-      delegate_->runAt(cb, ts);
+      DCHECK_NOTNULL(timer_delegate_.get());
+      timer_delegate_->runAt(cb, ts);
     }
-#endif
 
     static EventManager* current();
 
@@ -67,7 +73,8 @@ class EventManager : public ThreadSafe {
     }
 
   private:
-    scoped_ptr<Delegate> delegate_;
+    scoped_ptr<TimerDelegate> timer_delegate_;
+    scoped_ptr<ThreadSafeDelegate> thread_safe_delegate_;
 
     DISALLOW_COPY_AND_ASSIGN(EventManager);
 };

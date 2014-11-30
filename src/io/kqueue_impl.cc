@@ -1,5 +1,35 @@
 #include "kqueue_impl.h"
 
+namespace {
+
+class KQueueTimer : public io::EventManager::TimerDelegate {
+  public:
+    KQueueTimer(io::KqueueImpl* kq)
+        : kq_(kq) {
+      DCHECK_NOTNULL(kq);
+    }
+    virtual ~KQueueTimer() {
+    }
+
+  private:
+    io::KqueueImpl* kq_;
+
+    // called by EventManager::Init.
+    virtual bool Init();
+    virtual void runAt(Closure* cb, const TimeStamp& ts);
+
+    DISALLOW_COPY_AND_ASSIGN(KQueueTimer);
+};
+
+bool KQueueTimer::Init() {
+  return true;
+}
+
+void KQueueTimer::runAt(Closure* cb, const TimeStamp& ts) {
+  kq_->runAt(cb, ts);
+}
+}
+
 namespace io {
 
 KqueueImpl::~KqueueImpl() {
@@ -16,8 +46,15 @@ bool KqueueImpl::Init() {
   }
 
   events_.resize(kTriggerNumber);
+  timer_delegate_.reset(new KQueueTimer(this));
+  if (!EventManager::Init() || !timer_delegate_->Init()) {
+    ::close(kp_fd_);
+    kp_fd_ = INVALID_FD;
+    timer_delegate_.reset();
+    return false;
+  }
 
-  return EventManager::Init();
+  return true;
 }
 
 void KqueueImpl::Loop(SyncEvent* start_event) {
@@ -43,11 +80,17 @@ void KqueueImpl::Loop(SyncEvent* start_event) {
     for (uint32 i = 0; i < static_cast<uint32>(trigger_count); ++i) {
       const struct kevent& kevent = events_[i];
       uint32 flags = 0;
-      if (kevent.fflags & EVFILT_READ) flags |= EV_READ;
+      if ((kevent.fflags & EVFILT_READ) || (kevent.fflags & EVFILT_TIMER)) {
+        flags |= EV_READ;
+      }
       if (kevent.fflags & EVFILT_WRITE) flags |= EV_WRITE;
 
       Event* ev = static_cast<Event*>(kevent.udata);
       ev->cb(ev->fd, ev->arg, flags, time_stamp);
+
+      if (kevent.fflags & EVFILT_TIMER) {
+        ev_map_.erase(ev->fd);
+      }
     }
   }
 }
@@ -68,15 +111,15 @@ bool KqueueImpl::LoopInAnotherThread() {
 void KqueueImpl::Stop() {
   EventManager::Stop();
 
-  if (kp_fd_ != INVALID_FD) {
-    ::close(kp_fd_);
-    kp_fd_ = INVALID_FD;
-  }
   if (loop_pthread_ != NULL) {
     loop_pthread_->Join();
     loop_pthread_.reset();
   }
 
+  if (kp_fd_ != INVALID_FD) {
+    ::close(kp_fd_);
+    kp_fd_ = INVALID_FD;
+  }
   stop_ = true;
 }
 
@@ -114,6 +157,7 @@ void KqueueImpl::Mod(Event* ev) {
   int ret = ::kevent(kp_fd_, &event, 1, NULL, 0, NULL);
   if (ret != 0) {
     PLOG(WARNING)<< "kevent error";
+    // maybe should delete directly.
   }
 }
 
@@ -124,13 +168,26 @@ void KqueueImpl::Del(const Event& ev) {
   if (ev.event & EV_READ) flags |= EVFILT_READ;
   if (ev.event & EV_WRITE) flags |= EVFILT_WRITE;
   struct kevent event = { 0 };
-  EV_SET(&event, ev.fd, flags, EV_DELETE, 0, 0, ev);
+  EV_SET(&event, ev.fd, flags, EV_DELETE, 0, 0, NULL);
   int ret = ::kevent(kp_fd_, &event, 1, NULL, 0, NULL);
   if (ret != 0) {
     PLOG(WARNING)<<"kevent error";
   }
 
   ev_map_.erase(ev.fd);
+}
+
+void KqueueImpl::setTimer(Event* ev, uint32 exipred) {
+  if (ev_map_.count(ev->fd) != 1) {
+    ev_map_[ev->fd] = ev;
+  }
+
+  struct kevent event = { 0 };
+  EV_SET(&event, ev->fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, exipred, ev);
+  int ret = ::kevent(kp_fd_, &event, 1, NULL, 0, NULL);
+  if (ret != 0) {
+    PLOG(WARNING)<<"kevent error";
+  }
 }
 
 }

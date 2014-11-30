@@ -44,7 +44,7 @@ bool OutVectorObject::send(int fd, int32* err_no) {
     buildData(&io_vec);
     CHECK(!io_vec.empty());
 
-    int32 writen = ::writev(fd, io_vec.data(), io_vec.size());
+    int32 writen = writev(fd, io_vec.data(), io_vec.size());
     if (writen == -1) {
       if (errno == EINTR) continue;
       if (err_no != NULL) *err_no = errno;

@@ -13,6 +13,7 @@
 
 #include "thread.h"
 #include "thread_util.h"
+#include "thread_storage.h"
 
 #include <time.h>
 #include <unistd.h>
@@ -20,6 +21,7 @@
 #include <unistd.h>
 
 #include <errno.h>
+#include <sys/uio.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -74,15 +76,15 @@ template<typename T, typename K> inline void STLEarseAndDelete(T*t,
   auto item = t->find(k);
   if (item != t->end()) {
     delete (*item);
-    t->earse(item);
+    t->erase(item);
   }
 }
 template<typename T, typename K> inline void MapEarseAndDelete(T*t,
                                                                const K& k) {
-  auto item = t->find(k);
-  if (item != t->end()) {
-    delete item->second;
-    t->earse(item);
+  auto it = t->find(k);
+  if (it != t->end()) {
+    delete it->second;
+    t->erase(it);
   }
 }
 
@@ -97,7 +99,7 @@ template<typename T, typename K> inline void MapEarseAndUnRef(T*t, const K& k) {
   auto it = t->find(k);
   if (it != t->end()) {
     it->second->UnRef();
-    t->earse(it);
+    t->erase(it);
   }
 }
 

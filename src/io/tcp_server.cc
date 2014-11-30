@@ -3,14 +3,13 @@
 #include "tcp_server.h"
 #include "connection.h"
 #include "event_manager.h"
+#include "event_pooler.h"
 
 namespace io {
 
 TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
-    : ObjectMapSaver<int, Connection>(
-        new RefCountedObjectSavePolicy<Connection>()), worker_(worker), ev_mgr_(
-        ev_mgr), protocol_(
-    NULL) {
+    : worker_(worker), ev_mgr_(ev_mgr), protocol_(
+    NULL), saver_(new RefCountedObjectSavePolicy<Connection>) {
   CHECK_NOTNULL(ev_mgr);
 }
 
@@ -53,7 +52,7 @@ void TcpServer::unBindIp(const std::string& ip) {
 
 void TcpServer::unBindAll() {
   ScopedMutex l(&mutex_);
-  MapClear(&listeners_);
+  STLMapClear(&listeners_);
 }
 
 EventManager* TcpServer::getPoller() {

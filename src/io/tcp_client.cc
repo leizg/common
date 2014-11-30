@@ -1,4 +1,6 @@
+#include "io_buf.h"
 #include "connector.h"
+#include "protocol.h"
 #include "connection.h"
 #include "tcp_client.h"
 #include "event_manager.h"
@@ -48,7 +50,7 @@ void TcpClient::Send(OutputObject* io_obj) {
     return;
   }
 
-  if (ev_mgr_->inLoopThread()) {
+  if (ev_mgr_->inValidThread()) {
     connection_->Send(io_obj);
     return;
   }

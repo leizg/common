@@ -40,7 +40,6 @@ int32 InputBuf::ReadFd(int fd, uint32 total_len, int32* err_no) {
         case EINTR:
           continue;
 
-        case EAGAIN:
         case EWOULDBLOCK:
           return total_len - left;
 

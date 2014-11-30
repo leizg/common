@@ -22,6 +22,7 @@ class Acceptor : public TcpServer::Listener {
     }
 
     void handleAccept();
+    virtual bool doBind(const std::string& ip, uint16 port);
 
   private:
     int listen_fd_;
@@ -36,8 +37,6 @@ class Acceptor : public TcpServer::Listener {
     scoped_ptr<Event> event_;
 
     bool CreateListenFd(const std::string& ip, uint16 port);
-
-    virtual bool doBind(const std::string& ip, uint16 port);
 
     DISALLOW_COPY_AND_ASSIGN(Acceptor);
 };

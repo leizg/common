@@ -1,5 +1,5 @@
-#ifndef EPOLLER_H_
-#define EPOLLER_H_
+#ifndef EPOLLER_IMPL_H_
+#define EPOLLER_IMPL_H_
 
 #ifdef __linux__
 
@@ -9,13 +9,12 @@ struct epoll_event;
 
 namespace io {
 
-  class EpollerImpl : public EventManager {
-    public:
-    EpollerImpl()
-    : ep_fd_(INVALID_FD), stop_(true) {
-    }
+class EpollerImpl : public EventManager {
+  public:
+    EpollerImpl();
     virtual ~EpollerImpl();
 
+  private:
     virtual bool Init();
     virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
@@ -25,7 +24,7 @@ namespace io {
     virtual void Mod(Event* ev);
     virtual void Del(const Event& ev);
 
-    private:
+  private:
     int ep_fd_;
     bool stop_;
 
@@ -41,9 +40,7 @@ namespace io {
     uint32 convertEvent(uint8 event);
 
     DISALLOW_COPY_AND_ASSIGN(EpollerImpl);
-  };
+};
 }
-
-#endif
-
-#endif
+#endif // end for __linux__
+#endif // end for EPOLLER_IMPL_H_

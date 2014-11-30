@@ -1,6 +1,5 @@
 #include "thread_util.h"
 
-<<<<<<< HEAD
 void SyncEvent::Signal() {
   ScopedMutex l(&mutex_);
   if (is_signaled_) return;
@@ -35,7 +34,14 @@ bool SyncEvent::TimeWait(uint32 micro_sec) {
   }
 
   timespec ts = { 0 };
+#if __linux__
   clock_getres(CLOCK_MONOTONIC_RAW, &ts);
+#else
+  timeval tv;
+  ::gettimeofday(&tv, NULL);
+  ts.tv_sec = tv.tv_sec;
+  ts.tv_nsec = tv.tv_usec * 1000;
+#endif
 
   ts.tv_nsec += micro_sec * 1000 % kNanoPerSec;
   ts.tv_sec += micro_sec * 1000 / kNanoPerSec;

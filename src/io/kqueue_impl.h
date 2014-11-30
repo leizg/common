@@ -2,7 +2,7 @@
 #define KQUEUE_IMPL_H_
 
 #include "event_manager.h"
-#include <sys/event.h>
+#include <sys/event.h> // for kevent.
 
 namespace io {
 
@@ -13,6 +13,9 @@ class KqueueImpl : public EventManager {
     }
     virtual ~KqueueImpl();
 
+    void setTimer(Event* ev, uint32 exipred);
+
+  private:
     virtual bool Init();
     virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
