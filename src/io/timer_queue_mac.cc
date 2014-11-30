@@ -1,4 +1,5 @@
 #include "timer_queue_mac.h"
+#include "kqueue_impl.h"
 
 #ifdef __APPLE__
 

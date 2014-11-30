@@ -1,5 +1,6 @@
 #include "kqueue_impl.h"
 #include "epoller_impl.h"
+#include "event_manager.h"
 
 #include "event_pipe.h"
 
@@ -103,6 +104,10 @@ bool EventManager::Init() {
 
   ev_store.set(this);
   return true;
+}
+
+void EventManager::Stop() {
+  ev_store.set(NULL);
 }
 
 EventManager* EventManager::current() {

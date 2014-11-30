@@ -1,4 +1,5 @@
 #include "thread_util.h"
+#include <sys/time.h>
 
 void SyncEvent::Signal() {
   ScopedMutex l(&mutex_);
