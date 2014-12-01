@@ -69,18 +69,18 @@ bool FileSize(const std::string& path, uint64* size) {
 }
 
 bool FlushData(int fd) {
-  int ret = ::fsync(fd);
+  int ret = ::fdatasync(fd);
   if (ret == -1) {
-    PLOG(WARNING)<< "fsync error, fd: " << fd;
+    PLOG(WARNING)<< "fdatasync error, fd: " << fd;
     return false;
   }
   return true;
 }
 
 bool FlushFile(int fd) {
-  int ret = ::fdatasync(fd);
+  int ret = ::fsync(fd);
   if (ret == -1) {
-    PLOG(WARNING)<< "fdatasync error, fd: " << fd;
+    PLOG(WARNING)<< "fsync error, fd: " << fd;
     return false;
   }
   return true;
@@ -243,4 +243,54 @@ void AppendonlyMmapedFile::unMap() {
     mem_ = pos_ = end_ = NULL;
     flushed_size_ = 0;
   }
+}
+
+bool DirIterator::Init() {
+  if (dir_ != NULL) return false;
+
+  dir_ = ::opendir(fpath_.c_str());
+  if (dir_ == NULL) {
+    PLOG(WARNING)<< "opendir error, path: " << fpath_;
+    return false;
+  }
+  return true;
+}
+
+uint8 DirIterator::typeConvert(Type type) const {
+  switch (type) {
+    case REG_FILE:
+      return DT_REG;
+    case DIR_TYPE:
+      return DT_DIR;
+    case SYMBOLIC_LINK:
+      return DT_LNK;
+  }
+}
+
+const std::string* DirIterator::next(Type type) {
+  uint8 entry_type = typeConvert(type);
+  while (next() != NULL) {
+    if (entry_.d_type & entry_type) {
+      return &name_cache_;
+    }
+  }
+  return NULL;
+}
+
+const std::string* DirIterator::next() {
+  if (dir_ != NULL) {
+    struct dirent* dummy;
+    int ret = ::readdir_r(dir_, &entry_, &dummy);
+    if (ret != 0) {
+      PLOG(WARNING)<< "readdir_r error, path: " << fpath_;
+      return NULL;
+    }
+
+    if (dummy != NULL) {
+      name_cache_ = entry_.d_name;
+      return &name_cache_;
+    }
+  }
+
+  return NULL;
 }

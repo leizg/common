@@ -5,12 +5,13 @@
 #include "data_types.h"
 
 #include <cstdio>
+#include <dirent.h>
 
 namespace detail {
 
-class DiskFile {
+class FileAbstruct {
   public:
-    virtual ~DiskFile() {
+    virtual ~FileAbstruct() {
     }
 
     const std::string& fpath() const {
@@ -20,7 +21,7 @@ class DiskFile {
     virtual bool Init() = 0;
 
   protected:
-    explicit DiskFile(const std::string& fpath)
+    explicit FileAbstruct(const std::string& fpath)
         : fpath_(fpath) {
       DCHECK(!fpath.empty());
     }
@@ -28,7 +29,7 @@ class DiskFile {
     const std::string fpath_;
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(DiskFile);
+    DISALLOW_COPY_AND_ASSIGN(FileAbstruct);
 };
 }  // end for namespace named detail
 
@@ -45,10 +46,10 @@ bool FlushFile(int fd);
 bool FileTruncate(int fd, uint64 size);
 bool FileTruncate(const std::string& path, uint64 size);
 
-class SequentialAccessFile : public detail::DiskFile {
+class SequentialAccessFile : public detail::FileAbstruct {
   public:
     explicit SequentialAccessFile(const std::string& fpath)
-        : DiskFile(fpath), stream_(NULL) {
+        : FileAbstruct(fpath), stream_(NULL) {
     }
     ~SequentialAccessFile() {
       if (stream_ != NULL) {
@@ -67,10 +68,10 @@ class SequentialAccessFile : public detail::DiskFile {
     DISALLOW_COPY_AND_ASSIGN(SequentialAccessFile);
 };
 
-class RandomAccessFile : public detail::DiskFile {
+class RandomAccessFile : public detail::FileAbstruct {
   public:
     RandomAccessFile(const std::string& fpath)
-        : DiskFile(fpath), fd_(INVALID_FD) {
+        : FileAbstruct(fpath), fd_(INVALID_FD) {
     }
     ~RandomAccessFile() {
       closeWrapper(fd_);
@@ -89,10 +90,10 @@ class RandomAccessFile : public detail::DiskFile {
     DISALLOW_COPY_AND_ASSIGN(RandomAccessFile);
 };
 
-class AppendonlyMmapedFile : public detail::DiskFile {
+class AppendonlyMmapedFile : public detail::FileAbstruct {
   public:
     explicit AppendonlyMmapedFile(const std::string& fpath)
-        : DiskFile(fpath), fd_(INVALID_FD) {
+        : FileAbstruct(fpath), fd_(INVALID_FD) {
       mem_ = pos_ = end_ = NULL;
 
       flushed_size_ = 0;
@@ -121,6 +122,39 @@ class AppendonlyMmapedFile : public detail::DiskFile {
     const static uint32 kMappedSize = 8192;
 
     DISALLOW_COPY_AND_ASSIGN(AppendonlyMmapedFile);
+};
+
+// not threadsafe.
+class DirIterator : public detail::FileAbstruct {
+  public:
+    explicit DirIterator(const std::string& path)
+        : detail::FileAbstruct(path), dir_(NULL) {
+    }
+    virtual ~DirIterator() {
+      if (dir_ != NULL) {
+        ::closedir(dir_);
+        dir_ = NULL;
+      }
+    }
+
+    virtual bool Init();
+
+    enum Type {
+      REG_FILE = 0, DIR_TYPE, SYMBOLIC_LINK,
+    };
+    const std::string* next(Type type);
+
+    const std::string* next();
+
+  private:
+    DIR* dir_;
+
+    struct dirent entry_;
+    std::string name_cache_;
+
+    uint8 typeConvert(Type type) const;
+
+    DISALLOW_COPY_AND_ASSIGN(DirIterator);
 };
 
 #endif
