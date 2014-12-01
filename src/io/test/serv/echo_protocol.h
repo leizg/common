@@ -4,7 +4,6 @@
 #include "io/protocol.h"
 
 namespace test {
-class EchoCoder;
 
 class EchoProtocol : public io::Protocol {
   private:
@@ -24,11 +23,12 @@ class EchoProtocol : public io::Protocol {
 
     class EchoParser : public Parser {
       public:
-        EchoParser();
-        virtual ~EchoParser();
+        EchoParser() {
+        }
+        virtual ~EchoParser() {
+        }
 
       private:
-        scoped_ptr<EchoCoder> coder_;
 
         virtual uint32 headerLength() const {
           return sizeof(uint32);

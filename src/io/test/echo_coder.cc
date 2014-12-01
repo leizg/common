@@ -7,7 +7,7 @@
 
 namespace test {
 
-bool EchoCoder::Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
+bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
   uint32 header = len | LAST_GUARD;
 
   char* data;
@@ -30,7 +30,7 @@ bool EchoCoder::Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
   return true;
 }
 
-bool EchoCoder::Decode(io::InputBuf* buf, bool* is_last, uint32* data_len) {
+bool Decode(io::InputBuf* buf, bool* is_last, uint32* data_len) {
   int len = sizeof(uint32);
   const char* data;
   if (!buf->Next(&data, &len)) {

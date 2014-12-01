@@ -5,11 +5,11 @@ namespace io {
 bool EventPipe::initPipe() {
   int ret;
 #if __linux__
-  ret = ::pipe2(event_fd_, O_NONBLOCK | FD_CLOEXEC);
+  ret = ::pipe2(event_fd_, O_NONBLOCK | O_CLOEXEC);
 #else
   ret = ::pipe(event_fd_);
 #endif
-  if (ret != 0) {
+  if (ret == -1) {
     PLOG(WARNING)<< "pipe error";
     return false;
   }

@@ -11,18 +11,11 @@ void EchoProtocol::EchoProcessor::dispatch(io::Connection* conn,
   DLOG(INFO)<< "recv data from client: " << conn->Key() << " at: " << time_stamp.microSecs();
 }
 
-EchoProtocol::EchoParser::EchoParser() {
-  coder_.reset(new EchoCoder);
-}
-
-EchoProtocol::EchoParser::~EchoParser() {
-}
-
 bool EchoProtocol::EchoParser::parse(io::Connection* const conn,
                                      io::InputBuf* const input_buf) const {
   bool is_last;
   uint32 data_len;
-  if (!coder_->Decode(input_buf, &is_last, &data_len)) {
+  if (!Decode(input_buf, &is_last, &data_len)) {
     LOG(WARNING)<< "parse header error";
     return false;
   }
