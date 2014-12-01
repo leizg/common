@@ -129,4 +129,6 @@ class AutoRunner {
     DISALLOW_COPY_AND_ASSIGN(AutoRunner);
 };
 
+void SplitString(const std::string& src, char c, std::vector<std::string>* vec);
+
 #endif
