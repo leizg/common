@@ -127,6 +127,10 @@ class AppendonlyMmapedFile : public detail::FileAbstruct {
 // not threadsafe.
 class DirIterator : public detail::FileAbstruct {
   public:
+    enum Type {
+      REG_FILE = 0, DIR_TYPE, SYMBOLIC_LINK,
+    };
+
     explicit DirIterator(const std::string& path)
         : detail::FileAbstruct(path), dir_(NULL) {
     }
@@ -139,12 +143,8 @@ class DirIterator : public detail::FileAbstruct {
 
     virtual bool Init();
 
-    enum Type {
-      REG_FILE = 0, DIR_TYPE, SYMBOLIC_LINK,
-    };
-    const std::string* next(Type type);
-
     const std::string* next();
+    const std::string* next(Type type);
 
   private:
     DIR* dir_;
