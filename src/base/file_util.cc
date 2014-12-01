@@ -131,14 +131,21 @@ bool RandomAccessFile::Init() {
 }
 
 int32 RandomAccessFile::read(char* buf, uint32 len, off_t offset) {
-  DCHECK_GT(len, 0);
+  uint32 left = len;
+  while (left > 0) {
+    int32 readn = ::pread(fd_, buf, left, offset);
+    if (readn == 0) return 0;
+    else if (readn == -1) {
+      if (errno == EINTR) continue;
+      PLOG(WARNING)<< "pread error, path: " << fpath_;
+      return -1;
+    }
 
-  int32 readn = ::pread(fd_, buf, len, offset);
-  if (readn == -1) {
-    PLOG(WARNING)<< "pread error, path: " << fpath_;
-    return -1;
+    buf += readn;
+    left -= readn;
+    offset += readn;
   }
-  return readn;
+  return len - left;
 }
 
 bool RandomAccessFile::flush(bool only_flush_data) {
@@ -150,13 +157,20 @@ bool RandomAccessFile::flush(bool only_flush_data) {
 }
 
 int32 RandomAccessFile::write(const char* buf, uint32 len, off_t offset) {
-  DCHECK_GE(len, 0);
-  int32 writen = ::pwrite(fd_, buf, len, offset);
-  if (writen == -1) {
-    PLOG(WARNING)<< "pread error, path: " << fpath_;
-    return -1;
+  uint32 left = len;
+  while (left > 0) {
+    int32 writen = ::pwrite(fd_, buf, left, offset);
+    if (writen == -1) {
+      if (errno == EINTR) continue;
+      PLOG(WARNING)<< "pread error, path: " << fpath_;
+      return -1;
+    }
+
+    buf += writen;
+    left -= writen;
+    offset += writen;
   }
-  return writen;
+  return len - left;
 }
 
 AppendonlyMmapedFile::~AppendonlyMmapedFile() {
