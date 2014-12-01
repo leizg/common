@@ -12,14 +12,14 @@ class EventPipe {
         virtual ~Delegate() {
         }
 
-        virtual void handlevent() = 0;
+        virtual void handleEvent() = 0;
     };
 
     virtual ~EventPipe() {
       destory();
     }
 
-    int readPipeFd() const {
+    int readablePipeFd() const {
       return event_fd_[0];
     }
     void handlePipeRead();

@@ -53,6 +53,6 @@ void EventPipe::handlePipeRead() {
     }
   }
 
-  deletate_->handlevent();
+  deletate_->handleEvent();
 }
 }

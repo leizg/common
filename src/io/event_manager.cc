@@ -24,7 +24,7 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
         Mutex* mutex_;
         std::deque<Closure*>* cb_queue_;
 
-        virtual void handlevent();
+        virtual void handleEvent();
 
         DISALLOW_COPY_AND_ASSIGN(PipeDelegate);
     };
@@ -61,7 +61,7 @@ void handleSignal(int fd, void* arg, uint8 revent,
 bool ThreadsafePipe::Init() {
   if (!io::EventPipe::initPipe()) return false;
 
-  event_.fd = readPipeFd();
+  event_.fd = readablePipeFd();
   event_.event = EV_READ;
   event_.arg = this;
   event_.cb = handleSignal;
@@ -79,7 +79,7 @@ void ThreadsafePipe::runInLoop(Closure* cb) {
   triggerPipe();
 }
 
-void ThreadsafePipe::PipeDelegate::handlevent() {
+void ThreadsafePipe::PipeDelegate::handleEvent() {
   std::deque<Closure*> cbs;
   {
     ScopedMutex l(mutex_);

@@ -3,7 +3,7 @@
 
 #include "hash.h"
 #include "closure.h"
-#include "disk_file.h"
+#include "file_util.h"
 #include "macro_def.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
