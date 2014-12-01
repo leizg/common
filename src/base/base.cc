@@ -6,7 +6,7 @@ void SplitString(const std::string& src, char c,
   if (!src.empty()) {
     uint32 pos = 0;
 
-    while (true) {
+    while (pos < src.size()) {
       std::string::size_type ret = src.find(c, pos);
       std::string sub = src.substr(pos, ret);
       if (pos != ret && !sub.empty()) {
@@ -15,7 +15,7 @@ void SplitString(const std::string& src, char c,
           break;
         }
       }
-      pos++;
+      pos = ++ret;
     }
   }
 }
