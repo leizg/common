@@ -72,6 +72,7 @@ bool Acceptor::doBind(const std::string& ip, uint16 port) {
     return false;
   }
 
+  LOG(WARNING)<< "listen ip: " << ip << " port: " << port;
   return true;
 }
 

@@ -1,0 +1,39 @@
+import os, sys, time
+from glob import glob
+
+env = Environment()
+ccflags = ['-std=c++11', ]
+if ARGUMENTS.get('release', '0') == '0':
+  ccflags += ['-O0', '-g3', '-Werror', ]
+else:
+  ccflags += ['-O3', '-g0', '-Wall', ]
+env.Append(CPPFLAGS = ccflags)
+env.Append(CPPPATH = ['../', '/usr/local/include'])
+
+ccdefines = {'_FILE_OFFSET_BITS' : '64', 
+'DEBUG' : 1, }
+if sys.platform == 'darwin':
+  ccdefines['__APPALE__'] = 1 
+else:
+  ccdefines['_GNU_SOURCE'] = 1 
+
+env.Append(CPPDEFINES=ccdefines)
+
+env.Append(LIBPATH = ['/usr/local/lib',])
+libs = ['pthread', 'dl', 'glog', 'protobuf', 'gflags', 'gtest', 'tcmalloc']
+if sys.platform != 'darwin':
+  libs += ['rt']
+env.Append(LIBS=libs)
+
+source_files = glob('../io/*.cc') + \
+               glob('../base/*.cc') + \
+               glob('../util/*.cc') + \
+                glob('../io/test/*.cc') + \
+               glob('../io/test/cli/*.cc')
+
+print("souce code list: >>")
+for s in source_files:
+	print(os.path.realpath(s))
+print('')
+
+env.Program('cli', source_files)
