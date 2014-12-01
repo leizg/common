@@ -1,8 +1,9 @@
 #include "io/tcp_server.h"
 #include "io/event_manager.h"
 
-#include "echo_protocol.h"
 #include "echo_server.h"
+#include "echo_dispatcher.h"
+#include "io/test/echo_protocol.h"
 
 namespace test {
 
@@ -15,7 +16,7 @@ EchoServer::~EchoServer() {
 }
 
 bool EchoServer::Init(const std::string& ip, uint16 port) {
-  protocol_.reset(new EchoProtocol);
+  protocol_.reset(new EchoProtocol(new EchoDispatcher));
   ev_mgr_.reset(io::CreateEventManager());
   DCHECK_NOTNULL(ev_mgr_.get());
   if (!ev_mgr_->Init()) {

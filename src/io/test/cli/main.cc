@@ -2,6 +2,7 @@
 #include <google/gflags.h>
 
 #include "echo_client.h"
+#include "io/event_manager.h"
 
 DEFINE_string(ip, "0.0.0.0", "ip for echo server");
 DEFINE_int32(port, 8888, "port for echo server");
@@ -13,10 +14,17 @@ int main(int argc, char* argv[]) {
   ::google::InitGoogleLogging(argv[0]);
   ::google::ParseCommandLineFlags(&argc, &argv, true);
 
+  scoped_ptr<io::EventManager> ev_mgr;
+  ev_mgr.reset(io::CreateEventManager());
+  if (ev_mgr == NULL || !ev_mgr->Init()) {
+    LOG(WARNING)<< "create event manager error";
+    return -1;
+  }
+
   bool start_ok = true;
   std::vector<test::EchoClient*> clients;
   for (uint32 i = 0; i < FLAGS_test_thread; ++i) {
-    test::EchoClient* cli = new test::EchoClient(FLAGS_count);
+    test::EchoClient* cli = new test::EchoClient(ev_mgr.get(), FLAGS_count);
     if (!cli->connect(FLAGS_ip, FLAGS_port)) {
       LOG(WARNING)<< "connect error";
       start_ok = false;

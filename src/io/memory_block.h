@@ -40,6 +40,13 @@ class MemoryBlock : public RefCounted {
 
     void ensureLeft(int len);
 
+    char* peekR() {
+      return rpos_;
+    }
+    char* peekW() {
+      return wpos_;
+    }
+
   private:
     virtual ~MemoryBlock() {
       ::free(mem_);

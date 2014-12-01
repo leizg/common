@@ -7,20 +7,6 @@ namespace test {
 
 class EchoProtocol : public io::Protocol {
   private:
-    class EchoProcessor : public Processor {
-      public:
-        EchoProcessor() {
-        }
-        virtual ~EchoProcessor() {
-        }
-
-      private:
-        virtual void dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                              const TimeStamp& time_stamp);
-
-        DISALLOW_COPY_AND_ASSIGN(EchoProcessor);
-    };
-
     class EchoParser : public Parser {
       public:
         EchoParser() {
@@ -54,8 +40,8 @@ class EchoProtocol : public io::Protocol {
     };
 
   public:
-    EchoProtocol()
-        : io::Protocol(new EchoProcessor, new EchoParser) {
+    EchoProtocol(Processor* p)
+        : io::Protocol(p, new EchoParser) {
     }
     virtual ~EchoProtocol() {
     }

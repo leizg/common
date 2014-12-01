@@ -24,6 +24,10 @@ class OutputBuf {
       block_->ensureLeft(size);
     }
 
+    char* peek() {
+      return block_->peekW();
+    }
+
   private:
     scoped_ref<MemoryBlock> block_;
 

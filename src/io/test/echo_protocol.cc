@@ -5,12 +5,6 @@
 
 namespace test {
 
-void EchoProtocol::EchoProcessor::dispatch(io::Connection* conn,
-                                           io::InputBuf* input_buf,
-                                           const TimeStamp& time_stamp) {
-  DLOG(INFO)<< "recv data from client: " << conn->Key() << " at: " << time_stamp.microSecs();
-}
-
 bool EchoProtocol::EchoParser::parse(io::Connection* const conn,
                                      io::InputBuf* const input_buf) const {
   bool is_last;

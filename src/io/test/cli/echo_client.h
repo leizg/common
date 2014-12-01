@@ -4,6 +4,7 @@
 #include "base/base.h"
 
 namespace io {
+class Protocol;
 class TcpClient;
 class EventManager;
 }
@@ -12,7 +13,7 @@ namespace test {
 
 class EchoClient {
   public:
-    explicit EchoClient(uint32 count);
+    EchoClient(io::EventManager* ev_mgr, uint32 count);
     ~EchoClient();
 
     bool connect(const std::string& ip, uint16 port);
@@ -21,7 +22,10 @@ class EchoClient {
     void waitForFinished();
 
   private:
-    scoped_ptr<io::EventManager> ev_mgr_;
+    uint32 test_number_;
+
+    io::EventManager* ev_mgr_;
+    scoped_ptr<io::Protocol> protocol_;
     scoped_ptr<io::TcpClient> client_;
 
     scoped_ptr<StoppableThread> thread_;

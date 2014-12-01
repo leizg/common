@@ -69,12 +69,16 @@ bool FileSize(const std::string& path, uint64* size) {
 }
 
 bool FlushData(int fd) {
+#if __APPALE__
+  return FlushFile(fd);
+#else
   int ret = ::fdatasync(fd);
   if (ret == -1) {
     PLOG(WARNING)<< "fdatasync error, fd: " << fd;
     return false;
   }
   return true;
+#endif
 }
 
 bool FlushFile(int fd) {
@@ -231,12 +235,18 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
   return len - left;
 }
 
+#ifdef __linux__
+#define Map mmap64
+#else
+#define Map  mmap
+#endif
+
 bool AppendonlyMmapedFile::doMap() {
   if (mem_ != NULL) unMap();
   if (!FileTruncate(fd_, mapped_offset_ + kMappedSize)) return false;
 
-  mem_ = (char*) ::mmap64(NULL, kMappedSize, PROT_WRITE, MAP_SHARED, fd_,
-                          mapped_offset_);
+  mem_ = (char*) Map(NULL, kMappedSize, PROT_WRITE, MAP_SHARED, fd_,
+                     mapped_offset_);
   if (mem_ == MAP_FAILED) {
     PLOG(WARNING)<< "mmap64 error, fd: " << fd_;
     return false;
