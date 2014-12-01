@@ -7,8 +7,8 @@
 DEFINE_string(ip, "0.0.0.0", "ip for echo server");
 DEFINE_int32(port, 8888, "port for echo server");
 
-DEFINE_int32(count, 1, "how many times per thread");
-DEFINE_int32(test_thread, 1, "number of test threads");
+DEFINE_int32(count, 1, "how many times per client");
+DEFINE_int32(client_number, 1, "number of clients used for testing");
 
 int main(int argc, char* argv[]) {
   ::google::InitGoogleLogging(argv[0]);
@@ -20,10 +20,11 @@ int main(int argc, char* argv[]) {
     LOG(WARNING)<< "create event manager error";
     return -1;
   }
+  ev_mgr->LoopInAnotherThread();
 
   bool start_ok = true;
   std::vector<test::EchoClient*> clients;
-  for (uint32 i = 0; i < FLAGS_test_thread; ++i) {
+  for (uint32 i = 0; i < FLAGS_client_number; ++i) {
     test::EchoClient* cli = new test::EchoClient(ev_mgr.get(), FLAGS_count);
     if (!cli->connect(FLAGS_ip, FLAGS_port)) {
       LOG(WARNING)<< "connect error";
