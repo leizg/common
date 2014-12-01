@@ -6,8 +6,8 @@
 #include <sys/mman.h>
 
 namespace {
-bool openFile(const std::string& fpath, int* fd) {
-  int ret = ::open(fpath.c_str(), O_RDONLY);
+bool openFile(const std::string& fpath, int* fd, int flag) {
+  int ret = ::open(fpath.c_str(), flag);
   if (ret == INVALID_FD) {
     PLOG(WARNING)<< "open error, path: " << fpath;
     return false;
@@ -19,7 +19,7 @@ bool openFile(const std::string& fpath, int* fd) {
 
 bool Stat(const std::string& path, struct stat* st) {
   int fd;
-  if (!openFile(path, &fd)) return false;
+  if (!openFile(path, &fd, O_RDONLY)) return false;
 
   int ret = ::fstat(fd, st);
   closeWrapper(fd);
@@ -61,7 +61,7 @@ bool FileSize(int fd, uint64* size) {
 
 bool FileSize(const std::string& path, uint64* size) {
   int fd = INVALID_FD;
-  if (!openFile(path, &fd)) return false;
+  if (!openFile(path, &fd, O_RDONLY)) return false;
 
   bool ret = FileSize(fd, size);
   closeWrapper(fd);
@@ -127,7 +127,7 @@ int32 SequentialAccessFile::read(char* buf, uint32 len) {
 }
 
 bool RandomAccessFile::Init() {
-  return openFile(fpath_, &fd_);
+  return openFile(fpath_, &fd_, O_RDWR);
 }
 
 int32 RandomAccessFile::read(char* buf, uint32 len, off_t offset) {
@@ -170,7 +170,7 @@ AppendonlyMmapedFile::~AppendonlyMmapedFile() {
 }
 
 bool AppendonlyMmapedFile::Init() {
-  if (!openFile(fpath_, &fd_)) return false;
+  if (!openFile(fpath_, &fd_, O_APPEND)) return false;
 
   if (!FileSize(fd_, &mapped_offset_)) {
     closeWrapper(fd_);
@@ -181,7 +181,7 @@ bool AppendonlyMmapedFile::Init() {
 
 void AppendonlyMmapedFile::flush() {
   DCHECK_GE(end_, mem_);
-  if (end_ != mem_) {
+  if (fd_ != INVALID_FD && end_ != mem_) {
     int32 size = end_ - mem_ - flushed_size_;
     if (size > 0) {
       int ret = ::msync(mem_ + flushed_size_, size, MS_SYNC);
@@ -195,6 +195,8 @@ void AppendonlyMmapedFile::flush() {
 }
 
 int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
+  if (fd_ == INVALID_FD) return -1;
+
   uint32 left = len;
   while (left > 0) {
     uint32 avail_size = end_ - pos_;
