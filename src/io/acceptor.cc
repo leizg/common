@@ -30,12 +30,21 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
   setFdNonBlock(listen_fd_);
   setFdCloExec(listen_fd_);
 
+  int val = 1;
+  int ret = ::setsockopt(listen_fd_, SOL_SOCKET, SO_REUSEADDR, &val,
+                         sizeof(val));
+  if (ret != 0) {
+    PLOG(WARNING)<< "setsockopt error";
+    closeWrapper(listen_fd_);
+    return false;
+  }
+
   sockaddr_in addr;
   ::memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = ::inet_addr(ip.c_str());
-  int ret = ::bind(listen_fd_, (sockaddr*) &addr, sizeof(addr));
+  ret = ::bind(listen_fd_, (sockaddr*) &addr, sizeof(addr));
   if (ret != 0) {
     ::close(listen_fd_);
     listen_fd_ = INVALID_FD;

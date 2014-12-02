@@ -13,7 +13,6 @@ namespace {
 class EchoObject : public io::OutVectorObject::IoObject {
   public:
     EchoObject() {
-      buf_.reset(new io::OutputBuf(64));
       buildData();
     }
     virtual ~EchoObject() {
@@ -36,6 +35,7 @@ class EchoObject : public io::OutVectorObject::IoObject {
 uint64 EchoObject::value_ = 1;
 
 void EchoObject::buildData() {
+  buf_.reset(new io::OutputBuf(64));
   uint64 val = value_++;
   iovec io;
   char* begin = buf_->peek();
@@ -43,6 +43,7 @@ void EchoObject::buildData() {
   char* end = buf_->peek();
   io.iov_base = begin;
   io.iov_len = end - begin;
+  DCHECK_EQ(io.iov_len, 4 + 8);
   data_.push_back(io);
 }
 }

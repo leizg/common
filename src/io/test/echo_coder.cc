@@ -3,12 +3,13 @@
 #include "io/input_buf.h"
 #include "io/output_buf.h"
 
-#define LAST_GUARD (1 << 31)
+#define LAST_GUARD (1UL << 31)
 
 namespace test {
 
 bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
-  uint32 header = len | LAST_GUARD;
+  uint32 hdr = htonl(len | LAST_GUARD);
+  DLOG(INFO)<< "encode hdr: " << hdr;
 
   char* data;
   int size = sizeof(uint32);
@@ -17,7 +18,7 @@ bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
     LOG(WARNING)<< "encode header error";
     return false;
   }
-  ::memcpy(data, &header, sizeof(header));
+  ::memcpy(data, &hdr, sizeof(hdr));
 
   size = len;
   buf->Next(&data, &size);
@@ -25,7 +26,7 @@ bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
     LOG(WARNING)<< "encode data error";
     return false;
   }
-  ::memcpy(data, data_buf, len);
+  ::memcpy(data, data_buf, size);
 
   return true;
 }
@@ -44,10 +45,11 @@ bool Decode(io::InputBuf* buf, bool* is_last, uint32* data_len) {
 
   uint32 val = 0;
   ::memcpy(&val, data, sizeof(uint32));
-  val = ntohl(val);
+  uint32 hdr = ntohl(val);
+  DLOG(INFO)<< "decode hdr: " << hdr;
 
-  *is_last = val & LAST_GUARD;
-  *data_len = val & (~LAST_GUARD);
+  *is_last = hdr & LAST_GUARD;
+  *data_len = hdr & (~LAST_GUARD);
   return true;
 }
 

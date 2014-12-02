@@ -105,9 +105,10 @@ int32 Connection::Recv(uint32 len, int* err_no) {
       return 0;
     } else if (ret == -1) {
       if (*err_no == EWOULDBLOCK) {
-        continue;
+        break;
       }
       ShutDown();
+      return -1;
     }
 
     DCHECK_GT(ret, 0);

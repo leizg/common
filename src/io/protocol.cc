@@ -29,23 +29,19 @@ bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
   int err_no = 0;
 
   int32 ret = conn->Recv(data_len, &err_no);
-  if (ret != data_len) {
-    if (ret == -1) {
-      if (err_no == EWOULDBLOCK || err_no == EAGAIN) {
-        attr->pending_size = data_len;
-        return false;
-      }
-      reporter_->report(conn);
+  if (ret == 0) return false;
+  else if (ret == -1) {
+    if (err_no == EWOULDBLOCK || err_no == EAGAIN) {
+      attr->pending_size = data_len;
       return false;
     }
-
-    DCHECK_GT(ret, 0);
-    attr->pending_size = data_len - ret;
+    reporter_->report(conn);
     return false;
   }
 
-  DCHECK_EQ(attr->pending_size, 0);
-  return true;
+  DCHECK_GT(ret, 0);
+  attr->pending_size = data_len - ret;
+  return attr->pending_size == 0;
 }
 
 void Protocol::handleRead(Connection* conn, InputBuf* input_buf,

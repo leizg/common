@@ -34,5 +34,4 @@ class OutputBuf {
     DISALLOW_COPY_AND_ASSIGN(OutputBuf);
 };
 }
-
 #endif /* OUTPUT_BUF_H_ */

@@ -33,15 +33,14 @@ int32 InputBuf::ReadFd(int fd, uint32 total_len, int32* err_no) {
   int left = total_len;
 
   while (left > 0) {
-    int n = ::recv(fd, block_->wpos_, left, 0);
-    if (n == 0) return 0;
-    else if (n == -1) {
+    int readn = ::recv(fd, block_->wpos_, left, 0);
+    if (readn == 0) return 0;
+    else if (readn == -1) {
       switch (errno) {
         case EINTR:
           continue;
-
         case EWOULDBLOCK:
-          return total_len - left;
+          break;
 
         default:
           if (err_no != NULL) {
@@ -52,9 +51,9 @@ int32 InputBuf::ReadFd(int fd, uint32 total_len, int32* err_no) {
         }  // end switch.
       }
 
-    DCHECK_GT(n, 0);
-    left -= n;
-    block_->wpos_ += n;
+    DCHECK_GT(readn, 0);
+    left -= readn;
+    block_->wpos_ += readn;
     DCHECK_LE(block_->wpos_, block_->end_);
   }
 
