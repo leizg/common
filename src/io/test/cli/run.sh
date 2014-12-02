@@ -6,7 +6,7 @@ is_build=0
 build_command='scons -j4'
 
 bin='../../../build/cli'
-args='-logtostderr '
+args='-alsologtostderr '
 
 if [ $is_build -eq 1 ] 
 then

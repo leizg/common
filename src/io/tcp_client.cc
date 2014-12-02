@@ -46,6 +46,7 @@ void TcpClient::Remove(Connection* conn) {
 void TcpClient::Send(OutputObject* io_obj) {
   ScopedMutex l(&mutex_);
   if (connection_ == NULL) {
+    DLOG(INFO)<< "not connected, drop package.";
     delete io_obj;
     return;
   }
@@ -55,7 +56,8 @@ void TcpClient::Send(OutputObject* io_obj) {
     return;
   }
 
-  ev_mgr_->runInLoop(NewCallback(connection_.get(), &Connection::Send, io_obj));
+  ev_mgr_->runInLoop(
+      ::NewCallback(connection_.get(), &Connection::Send, io_obj));
 }
 
 }

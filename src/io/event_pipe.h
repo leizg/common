@@ -37,11 +37,11 @@ class EventPipe {
 
     void triggerPipe();
 
-  private:
+    private:
     int event_fd_[2];
     scoped_ptr<Delegate> deletate_;
 
     DISALLOW_COPY_AND_ASSIGN(EventPipe);
-};
+  };
 }
 #endif /* EVENT_PIPE_H_ */

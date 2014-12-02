@@ -98,7 +98,7 @@ class SyncEvent {
     pthread_cond_t cond_;
     Mutex mutex_;
 
-    const static uint64 kNanoPerSec = 1000 * 1000 * 1000;
+    const static uint64 kNanoPerSec = 1000ULL * 1000 * 1000;
 
     DISALLOW_COPY_AND_ASSIGN(SyncEvent);
 };

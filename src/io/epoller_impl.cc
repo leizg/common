@@ -8,6 +8,7 @@
 namespace io {
 
 EpollerImpl::~EpollerImpl() {
+  Stop();
   closeWrapper(ep_fd_);
 }
 
@@ -35,33 +36,30 @@ bool EpollerImpl::Init() {
 
   setFdNonBlock(ep_fd_);
 
-  epoll_event ev;
-  ::memset(&ev, 0, sizeof(ev));
-  events_.resize(kTriggerNumber, ev);
-
   if (!EventManager::Init()) {
     closeWrapper(ep_fd_);
   }
   timer_delegate_.reset(new TimerQueuePosix(this, new TimerListImpl));
   if (!timer_delegate_->Init()) {
+    DLOG(INFO)<< "timer delegate init error";
     closeWrapper(ep_fd_);
     thread_safe_delegate_.reset();
     return false;
   }
 
+  epoll_event ev;
+  ::memset(&ev, 0, sizeof(ev));
+  events_.resize(kTriggerNumber, ev);
   return true;
 }
 
 void EpollerImpl::Loop(SyncEvent* start_event) {
   stop_ = false;
   DCHECK_NE(ep_fd_, INVALID_FD);
-  if (!inValidThread()) {
-    update();
-    if (start_event != NULL) {
-      start_event->Signal();
-    }
-  }
+  if (!inValidThread()) update();
+  if (start_event != NULL) start_event->Signal();
 
+  DLOG(INFO)<< "start event loop...";
   while (!stop_) {
     int32 trigger_number = ::epoll_wait(ep_fd_, events_.data(), events_.size(),
                                         1);
@@ -95,10 +93,15 @@ bool EpollerImpl::LoopInAnotherThread() {
       new StoppableThread(
           ::NewPermanentCallback(this, &EpollerImpl::Loop, &start_event)));
   if (loop_pthread_->Start()) {
-    start_event.Wait();
+    if (!start_event.TimeWait(3 * 1000)) {
+      loop_pthread_.reset();
+      LOG(WARNING)<< "event loop thread start error";
+      return false;
+    }
     DCHECK(!inValidThread());
     return true;
   }
+
   loop_pthread_.reset();
   return false;
 }

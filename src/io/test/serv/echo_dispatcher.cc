@@ -6,7 +6,7 @@ namespace test {
 
 void EchoDispatcher::dispatch(io::Connection* conn, io::InputBuf* input_buf,
                               const TimeStamp& time_stamp) {
-  // just ignore.
+  LOG(INFO)<<"recv data: " << time_stamp.microSecs();
 }
 
 }

@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  serv.loop();
+  serv.loop(false);
 
   return 0;
 }

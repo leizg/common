@@ -42,7 +42,7 @@ bool OutVectorObject::send(int fd, int32* err_no) {
 
   while (left_ != 0) {
     buildData(&io_vec);
-    CHECK(!io_vec.empty());
+    DCHECK(!io_vec.empty());
 
     int32 writen = writev(fd, io_vec.data(), io_vec.size());
     if (writen == -1) {

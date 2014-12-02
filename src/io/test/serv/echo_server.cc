@@ -26,7 +26,7 @@ bool EchoServer::Init(const std::string& ip, uint16 port) {
 
   server_.reset(new io::TcpServer(ev_mgr_.get(), worker_));
   server_->setProtocol(protocol_.get());
-  if (!server_->bindIp(ip, port)) {
+  if (!server_->Init() || !server_->bindIp(ip, port)) {
     ev_mgr_.reset();
     return false;
   }

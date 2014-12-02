@@ -60,6 +60,7 @@ EchoClient::~EchoClient() {
 
 bool EchoClient::connect(const std::string& ip, uint16 port) {
   client_.reset(new io::TcpClient(ev_mgr_, ip, port));
+  client_->SetProtocol(protocol_.get());
   if (!client_->Connect(3)) {
     LOG(WARNING)<< "connect error: " << ip << ": " << port;
     return false;

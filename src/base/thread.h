@@ -62,7 +62,7 @@ class Thread {
 };
 
 inline bool Thread::StartWithOption(const Option& option) {
-  if (!started_) return true;
+  if (started_) return false;
 
   ::pthread_attr_t attr;
   int ret = ::pthread_attr_init(&attr);
@@ -89,7 +89,7 @@ inline bool Thread::StartWithOption(const Option& option) {
 
   ret = ::pthread_create(&tid_, &attr, &Thread::ThreadMain, closure_.get());
   ::pthread_attr_destroy(&attr);
-  if (tid_ != 0) {
+  if (ret != 0) {
     LOG(WARNING)<< "pthread_create error: " << ::strerror(ret);
     return false;
   }

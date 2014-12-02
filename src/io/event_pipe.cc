@@ -31,28 +31,26 @@ void EventPipe::destory() {
 
 void EventPipe::triggerPipe() {
   uint8 c;
-  ::send(event_fd_[1], &c, sizeof(c), 0);
+  int ret = write(event_fd_[1], &c, sizeof(c));
+  CHECK_EQ(ret, sizeof(c))<< event_fd_[1] << " " << strerror(errno);
 }
 
 void EventPipe::handlePipeRead() {
-  DCHECK_NOTNULL(deletate_.get());
-  uint64 dummy;
+  uint8 dummy;
   while (true) {  // read all of data.
-    int ret = ::recv(event_fd_[0], &dummy, sizeof(dummy), 0);
+    int ret = ::read(event_fd_[0], &dummy, sizeof(dummy));
     if (ret == -1) {
       switch (errno) {
         case EINTR:
-          continue;
+        continue;
         case EWOULDBLOCK:
-          return;
-        default:
-          break;
+        return;
       }
-      PLOG(WARNING)<< "read pipe error";
+      PLOG(WARNING)<< "read pipe error" << event_fd_[0];
       return;
     }
+    break;
   }
-
   deletate_->handleEvent();
 }
 }

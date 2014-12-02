@@ -10,7 +10,7 @@ ThreadStorage<io::EventManager> ev_store;
 class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
     public io::EventPipe {
   private:
-    class PipeDelegate : public Delegate {
+    class PipeDelegate : public io::EventPipe::Delegate {
       public:
         PipeDelegate(Mutex* mutex, std::deque<Closure*>* cb_queue)
             : mutex_(mutex), cb_queue_(cb_queue) {
@@ -54,7 +54,7 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
 
 void handleSignal(int fd, void* arg, uint8 revent,
                   const TimeStamp& time_stamp) {
-  io::EventPipe* p = static_cast<io::EventPipe*>(arg);
+  ThreadsafePipe* p = static_cast<ThreadsafePipe*>(arg);
   p->handlePipeRead();
 }
 
@@ -96,29 +96,29 @@ void ThreadsafePipe::PipeDelegate::handleEvent() {
 namespace io {
 
 bool EventManager::Init() {
-  thread_safe_delegate_.reset(new ThreadsafePipe(this));
-  if (!thread_safe_delegate_->Init()) {
-    thread_safe_delegate_.reset();
-    return false;
-  }
+thread_safe_delegate_.reset(new ThreadsafePipe(this));
+if (!thread_safe_delegate_->Init()) {
+  thread_safe_delegate_.reset();
+  return false;
+}
 
-  ev_store.set(this);
-  return true;
+ev_store.set(this);
+return true;
 }
 
 void EventManager::Stop() {
-  ev_store.set(NULL);
+ev_store.set(NULL);
 }
 
 EventManager* EventManager::current() {
-  return ev_store.get();
+return ev_store.get();
 }
 
 EventManager* CreateEventManager() {
 #ifdef __linux__
-  return new EpollerImpl();
+return new EpollerImpl();
 #else
-  return new KqueueImpl();
+return new KqueueImpl();
 #endif
 }
 }

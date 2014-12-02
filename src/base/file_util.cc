@@ -236,17 +236,17 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
 }
 
 #ifdef __linux__
-#define Map mmap64
+#define Mmap mmap64
 #else
-#define Map  mmap
+#define Mmap  mmap
 #endif
 
 bool AppendonlyMmapedFile::doMap() {
   if (mem_ != NULL) unMap();
   if (!FileTruncate(fd_, mapped_offset_ + kMappedSize)) return false;
 
-  mem_ = (char*) Map(NULL, kMappedSize, PROT_WRITE, MAP_SHARED, fd_,
-                     mapped_offset_);
+  mem_ = (char*) Mmap(NULL, kMappedSize, PROT_WRITE, MAP_SHARED, fd_,
+                      mapped_offset_);
   if (mem_ == MAP_FAILED) {
     PLOG(WARNING)<< "mmap64 error, fd: " << fd_;
     return false;
