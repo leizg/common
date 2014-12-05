@@ -1,6 +1,8 @@
 #include <sys/inotify.h>
 
 #include "io/event_manager.h"
+
+#include "watch_object.h"
 #include "file_system_watcher.h"
 
 namespace {
@@ -13,6 +15,11 @@ void handleWatcher(int fd, void* arg, uint8 event,
 }
 
 namespace util {
+
+FileSystemWatcher::FileSystemWatcher(io::EventManager* ev_mgr)
+    : fd_(INVALID_FD), ev_mgr_(ev_mgr) {
+  DCHECK_NOTNULL(ev_mgr);
+}
 
 FileSystemWatcher::~FileSystemWatcher() {
   stopWatch();
@@ -68,9 +75,9 @@ int FileSystemWatcher::watch(WatchObject* watcher) {
   return wd;
 }
 
-void FileSystemWatcher::rmWatch(uint32 wd) {
+void FileSystemWatcher::rmWatch(int wd) {
   if (wd != 0 && map_.count(wd) != 0) {
-    STLEarseAndUnRef(&map_, wd);
+    MapEarseAndUnRef(&map_, wd);
 
     int ret = ::inotify_rm_watch(fd_, wd);
     if (ret != 0) {
@@ -127,7 +134,7 @@ void FileSystemWatcher::handleKernelEvent() {
 
   struct inotify_event* event;
   while (len >= sizeof(*event)) {
-    event = static_cast<struct inotify_event*>(data);
+    event = reinterpret_cast<struct inotify_event*>(data);
     data += sizeof(*event);
     len -= sizeof(*event);
 

@@ -13,10 +13,7 @@ class WatchObject;
 
 class FileSystemWatcher {
   public:
-    explicit FileSystemWatcher(io::EventManager* ev_mgr)
-        : fd_(INVALID_FD), ev_mgr_(ev_mgr) {
-      DCHECK_NOTNULL(ev_mgr);
-    }
+    explicit FileSystemWatcher(io::EventManager* ev_mgr);
     virtual ~FileSystemWatcher();
 
     bool Init();
@@ -24,7 +21,7 @@ class FileSystemWatcher {
     // return -1 iif error orrcured.
     // else return id of watched object.
     int watch(WatchObject* watcher);
-    void rmWatch(uint32 id);
+    void rmWatch(int id);
 
     void handleKernelEvent();
 
@@ -34,7 +31,7 @@ class FileSystemWatcher {
     io::EventManager* ev_mgr_;
     scoped_ptr<io::Event> event_;
 
-    typedef std::map<uint32, WatchObject*> Map;
+    typedef std::map<int, WatchObject*> Map;
     Map map_;
 
     const static uint32 kBufSize = 4096;

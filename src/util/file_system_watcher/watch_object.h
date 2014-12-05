@@ -47,12 +47,7 @@ class WatchObject : public RefCounted {
     }
 
     virtual bool watch(uint32 mode, Delegate* delegate) = 0;
-    void rmWatch() {
-      if (watcher_ != NULL && watch_id_ != 0) {
-        watcher_->rmWatch(watch_id_);
-        watch_id_ = 0;
-      }
-    }
+    void rmWatch();
 
     void notify(uint32 event, const std::string* path) {
       delegate_->notify(this, event, path);
