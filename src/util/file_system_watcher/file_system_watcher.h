@@ -1,0 +1,50 @@
+#ifndef DIR_WATCHER_H_
+#define DIR_WATCHER_H_
+
+#include "base/base.h"
+
+namespace io {
+struct Event;
+class EventManager;
+}
+
+namespace util {
+class WatchObject;
+
+class FileSystemWatcher {
+  public:
+    explicit FileSystemWatcher(io::EventManager* ev_mgr)
+        : fd_(INVALID_FD), ev_mgr_(ev_mgr) {
+      DCHECK_NOTNULL(ev_mgr);
+    }
+    virtual ~FileSystemWatcher();
+
+    bool Init();
+
+    // return -1 iif error orrcured.
+    // else return id of watched object.
+    int watch(WatchObject* watcher);
+    void rmWatch(uint32 id);
+
+    void handleKernelEvent();
+
+  private:
+    int fd_;
+
+    io::EventManager* ev_mgr_;
+    scoped_ptr<io::Event> event_;
+
+    typedef std::map<uint32, WatchObject*> Map;
+    Map map_;
+
+    const static uint32 kBufSize = 4096;
+    std::vector<char> buf_;
+    std::string name_cache_;
+
+    void stopWatch();
+    int readEvents();
+
+    DISALLOW_COPY_AND_ASSIGN(FileSystemWatcher);
+};
+}
+#endif /* DIR_WATCHER_H_ */
