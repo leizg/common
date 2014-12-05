@@ -108,7 +108,7 @@ bool FileTruncate(const std::string& path, uint64 size) {
   return true;
 }
 
-bool SequentialAccessFile::Init() {
+bool SequentialReadonlyFile::Init() {
   if (stream_ != NULL) return false;
 
   stream_ = ::fopen(fpath_.c_str(), "r");
@@ -119,7 +119,7 @@ bool SequentialAccessFile::Init() {
   return true;
 }
 
-int32 SequentialAccessFile::read(char* buf, uint32 len) {
+int32 SequentialReadonlyFile::read(char* buf, uint32 len) {
   DCHECK_GE(len, 0);
   int32 readn = ::fread(buf, len, 1, stream_);
   if (readn == -1) {

@@ -46,12 +46,12 @@ bool FlushFile(int fd);
 bool FileTruncate(int fd, uint64 size);
 bool FileTruncate(const std::string& path, uint64 size);
 
-class SequentialAccessFile : public detail::FileAbstruct {
+class SequentialReadonlyFile : public detail::FileAbstruct {
   public:
-    explicit SequentialAccessFile(const std::string& fpath)
+    explicit SequentialReadonlyFile(const std::string& fpath)
         : FileAbstruct(fpath), stream_(NULL) {
     }
-    ~SequentialAccessFile() {
+    ~SequentialReadonlyFile() {
       if (stream_ != NULL) {
         ::fclose(stream_);
         stream_ = NULL;
@@ -65,7 +65,7 @@ class SequentialAccessFile : public detail::FileAbstruct {
   private:
     FILE *stream_;
 
-    DISALLOW_COPY_AND_ASSIGN(SequentialAccessFile);
+    DISALLOW_COPY_AND_ASSIGN(SequentialReadonlyFile);
 };
 
 class RandomAccessFile : public detail::FileAbstruct {
