@@ -7,10 +7,6 @@ enum RECORD_TYPE {
   START_RECORD = (1 << 0), LAST_RECORD = (1 << 1),
 };
 
-enum COPMRESS_TYPE {
-  NO_COMPRESSION, SNAPPY_COMPRESSION = 1 << 0, GZIP_COMPRESSION = 1 << 1,
-};
-
 enum Status {
   OK = 0, FILE_,
 };
