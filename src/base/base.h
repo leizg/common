@@ -37,6 +37,13 @@
 #include <string>
 #include <algorithm>
 
+#define v16(c) (*(uint16*)c)
+#define v32(c) (*(uint32*)c)
+#define v64(c) (*(uint64*)c)
+#define save16(c, v) (*((uint16*)c)  = v)
+#define save32(c, v) (*((uint32*)c)  = v)
+#define save64(c, v) (*((uint64*)c) = v)
+
 #define setFdBlock(fd) \
   ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_NONBLOCK)
 #define setFdNonBlock(fd) \

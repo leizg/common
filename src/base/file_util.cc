@@ -243,9 +243,9 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
 
 bool AppendonlyMmapedFile::doMap() {
   if (mem_ != NULL) unMap();
-  if (!FileTruncate(fd_, mapped_offset_ + kMappedSize)) return false;
+  if (!FileTruncate(fd_, mapped_offset_ + mapped_size_)) return false;
 
-  mem_ = (char*) Mmap(NULL, kMappedSize, PROT_WRITE, MAP_SHARED, fd_,
+  mem_ = (char*) Mmap(NULL, mapped_size_, PROT_WRITE, MAP_SHARED, fd_,
                       mapped_offset_);
   if (mem_ == MAP_FAILED) {
     PLOG(WARNING)<< "mmap64 error, fd: " << fd_;
@@ -253,17 +253,17 @@ bool AppendonlyMmapedFile::doMap() {
   }
 
   pos_ = mem_;
-  end_ = mem_ + kMappedSize;
+  end_ = mem_ + mapped_size_;
 
   flushed_size_ = 0;
-  mapped_offset_ += kMappedSize;
+  mapped_offset_ += mapped_size_;
 
   return true;
 }
 
 void AppendonlyMmapedFile::unMap() {
   if (mem_ != NULL) {
-    ::munmap(mem_, kMappedSize);
+    ::munmap(mem_, mapped_size_);
     mem_ = pos_ = end_ = NULL;
     flushed_size_ = 0;
   }
