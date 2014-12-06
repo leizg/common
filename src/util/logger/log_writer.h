@@ -9,8 +9,7 @@ namespace util {
 // not threadsafe.
 class LogWriter {
   public:
-    LogWriter(AppendonlyMmapedFile* log_file, uint64 limit_size,
-              COPMRESS_TYPE compress_type)
+    explicit LogWriter(AppendonlyMmapedFile* log_file)
         : log_file_(log_file), block_offset_(0) {
     }
     ~LogWriter() {
@@ -18,6 +17,9 @@ class LogWriter {
 
     void flush();
     bool append(const char* data, uint32 len);
+    bool append(const std::string& log) {
+      return append(log.data(), log.size());
+    }
 
   private:
     scoped_ptr<AppendonlyMmapedFile> log_file_;

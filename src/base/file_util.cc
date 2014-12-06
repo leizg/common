@@ -6,8 +6,8 @@
 #include <sys/mman.h>
 
 namespace {
-bool openFile(const std::string& fpath, int* fd, int flag) {
-  int ret = ::open(fpath.c_str(), flag);
+bool openFile(const std::string& fpath, int* fd, int flag, int mode = 0644) {
+  int ret = ::open(fpath.c_str(), flag, mode);
   if (ret == INVALID_FD) {
     PLOG(WARNING)<< "open error, path: " << fpath;
     return false;
@@ -56,6 +56,7 @@ bool FileSize(int fd, uint64* size) {
     return true;
   }
 
+  PLOG(WARNING)<< "stat error, fd: " << fd;
   return false;
 }
 
@@ -91,9 +92,10 @@ bool FlushFile(int fd) {
 }
 
 bool FileTruncate(int fd, uint64 size) {
+  DCHECK_GT(size, 0);
   int ret = ::ftruncate(fd, size);
   if (ret != 0) {
-    LOG(WARNING)<< "ftruncate error, fd: " << fd;
+    PLOG(WARNING)<< "ftruncate error, fd: " << fd << " size: " << size;
     return false;
   }
   return true;
@@ -102,7 +104,7 @@ bool FileTruncate(int fd, uint64 size) {
 bool FileTruncate(const std::string& path, uint64 size) {
   int ret = ::truncate(path.c_str(), size);
   if (ret != 0) {
-    LOG(WARNING)<< "ftruncate error, path: " << path;
+    LOG(WARNING)<< "ftruncate error, path: " << path << " size: " << size;
     return false;
   }
   return true;
@@ -121,7 +123,7 @@ bool SequentialReadonlyFile::Init() {
 
 int32 SequentialReadonlyFile::read(char* buf, uint32 len) {
   DCHECK_GE(len, 0);
-  int32 readn = ::fread(buf, len, 1, stream_);
+  int32 readn = ::fread(buf, 1, len, stream_);
   if (readn == -1) {
     PLOG(WARNING)<< "fread error, path: " << fpath_;
     return -1;
@@ -180,7 +182,8 @@ int32 RandomAccessFile::write(const char* buf, uint32 len, off_t offset) {
 AppendonlyMmapedFile::~AppendonlyMmapedFile() {
   if (fd_ != INVALID_FD) {
     if (pos_ != end_) {
-      FileTruncate(fd_, mapped_offset_ - (end_ - pos_));
+      uint64 file_size = mapped_offset_ - (end_ - pos_);
+      DCHECK(FileTruncate(fd_, file_size));
     }
 
     closeWrapper(fd_);
@@ -188,27 +191,32 @@ AppendonlyMmapedFile::~AppendonlyMmapedFile() {
 }
 
 bool AppendonlyMmapedFile::Init() {
-  if (!openFile(fpath_, &fd_, O_APPEND)) return false;
-
+//  uint32 flags = O_APPEND | O_CREAT | O_CLOEXEC | O_WRONLY;
+  uint32 flags = O_RDWR | O_CREAT | O_CLOEXEC | O_TRUNC;
+  if (!openFile(fpath_, &fd_, flags)) {
+    return false;
+  }
+  DCHECK_NE(fd_, INVALID_FD);
   if (!FileSize(fd_, &mapped_offset_)) {
     closeWrapper(fd_);
     return false;
   }
+
   return true;
 }
 
 void AppendonlyMmapedFile::flush() {
   DCHECK_GE(end_, mem_);
-  if (fd_ != INVALID_FD && end_ != mem_) {
-    int32 size = end_ - mem_ - flushed_size_;
-    if (size > 0) {
-      int ret = ::msync(mem_ + flushed_size_, size, MS_SYNC);
-      if (ret != 0) {
-        PLOG(WARNING)<< "msync error";
-        return;
-      }
-      flushed_size_ += size;
+  if (fd_ != INVALID_FD && end_ != mem_) return;
+
+  int32 size = end_ - mem_ - flushed_size_;
+  if (size > 0) {
+    int ret = ::msync(mem_ + flushed_size_, size, MS_SYNC);
+    if (ret != 0) {
+      PLOG(WARNING)<< "msync error";
+      return;
     }
+    flushed_size_ += size;
   }
 }
 
@@ -219,7 +227,7 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
   while (left > 0) {
     uint32 avail_size = end_ - pos_;
     if (avail_size == 0) {
-      doMap();
+      if (!doMap()) return -1;
       continue;
     }
 
@@ -243,8 +251,11 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
 
 bool AppendonlyMmapedFile::doMap() {
   if (mem_ != NULL) unMap();
-  if (!FileTruncate(fd_, mapped_offset_ + mapped_size_)) return false;
 
+  bool ret = FileTruncate(fd_, mapped_offset_ + mapped_size_);
+  if (!ret) {
+    return false;
+  }
   mem_ = (char*) Mmap(NULL, mapped_size_, PROT_WRITE, MAP_SHARED, fd_,
                       mapped_offset_);
   if (mem_ == MAP_FAILED) {

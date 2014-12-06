@@ -26,7 +26,7 @@ void LogWriter::flush() {
   if (block_offset_ != 0) {
     int32 writen = log_file_->write(block_, block_offset_);
     DCHECK_EQ(writen, block_offset_);
-
+    log_file_->flush();
     block_offset_ = 0;
   }
 }

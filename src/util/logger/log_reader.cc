@@ -11,6 +11,7 @@ bool LogReader::loadCache() {
     return true;
   }
 
+  PLOG(INFO)<< "read error: " << readn;
   return false;
 }
 

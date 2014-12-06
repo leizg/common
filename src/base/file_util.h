@@ -92,7 +92,7 @@ class RandomAccessFile : public detail::FileAbstruct {
 
 class AppendonlyMmapedFile : public detail::FileAbstruct {
   public:
-    AppendonlyMmapedFile(const std::string& fpath, uint32 mapped_size)
+    AppendonlyMmapedFile(const std::string& fpath, uint32 mapped_size = 0)
         : FileAbstruct(fpath), fd_(INVALID_FD) {
       mem_ = pos_ = end_ = NULL;
       mapped_size_ = mapped_size == 0 ? kDefaultMappedSize : mapped_size;
