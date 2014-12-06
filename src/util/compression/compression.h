@@ -10,6 +10,7 @@ class Compression {
     virtual ~Compression() {
     }
 
+    // it is here for zero copy
     class InBuf {
       public:
         virtual ~InBuf() {
