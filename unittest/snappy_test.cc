@@ -11,17 +11,11 @@ class SnappyTest : public testing::Test {
 
   protected:
     scoped_ptr<util::SnappyCompression> cp_;
-
     std::string origin_data_;
-    scoped_ptr<util::StringInBuf> in_buf_;
-    scoped_ptr<util::StringOutBuf> out_buf_;
 
     void SetUp() {
       origin_data_ = "women dou shi hao wawa!";
       cp_.reset(new util::SnappyCompression);
-
-      in_buf_.reset(new util::StringInBuf(&origin_data_));
-      out_buf_.reset(new util::StringOutBuf);
     }
 
   private:
@@ -29,9 +23,11 @@ class SnappyTest : public testing::Test {
 };
 
 TEST_F(SnappyTest, SimpleTest) {
-  ASSERT_TRUE(cp_->compress(in_buf_.get(), out_buf_.get()));
+  util::StringInBuf in1(&origin_data_);
+  util::StringOutBuf out1;
+  ASSERT_TRUE(cp_->compress(&in1, &out1));
 
-  util::StringInBuf in2(&out_buf_->data());
+  util::StringInBuf in2(&out1.data());
   util::StringOutBuf out2;
   ASSERT_TRUE(cp_->decompress(&in2, &out2));
 
