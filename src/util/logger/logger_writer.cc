@@ -14,7 +14,9 @@ bool LogWriter::append(uint32 type, const char* data, uint32 len) {
   buf += 4;
   save32(buf, type);  // type
   buf += 4;
-  save32(buf, 0);  // crc32, TODO
+  uint32 crc = 0;
+  if (crc_check_) crc = crc32::Value(data, len);
+  save32(buf, crc);  // crc32
   buf += 4;
 
   ::memcpy(buf, data, len);

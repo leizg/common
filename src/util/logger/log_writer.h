@@ -9,8 +9,8 @@ namespace util {
 // not threadsafe.
 class LogWriter {
   public:
-    explicit LogWriter(AppendonlyMmapedFile* log_file)
-        : log_file_(log_file), block_offset_(0) {
+    LogWriter(AppendonlyMmapedFile* log_file, bool enable_crc_check = true)
+        : log_file_(log_file), crc_check_(enable_crc_check), block_offset_(0) {
     }
     ~LogWriter() {
     }
@@ -23,6 +23,8 @@ class LogWriter {
 
   private:
     scoped_ptr<AppendonlyMmapedFile> log_file_;
+
+    const bool crc_check_;
 
     uint32 block_offset_;
     char block_[BLOCK_SIZE];

@@ -20,6 +20,8 @@ bool LogReader::readRecord(std::string* log, bool* is_last) {
   uint32 len = v32(data);
   data += 4;
   DCHECK_LE(len, load_size_ - offset_);
+  DCHECK_LE(len, BLOCK_SIZE - offset_);
+  offset_ += len + LOG_HEADER_SIZE;
 
   uint32 type = v32(data);
   data += 4;
@@ -28,13 +30,14 @@ bool LogReader::readRecord(std::string* log, bool* is_last) {
 
   uint32 saved_crc = v32(data);
   data += 4;
-  if (saved_crc != 0) {
-    // TODO: check crc32.
+  if (crc_check_ && saved_crc != 0) {
+    uint32 crc = crc32::Value(data, len);
+    if (crc != saved_crc) {
+      return false;
+    }
   }
 
   log->append(data, len);
-  data += len;
-
   return true;
 }
 

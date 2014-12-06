@@ -8,8 +8,9 @@ namespace util {
 
 class LogReader {
   public:
-    explicit LogReader(SequentialReadonlyFile* log_file)
-        : log_file_(log_file), offset_(0), load_size_(0) {
+    LogReader(SequentialReadonlyFile* log_file, bool enable_crc_check = true)
+        : log_file_(log_file), crc_check_(enable_crc_check), offset_(0), load_size_(
+            0) {
       DCHECK_NOTNULL(log_file);
     }
     ~LogReader() {
@@ -19,6 +20,8 @@ class LogReader {
 
   private:
     scoped_ptr<SequentialReadonlyFile> log_file_;
+
+    const bool crc_check_;
 
     uint32 offset_;
     uint32 load_size_;

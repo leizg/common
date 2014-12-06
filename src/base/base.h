@@ -2,6 +2,7 @@
 #define BASE_H_
 
 #include "hash.h"
+#include "crc32.h"
 #include "closure.h"
 #include "file_util.h"
 #include "macro_def.h"
