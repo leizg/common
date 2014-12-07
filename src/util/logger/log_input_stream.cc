@@ -23,25 +23,7 @@ class LogInputStream::LogDir {
     ~LogDir() {
     }
 
-    bool Init() {
-      if (!dit_.Init()) return false;
-
-      std::set<uint64> ids;
-      while (true) {
-        const std::string* file = dit_.next(DirIterator::REG_FILE);
-        if (file != NULL) return false;
-
-        DCHECK(!file->empty());
-        if (file->at(0) != '.') {
-          ids.insert(atoi(file->c_str()));
-        }
-      }
-
-      for (auto i = ids.begin(); i != ids.end(); ++i) {
-        log_files_.push_back(itostring(*i));
-      }
-      return true;
-    }
+    bool Init();
 
     bool nextLogFile(std::string* log_file);
 
@@ -53,6 +35,26 @@ class LogInputStream::LogDir {
 
     DISALLOW_COPY_AND_ASSIGN(LogDir);
 };
+
+bool LogInputStream::LogDir::Init() {
+  if (!dit_.Init()) return false;
+
+  std::set<uint64> ids;
+  while (true) {
+    const std::string* file = dit_.next(DirIterator::REG_FILE);
+    if (file != NULL) break;
+
+    DCHECK(!file->empty());
+    if (file->at(0) != '.') {
+      ids.insert(atoi(file->c_str()));
+    }
+  }
+
+  for (auto i = ids.begin(); i != ids.end(); ++i) {
+    log_files_.push_back(itostring(*i));
+  }
+  return true;
+}
 
 bool LogInputStream::LogDir::nextLogFile(std::string* log_file) {
   if (!log_files_.empty()) {
@@ -72,30 +74,43 @@ bool LogInputStream::Init(const std::string& log_dir) {
   dir_.reset(new LogDir(log_dir));
   if (!dir_->Init()) return false;
 
+  loadCache();
   return true;
+}
+
+bool LogInputStream::createReader() {
+  std::string log_file;
+
+  SequentialReadonlyFile* file;
+  while (dir_->nextLogFile(&log_file)) {
+    file = new SequentialReadonlyFile(log_file);
+    if (!file->Init()) {
+      delete file;
+      continue;
+    }
+
+    reader_.reset(new LogReader(file, crc32_check_));
+    return true;
+  }
+
+  return false;
 }
 
 bool LogInputStream::loadCache() {
   DCHECK(log_queue_.empty());
   while (true) {
-    if (reader_ == NULL) {
-      std::string log_file;
-      if (!dir_->nextLogFile(&log_file)) {
-        return false;
-      }
-      SequentialReadonlyFile* file = new SequentialReadonlyFile(log_file);
-      if (!file->Init()) {
-        delete file;
-        continue;
-      }
-      reader_.reset(new LogReader(file, crc32_check_));
+    if (reader_ == NULL && !createReader()) {
+      return false;
     }
 
     DCHECK_NOTNULL(reader_.get());
-    if (reader_->read(&log_queue_, 10)) {
-      break;
+    if (!reader_->read(&log_queue_, kLoadNumber)) {
+      reader_.reset();
+      continue;
     }
+    break;
   }
+
   DCHECK(!log_queue_.empty());
   return true;
 }
