@@ -1,3 +1,6 @@
+#ifndef SNAPPY_H_
+#define SNAPPY_H_
+
 #include "compression.h"
 #include <snappy.h>
 
@@ -18,3 +21,4 @@ class SnappyCompression : public Compression {
 };
 
 }
+#endif
