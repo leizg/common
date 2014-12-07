@@ -6,7 +6,7 @@ is_build=0
 build_command='scons -j4'
 
 bin='../src/build/test'
-args='-alsologtostderr '
+#args='-alsologtostderr '
 
 if [ "$is_build" -eq 1 ] ; then
   $build_command

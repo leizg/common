@@ -17,6 +17,17 @@ class LogReader {
     }
 
     bool read(std::string* log);
+    bool read(std::deque<std::string*>* log_vec, int size) {
+      for (uint32 i = 0; i < size; ++i) {
+        std::string* log = new std::string;
+        if (!read(log)) {
+          delete log;
+          break;
+        }
+        log_vec->push_back(log);
+      }
+      return !log_vec->empty();
+    }
 
   private:
     scoped_ptr<SequentialReadonlyFile> log_file_;
