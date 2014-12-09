@@ -48,6 +48,65 @@ class ScopedMutex {
     DISALLOW_COPY_AND_ASSIGN(ScopedMutex);
 };
 
+class RwLock {
+  public:
+    RwLock() {
+      ::pthread_rwlock_init(&t_, NULL);
+    }
+    ~RwLock() {
+      ::pthread_rwlock_destroy(&t_);
+    }
+
+    void readLock() {
+      ::pthread_rwlock_rdlock(&t_);
+    }
+    void writeLock() {
+      ::pthread_rwlock_wrlock(&t_);
+    }
+
+    void unLock() {
+      ::pthread_rwlock_unlock(&t_);
+    }
+
+  private:
+    pthread_rwlock_t t_;
+
+    DISALLOW_COPY_AND_ASSIGN(RwLock);
+};
+
+class ScopedReadLock {
+  public:
+    explicit ScopedReadLock(RwLock* lock)
+        : lock_(lock) {
+      DCHECK_NOTNULL(lock);
+      lock_->readLock();
+    }
+    ~ScopedReadLock() {
+      lock_->unLock();
+    }
+
+  private:
+    RwLock* lock_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedReadLock);
+};
+class ScopedWriteLock {
+  public:
+    explicit ScopedWriteLock(RwLock* lock)
+        : lock_(lock) {
+      DCHECK_NOTNULL(lock);
+      lock_->writeLock();
+    }
+    ~ScopedWriteLock() {
+      lock_->unLock();
+    }
+
+  private:
+    RwLock* lock_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedWriteLock);
+};
+
 // CLOCK_MONOTONIC: // man clock_getres
 //     Clock that cannot be set and represents monotonic
 //     time since some unspecified starting point.  This

@@ -42,25 +42,18 @@ struct LinkNode {
 class LinkQueue : public LinkNode {
   public:
     virtual ~LinkQueue() {
-      DCHECK(empty());
     }
 
     bool empty() const {
       return prev == next;
     }
 
-    void clear() {
-      while (!empty()) {
-        LinkNode* node = next;
-        node->remove();
-        delete node;
-      }
-    }
-
   protected:
     LinkQueue()
-        : prev(this), next(this) {
+        : prev(this), next(this), size_(0) {
     }
+
+    uint64 size_;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(LinkQueue);

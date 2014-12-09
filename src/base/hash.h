@@ -21,4 +21,11 @@ inline uint32 Hash(const std::string& key) {
   return SuperFastHash(key.data(), static_cast<int>(key.size()));
 }
 
+inline uint32 Hash(uint32 id) {
+  return id;
+}
+inline uint64 Hash(uint64 id) {
+  return id;
+}
+
 #endif /* HASH_H_ */
