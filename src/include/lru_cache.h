@@ -6,6 +6,8 @@
 namespace util {
 
 namespace internal {
+
+// todo: remove map_
 template<typename Key, typename Value>
 class Table : public LinkQueue {
   public:
