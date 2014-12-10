@@ -3,8 +3,6 @@
 
 #include "include/link_queue.h"
 
-namespace util {
-
 namespace internal {
 
 // todo: remove map_
@@ -120,6 +118,7 @@ class LruCache {
 
   private:
     uint32 size_;
+    RwLock rw_lock_;
 
     HashTable* getTableByKey(const Key& k) {
       uint32 hash_id = Hash(k);
@@ -135,10 +134,11 @@ namespace internal {
 
 template<typename Key, typename Value>
 bool Table<Key, Value>::insert(const Key& k, Value* value) {
-  if (map_.count(Key) != 0) return false;
+  ScopedWriteLock l(&rw_lock_);
+  if (map_.count(k) != 0) return false;
 
   if (size_ == capacity_) {
-    NodeValue* old_value = prev;
+    NodeValue* old_value = static_cast<NodeValue*>(prev);
     old_value->remove();
     delete old_value;
     --size_;
@@ -147,6 +147,7 @@ bool Table<Key, Value>::insert(const Key& k, Value* value) {
   DCHECK_LT(size_, capacity_);
   NodeValue* new_value = new NodeValue(value);
   new_value->inertBefore(prev);
+  map_[k] = new_value;
   ++size_;
 
   return true;
@@ -154,6 +155,7 @@ bool Table<Key, Value>::insert(const Key& k, Value* value) {
 
 template<typename Key, typename Value>
 Value* Table<Key, Value>::find(const Key& k) {
+  ScopedReadLock l(&rw_lock_);
   auto it = map_.find(k);
   if (it != map_.end()) {
     NodeValue* v = it->second;
@@ -167,8 +169,10 @@ Value* Table<Key, Value>::find(const Key& k) {
 
 template<typename Key, typename Value>
 bool Table<Key, Value>::remove(const Key& k) {
+  ScopedWriteLock l(&rw_lock_);
   auto it = map_.find(k);
   if (it != map_.end()) {
+    map_.erase(it);
     NodeValue* v = it->second;
     v->remove();
     delete v;
@@ -181,12 +185,12 @@ bool Table<Key, Value>::remove(const Key& k) {
 
 template<typename Key, typename Value>
 void Table<Key, Value>::clear() {
+  ScopedWriteLock l(&rw_lock_);
   prev = next = this;
   STLMapClear(&map_);
 
   size_ = 0;
 }
 }  // end for namespace internal
-}  // end for namespace util
 
 #endif /* LRU_CACHE_H_ */

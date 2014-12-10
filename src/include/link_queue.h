@@ -50,7 +50,7 @@ class LinkQueue : public LinkNode {
 
   protected:
     LinkQueue()
-        : prev(this), next(this), size_(0) {
+        : size_(0) {
     }
 
     uint64 size_;
