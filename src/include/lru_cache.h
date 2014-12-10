@@ -31,14 +31,17 @@ class Table : public LinkQueue {
 
     class NodeValue : public LinkNode {
       public:
-        NodeValue(Value* value)
-            : value_(value) {
+        NodeValue(const Key key, Value* value)
+            : key_(key), value_(value) {
           DCHECK_NOTNULL(value);
           value->Ref();
         }
         virtual ~NodeValue() {
         }
 
+        const Key& key() const {
+          return key_;
+        }
         Value* value() const {
           Value*v = value_.get();
           v->Ref();
@@ -46,6 +49,7 @@ class Table : public LinkQueue {
         }
 
       private:
+        const Key key_;
         scoped_ref<Value> value_;
 
         DISALLOW_COPY_AND_ASSIGN(NodeValue);
@@ -139,13 +143,14 @@ bool Table<Key, Value>::insert(const Key& k, Value* value) {
 
   if (size_ == capacity_) {
     NodeValue* old_value = static_cast<NodeValue*>(prev);
+    map_.erase(old_value->key());
     old_value->remove();
     delete old_value;
     --size_;
   }
 
   DCHECK_LT(size_, capacity_);
-  NodeValue* new_value = new NodeValue(value);
+  NodeValue* new_value = new NodeValue(k, value);
   new_value->inertBefore(prev);
   map_[k] = new_value;
   ++size_;
