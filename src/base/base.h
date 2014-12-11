@@ -5,6 +5,7 @@
 #include "data_types.h"
 
 #include "crc32.h"
+#include "xx_hash.h"
 #include "super_hash.h"
 #include "murmur_hash.h"
 
