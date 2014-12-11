@@ -1,4 +1,4 @@
-#include "hash.h"
+#include "super_hash.h"
 
 // From http://www.azillionmonkeys.com/qed/hash.html
 

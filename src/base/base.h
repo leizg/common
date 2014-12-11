@@ -1,16 +1,20 @@
 #ifndef BASE_H_
 #define BASE_H_
 
-#include "hash.h"
-#include "crc32.h"
-#include "closure.h"
-#include "file_util.h"
 #include "macro_def.h"
+#include "data_types.h"
+
+#include "crc32.h"
+#include "super_hash.h"
+#include "murmur_hash.h"
+
+#include "closure.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
 #include "ref_counted.h"
+
+#include "file_util.h"
 #include "time_stamp.h"
-#include "data_types.h"
 
 #include "thread.h"
 #include "thread_util.h"
