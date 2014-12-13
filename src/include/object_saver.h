@@ -18,6 +18,7 @@ class ObjectSaver {
     bool empty() const {
       return size() == 0;
     }
+    virtual void clear() = 0;
 
     virtual Object* Find(const Key& key) const = 0;
 
@@ -80,6 +81,11 @@ class ObjectMapSaver : public ObjectSaver<Key, Object> {
       return false;
     }
 
+    virtual void clear() {
+      STLMapClear(&object_map_);
+      SaverType::size_ = 0;
+    }
+
   private:
     DISALLOW_COPY_AND_ASSIGN(ObjectMapSaver);
 };
@@ -137,6 +143,15 @@ class ObjectVectorSaver : public ObjectSaver<Key, Object> {
       return flag;
     }
 
+    virtual void clear() {
+      SaverType::size_ = 0;
+      for (auto i = SaverType::object_vector_.begin();
+          i != SaverType::object_vector_.end(); ++i) {
+        delete (*i);
+      }
+      SaverType::object_vector_.clear();
+    }
+
   private:
     DISALLOW_COPY_AND_ASSIGN(ObjectVectorSaver);
 };
@@ -178,6 +193,16 @@ class RefCountedObjectMapSaver : public ObjectMapSaver<Key, Object> {
         return true;
       }
       return false;
+    }
+
+    virtual void clear() {
+      for (auto i = SaverType::object_map_.begin();
+          i != SaverType::object_map_.end(); ++i) {
+        i->second->UnRef();
+      }
+      SaverType::object_map_.clear();
+
+      SaverType::size_ = 0;
     }
 
   private:
@@ -232,13 +257,18 @@ class RefCountedObjectArraySaver : public ObjectVectorSaver<Key, Object> {
       return flag;
     }
 
+    virtual void clear() {
+      STLUnRef(&SaverType::object_vector_);
+      SaverType::size_ = 0;
+    }
+
   private:
     DISALLOW_COPY_AND_ASSIGN(RefCountedObjectArraySaver);
 };
 
 template<typename Key, typename Object,
     template<typename, typename > class Saver>
-class ThreadSafeObjectSaver : ObjectSaver<Key, Object> {
+class ThreadSafeObjectSaver : public ObjectSaver<Key, Object> {
   protected:
     typedef ObjectSaver<Key, Object> SaverType;
 
@@ -277,6 +307,11 @@ class ThreadSafeObjectSaver : ObjectSaver<Key, Object> {
         return true;
       }
       return false;
+    }
+    virtual void clear() {
+      ScopedWriteLock l(&rw_lock_);
+      --SaverType::size_ = 0;
+      saver_.clear();
     }
 
   private:
@@ -347,6 +382,14 @@ class MulityTableObjectSaver : public ObjectSaver<Key, Object> {
         return true;
       }
       return false;
+    }
+
+    virtual void clear() {
+      SaverType::size_ = 0;
+      for (uint32 i = 0; i < capacity_; ++i) {
+        Table* t = tables_[i];
+        t->clear();
+      }
     }
 
   private:

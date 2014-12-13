@@ -13,6 +13,8 @@ TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
         100, false), worker_(worker), ev_mgr_(ev_mgr), protocol_(
     NULL) {
   CHECK_NOTNULL(ev_mgr);
+
+  listeners_.reset(new ListenerMap);
 }
 
 TcpServer::~TcpServer() {
@@ -35,28 +37,24 @@ bool TcpServer::Init() {
 
 bool TcpServer::bindIp(const std::string& ip, uint16 port) {
   CHECK_NOTNULL(protocol_);
-  ScopedMutex l(&mutex_);
-  if (listeners_.count(ip) != 0) return true;
+  if (listeners_->Find(ip) != nullptr) return true;
 
   Acceptor* a = new Acceptor(ev_mgr_, this);
   a->setProtocol(protocol_);
-  if (!a->doBind(ip, port)) {
+  if (!a->doBind(ip, port) || !listeners_->Add(ip, a)) {
     delete a;
     return false;
   }
-  listeners_[ip] = a;
 
   return true;
 }
 
 void TcpServer::unBindIp(const std::string& ip) {
-  ScopedMutex l(&mutex_);
-  STLMapEarseAndDelete(&listeners_, ip);
+  listeners_->Remove(ip);
 }
 
 void TcpServer::unBindAll() {
-  ScopedMutex l(&mutex_);
-  STLMapClear(&listeners_);
+  listeners_->clear();
 }
 
 EventManager* TcpServer::getPoller() {

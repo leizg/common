@@ -29,6 +29,8 @@ class Connection : public RefCounted {
     };
 
     Connection(int fd, EventManager* ev_mgr);
+    virtual ~Connection();
+
     void Init();
 
     const int& FileHandle() const {
@@ -90,8 +92,6 @@ class Connection : public RefCounted {
 
     scoped_ptr<InputBuf> input_buf_;
     scoped_ptr<OutQueue> out_queue_;
-
-    virtual ~Connection();
 
     DISALLOW_COPY_AND_ASSIGN(Connection);
 };

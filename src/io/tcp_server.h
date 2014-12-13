@@ -14,8 +14,10 @@ class EventManager;
 // master + workers.
 // master accept new connection, and dispatch it to worker.
 // thread pool + event loop per thread.
-class TcpServer : public MulityTableObjectSaver<int, Connection,
-    ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> > {
+
+typedef ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> ConnTable;
+
+class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
   public:
     class Listener {
       public:
@@ -50,8 +52,8 @@ class TcpServer : public MulityTableObjectSaver<int, Connection,
     EventManager* ev_mgr_;
     scoped_ptr<EventPooler> event_poller_;
 
-    Mutex mutex_;
-    std::map<std::string, Listener*> listeners_;
+    typedef ThreadSafeObjectSaver<std::string, Listener, ObjectMapSaver> ListenerMap;
+    scoped_ptr<ListenerMap> listeners_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };
