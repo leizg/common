@@ -11,12 +11,11 @@ class Connection;
 class EventPooler;
 class EventManager;
 
+typedef ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> ConnTable;
+
 // master + workers.
 // master accept new connection, and dispatch it to worker.
 // thread pool + event loop per thread.
-
-typedef ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> ConnTable;
-
 class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
   public:
     class Listener {
