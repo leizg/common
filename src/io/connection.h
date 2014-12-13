@@ -1,7 +1,7 @@
 #ifndef CONNECTION_H_
 #define CONNECTION_H_
 
-#include "base/base.h"
+#include "include/object_saver.h"
 
 namespace io {
 class InputBuf;
@@ -31,14 +31,23 @@ class Connection : public RefCounted {
     Connection(int fd, EventManager* ev_mgr);
     void Init();
 
-    int Key() const {
-      return fd_;
-    }
-    int FileHandle() const {
+    const int& FileHandle() const {
       return fd_;
     }
     EventManager* getEventLoop() const {
       return ev_mgr_;
+    }
+
+    void setSaver(ObjectSaver<int, Connection>* saver) {
+      DCHECK_NE(saver_, saver);
+      if (saver_ != NULL) {
+        saver_->Remove(fd_);
+        saver_ = NULL;
+      }
+      if (saver != NULL) {
+        saver->Add(fd_, this);
+        saver_ = saver;
+      }
     }
 
     void setAttr(Attr* attr);
@@ -74,6 +83,9 @@ class Connection : public RefCounted {
 
     Protocol* protocol_;
     scoped_ptr<Attr> attr_;
+
+    ObjectSaver<int, Connection>* saver_;
+
     scoped_ptr<Closure> close_closure_;
 
     scoped_ptr<InputBuf> input_buf_;

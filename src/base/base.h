@@ -77,7 +77,7 @@ template<typename T> inline void STLUnRef(T* t) {
   }
   t->clear();
 }
-template<typename T> inline void MapUnRef(T* t) {
+template<typename T> inline void STLMapUnRef(T* t) {
   for (auto it = t->begin(); it != t->end(); ++it) {
     (it->second)->UnRef();
   }
@@ -92,11 +92,24 @@ template<typename T, typename K> inline void STLEarseAndDelete(T*t,
     t->erase(item);
   }
 }
-template<typename T, typename K> inline void MapEarseAndDelete(T*t,
-                                                               const K& k) {
+template<typename T, typename K> inline void STLMapEarseAndDelete(T*t,
+                                                                  const K& k) {
   auto it = t->find(k);
   if (it != t->end()) {
     delete it->second;
+    t->erase(it);
+  }
+}
+
+template<typename T, typename K> inline void STLEarse(T* t, const K& k) {
+  auto item = t->find(k);
+  if (item != t->end()) {
+    t->erase(item);
+  }
+}
+template<typename T, typename K> inline void STLMapEarse(T*t, const K& k) {
+  auto it = t->find(k);
+  if (it != t->end()) {
     t->erase(it);
   }
 }
@@ -108,7 +121,8 @@ template<typename T, typename K> inline void STLEarseAndUnRef(T*t, const K& k) {
     t->earse(it);
   }
 }
-template<typename T, typename K> inline void MapEarseAndUnRef(T*t, const K& k) {
+template<typename T, typename K> inline void STLMapEarseAndUnRef(T*t,
+                                                                 const K& k) {
   auto it = t->find(k);
   if (it != t->end()) {
     it->second->UnRef();

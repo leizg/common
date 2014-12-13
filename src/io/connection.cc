@@ -32,7 +32,7 @@ void Connection::Attr::Init() {
 }
 
 Connection::Connection(int fd, EventManager* ev_mgr)
-    : fd_(fd), closed_(false), ev_mgr_(ev_mgr), protocol_(NULL) {
+    : fd_(fd), closed_(false), ev_mgr_(ev_mgr), saver_(NULL), protocol_(NULL) {
   DCHECK_NE(fd, INVALID_FD);
   DCHECK_NOTNULL(ev_mgr);
 }

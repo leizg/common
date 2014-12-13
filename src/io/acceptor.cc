@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include "tcp_server.h"
 #include "acceptor.h"
 #include "connection.h"
 #include "event_manager.h"
@@ -108,10 +109,11 @@ void Acceptor::handleAccept() {
     EventManager* ev_mgr = serv_->getPoller();
     scoped_ref<Connection> conn(new Connection(fd, ev_mgr));
     conn->setProtocol(protocol_);
+    conn->setSaver(serv_);
     conn->setAttr(protocol_->NewConnectionAttr());
-    serv_->Add(conn.get());
-    conn->setCloseClosure(
-        NewPermanentCallback(serv_, &TcpServer::Remove, conn.get()), false);
+    serv_->Add(fd, conn.get());
+
+    // FIXME: return value
     ev_mgr->runInLoop(NewCallback(conn.get(), &Connection::Init));
   }
 }

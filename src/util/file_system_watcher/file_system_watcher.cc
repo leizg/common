@@ -77,7 +77,7 @@ int FileSystemWatcher::watch(WatchObject* watcher) {
 
 void FileSystemWatcher::rmWatch(int wd) {
   if (wd != 0 && map_.count(wd) != 0) {
-    MapEarseAndUnRef(&map_, wd);
+    STLMapEarseAndUnRef(&map_, wd);
 
     int ret = ::inotify_rm_watch(fd_, wd);
     if (ret != 0) {

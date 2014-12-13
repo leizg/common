@@ -8,13 +8,17 @@
 namespace io {
 
 TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
-    : worker_(worker), ev_mgr_(ev_mgr), protocol_(
-    NULL), saver_(new RefCountedObjectSavePolicy<Connection>) {
+    : MulityTableObjectSaver<int, Connection,
+          ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> >(
+        100, false), worker_(worker), ev_mgr_(ev_mgr), protocol_(
+    NULL) {
   CHECK_NOTNULL(ev_mgr);
 }
 
 TcpServer::~TcpServer() {
   unBindAll();
+
+  // todo: remote all connections.
 }
 
 bool TcpServer::Init() {
@@ -47,7 +51,7 @@ bool TcpServer::bindIp(const std::string& ip, uint16 port) {
 
 void TcpServer::unBindIp(const std::string& ip) {
   ScopedMutex l(&mutex_);
-  MapEarseAndDelete(&listeners_, ip);
+  STLMapEarseAndDelete(&listeners_, ip);
 }
 
 void TcpServer::unBindAll() {
@@ -58,13 +62,6 @@ void TcpServer::unBindAll() {
 EventManager* TcpServer::getPoller() {
   CHECK_NOTNULL(event_poller_.get());
   return event_poller_->getPoller();
-}
-
-void TcpServer::Add(Connection* conn) {
-  saver_.Add(conn);
-}
-void TcpServer::Remove(Connection* conn) {
-  saver_.Remove(conn);
 }
 
 }

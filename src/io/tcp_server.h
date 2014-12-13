@@ -1,6 +1,7 @@
 #ifndef TCP_SERVER_H_
 #define TCP_SERVER_H_
 
+#include "connection.h"
 #include "include/object_saver.h"
 
 namespace io {
@@ -13,7 +14,8 @@ class EventManager;
 // master + workers.
 // master accept new connection, and dispatch it to worker.
 // thread pool + event loop per thread.
-class TcpServer {
+class TcpServer : public MulityTableObjectSaver<int, Connection,
+    ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> > {
   public:
     class Listener {
       public:
@@ -41,9 +43,6 @@ class TcpServer {
     void unBindIp(const std::string& ip);
     void unBindAll();
 
-    void Add(Connection* conn);
-    void Remove(Connection* conn);
-
   private:
     uint8 worker_;
     Protocol* protocol_;
@@ -53,7 +52,6 @@ class TcpServer {
 
     Mutex mutex_;
     std::map<std::string, Listener*> listeners_;
-    ObjectMapSaver<int, Connection> saver_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };
