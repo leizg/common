@@ -1,26 +1,6 @@
 #ifndef BASE_H_
 #define BASE_H_
 
-#include "macro_def.h"
-#include "data_types.h"
-
-#include "crc32.h"
-#include "xx_hash.h"
-#include "super_hash.h"
-#include "murmur_hash.h"
-
-#include "closure.h"
-#include "scoped_ptr.h"
-#include "scoped_ref.h"
-#include "ref_counted.h"
-
-#include "file_util.h"
-#include "time_stamp.h"
-
-#include "thread.h"
-#include "thread_util.h"
-#include "thread_storage.h"
-
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>              /* Obtain O_* constant definitions */
@@ -42,6 +22,26 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+
+#include "macro_def.h"
+#include "data_types.h"
+
+#include "crc32.h"
+#include "xx_hash.h"
+#include "super_hash.h"
+#include "murmur_hash.h"
+
+#include "closure.h"
+#include "scoped_ptr.h"
+#include "scoped_ref.h"
+#include "ref_counted.h"
+
+#include "file_util.h"
+#include "time_stamp.h"
+
+#include "thread.h"
+#include "thread_util.h"
+#include "thread_storage.h"
 
 #define v16(c) (*(uint16*)c)
 #define v32(c) (*(uint32*)c)
