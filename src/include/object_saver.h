@@ -356,6 +356,7 @@ class MulityTableObjectSaver : public ObjectSaver<Key, Object> {
       DCHECK_GT(capacity, 0);
       DCHECK_EQ(capacity % 2, 0);
 
+      tables_.resize(capacity);
       for (uint32 i = 0; i < capacity; ++i) {
         tables_[i] = new Table;
       }
