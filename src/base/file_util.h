@@ -90,10 +90,50 @@ class RandomAccessFile : public detail::FileAbstruct {
     DISALLOW_COPY_AND_ASSIGN(RandomAccessFile);
 };
 
-class AppendonlyMmapedFile : public detail::FileAbstruct {
+class writeableFile : public detail::FileAbstruct {
+  public:
+    writeableFile(const std::string& fpath)
+        : detail::FileAbstruct(fpath) {
+    }
+    virtual ~writeableFile() {
+    }
+
+    virtual bool Init() = 0;
+
+    virtual bool flush() = 0;
+    virtual int32 write(const char* buf, uint32 len) = 0;
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(writeableFile);
+};
+
+class AppendonlyFile : public writeableFile {
+  public:
+    AppendonlyFile(const std::string& fpath)
+        : writeableFile(fpath), stream_(NULL) {
+    }
+    virtual ~AppendonlyFile() {
+      if (stream_ != NULL) {
+        ::fclose(stream_);
+        stream_ = NULL;
+      }
+    }
+
+    virtual bool Init();
+
+    virtual bool flush();
+    virtual int32 write(const char* buf, uint32 len);
+
+  private:
+    FILE* stream_;
+
+    DISALLOW_COPY_AND_ASSIGN(AppendonlyFile);
+};
+
+class AppendonlyMmapedFile : public writeableFile {
   public:
     AppendonlyMmapedFile(const std::string& fpath, uint32 mapped_size = 0)
-        : FileAbstruct(fpath), fd_(INVALID_FD) {
+        : writeableFile(fpath), fd_(INVALID_FD) {
       mem_ = pos_ = end_ = NULL;
       mapped_size_ = mapped_size == 0 ? kDefaultMappedSize : mapped_size;
       flushed_size_ = 0;
@@ -101,10 +141,10 @@ class AppendonlyMmapedFile : public detail::FileAbstruct {
     }
     virtual ~AppendonlyMmapedFile();
 
-    bool Init();
+    virtual bool Init();
 
-    void flush();
-    int32 write(const char* buf, uint32 len);
+    virtual bool flush();
+    virtual int32 write(const char* buf, uint32 len);
 
   private:
     int fd_;

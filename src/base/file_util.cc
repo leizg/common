@@ -111,10 +111,10 @@ bool FileTruncate(const std::string& path, uint64 size) {
 }
 
 bool SequentialReadonlyFile::Init() {
-  if (stream_ != NULL) return false;
+  if (stream_ != nullptr) return false;
 
   stream_ = ::fopen(fpath_.c_str(), "r");
-  if (stream_ == NULL) {
+  if (stream_ == nullptr) {
     PLOG(WARNING)<< "fopen error, path: " << fpath_;
     return false;
   }
@@ -179,6 +179,37 @@ int32 RandomAccessFile::write(const char* buf, uint32 len, off_t offset) {
   return len - left;
 }
 
+bool AppendonlyFile::Init() {
+  stream_ = ::fopen(fpath_.c_str(), "a");
+  if (stream_ == nullptr) {
+    PLOG(WARNING)<< "fopen error";
+    return false;
+  }
+
+  return true;
+}
+
+bool AppendonlyFile::flush() {
+  if (stream_ != nullptr) {
+    ::fflush(stream_);
+    return true;
+  }
+  return false;
+}
+
+int32 AppendonlyFile::write(const char* buf, uint32 len) {
+  if (stream_ != nullptr) {
+    int32 ret = ::fwrite(buf, len, 1, stream_);
+    if (ret == -1) {
+      PLOG(WARNING)<< "fwrite error";
+      return -1;
+    }
+    return ret;
+  }
+
+  return -1;
+}
+
 AppendonlyMmapedFile::~AppendonlyMmapedFile() {
   if (fd_ != INVALID_FD) {
     if (pos_ != end_) {
@@ -205,19 +236,20 @@ bool AppendonlyMmapedFile::Init() {
   return true;
 }
 
-void AppendonlyMmapedFile::flush() {
-  DCHECK_GE(end_, mem_);
-  if (fd_ != INVALID_FD && end_ != mem_) return;
-
-  int32 size = end_ - mem_ - flushed_size_;
-  if (size > 0) {
-    int ret = ::msync(mem_ + flushed_size_, size, MS_SYNC);
-    if (ret != 0) {
-      PLOG(WARNING)<< "msync error";
-      return;
+bool AppendonlyMmapedFile::flush() {
+  if (fd_ == INVALID_FD) return false;
+  if (end_ != mem_) {
+    int32 size = end_ - mem_ - flushed_size_;
+    if (size > 0) {
+      int ret = ::msync(mem_ + flushed_size_, size, MS_SYNC);
+      if (ret != 0) {
+        PLOG(WARNING)<< "msync error";
+        return false;
+      }
+      flushed_size_ += size;
     }
-    flushed_size_ += size;
   }
+  return true;
 }
 
 int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
@@ -250,13 +282,13 @@ int32 AppendonlyMmapedFile::write(const char* buf, uint32 len) {
 #endif
 
 bool AppendonlyMmapedFile::doMap() {
-  if (mem_ != NULL) unMap();
+  if (mem_ != nullptr) unMap();
 
   bool ret = FileTruncate(fd_, mapped_offset_ + mapped_size_);
   if (!ret) {
     return false;
   }
-  mem_ = (char*) Mmap(NULL, mapped_size_, PROT_WRITE, MAP_SHARED, fd_,
+  mem_ = (char*) Mmap(nullptr, mapped_size_, PROT_WRITE, MAP_SHARED, fd_,
                       mapped_offset_);
   if (mem_ == MAP_FAILED) {
     PLOG(WARNING)<< "mmap64 error, fd: " << fd_;
@@ -273,18 +305,18 @@ bool AppendonlyMmapedFile::doMap() {
 }
 
 void AppendonlyMmapedFile::unMap() {
-  if (mem_ != NULL) {
+  if (mem_ != nullptr) {
     ::munmap(mem_, mapped_size_);
-    mem_ = pos_ = end_ = NULL;
+    mem_ = pos_ = end_ = nullptr;
     flushed_size_ = 0;
   }
 }
 
 bool DirIterator::Init() {
-  if (dir_ != NULL) return false;
+  if (dir_ != nullptr) return false;
 
   dir_ = ::opendir(fpath_.c_str());
-  if (dir_ == NULL) {
+  if (dir_ == nullptr) {
     PLOG(WARNING)<< "opendir error, path: " << fpath_;
     return false;
   }
@@ -304,28 +336,28 @@ uint8 DirIterator::typeConvert(Type type) const {
 
 const std::string* DirIterator::next(Type type) {
   uint8 entry_type = typeConvert(type);
-  while (next() != NULL) {
+  while (next() != nullptr) {
     if (entry_.d_type & entry_type) {
       return &name_cache_;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 const std::string* DirIterator::next() {
-  if (dir_ != NULL) {
+  if (dir_ != nullptr) {
     struct dirent* dummy;
     int ret = ::readdir_r(dir_, &entry_, &dummy);
     if (ret != 0) {
       PLOG(WARNING)<< "readdir_r error, path: " << fpath_;
-      return NULL;
+      return nullptr;
     }
 
-    if (dummy != NULL) {
+    if (dummy != nullptr) {
       name_cache_ = entry_.d_name;
       return &name_cache_;
     }
   }
 
-  return NULL;
+  return nullptr;
 }
