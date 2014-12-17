@@ -70,10 +70,10 @@ class SequentialReadonlyFile : public detail::FileAbstruct {
 
 class RandomAccessFile : public detail::FileAbstruct {
   public:
-    RandomAccessFile(const std::string& fpath)
+    explicit RandomAccessFile(const std::string& fpath)
         : FileAbstruct(fpath), fd_(INVALID_FD) {
     }
-    ~RandomAccessFile() {
+    virtual ~RandomAccessFile() {
       closeWrapper(fd_);
     }
 
@@ -92,7 +92,7 @@ class RandomAccessFile : public detail::FileAbstruct {
 
 class writeableFile : public detail::FileAbstruct {
   public:
-    writeableFile(const std::string& fpath)
+    explicit writeableFile(const std::string& fpath)
         : detail::FileAbstruct(fpath) {
     }
     virtual ~writeableFile() {
@@ -109,7 +109,7 @@ class writeableFile : public detail::FileAbstruct {
 
 class AppendonlyFile : public writeableFile {
   public:
-    AppendonlyFile(const std::string& fpath)
+    explicit AppendonlyFile(const std::string& fpath)
         : writeableFile(fpath), stream_(NULL) {
     }
     virtual ~AppendonlyFile() {
@@ -132,7 +132,8 @@ class AppendonlyFile : public writeableFile {
 
 class AppendonlyMmapedFile : public writeableFile {
   public:
-    AppendonlyMmapedFile(const std::string& fpath, uint32 mapped_size = 0)
+    explicit AppendonlyMmapedFile(const std::string& fpath, uint32 mapped_size =
+                                      0)
         : writeableFile(fpath), fd_(INVALID_FD) {
       mem_ = pos_ = end_ = NULL;
       mapped_size_ = mapped_size == 0 ? kDefaultMappedSize : mapped_size;
