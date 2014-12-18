@@ -32,6 +32,7 @@
 #include "murmur_hash.h"
 
 #include "closure.h"
+#include "spin_lock.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
 #include "ref_counted.h"
