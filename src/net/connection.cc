@@ -9,7 +9,7 @@ DEFINE_int32(input_buf_len, 128, "the size of inputbuf");
 namespace {
 
 void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
-  io::Connection* conn = static_cast<io::Connection*>(arg);
+  net::Connection* conn = static_cast<net::Connection*>(arg);
 
   if (revent & EV_READ) {
     conn->handleRead(time_stamp);
@@ -21,7 +21,7 @@ void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
 
 }
 
-namespace io {
+namespace net {
 
 // default implemetion.
 void Connection::Attr::Init() {

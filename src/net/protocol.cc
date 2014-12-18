@@ -2,7 +2,7 @@
 
 namespace {
 
-bool RecvPending(io::Connection* conn, io::Connection::Attr* attr) {
+bool RecvPending(net::Connection* conn, net::Connection::Attr* attr) {
   if (attr->pending_size == 0) return true;
 
   int err_no;
@@ -21,7 +21,7 @@ bool RecvPending(io::Connection* conn, io::Connection::Attr* attr) {
 
 }
 
-namespace io {
+namespace net {
 
 bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
                         uint32 data_len) const {

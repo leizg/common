@@ -1,6 +1,6 @@
 #include "event_pipe.h"
 
-namespace io {
+namespace net {
 
 bool EventPipe::initPipe() {
   int ret;

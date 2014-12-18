@@ -22,8 +22,9 @@ if sys.platform != 'darwin':
   libs += ['rt']
 env.Append(LIBS=libs)
 
-source_files = glob('../io/*.cc') + \
-               glob('../base/*.cc') + \
+source_files = glob('../base/*.cc') + \
+               glob('../io/*.cc') + \
+               glob('../net/*.cc') + \
                glob('../util/*.cc') + \
                glob('../util/logger/*.cc') + \
                glob('../util/compression/*.cc') + \

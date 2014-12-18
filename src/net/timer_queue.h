@@ -3,7 +3,7 @@
 
 #include "event_manager.h"
 
-namespace io {
+namespace net {
 
 class TimerQueue : public EventManager::TimerDelegate {
   public:

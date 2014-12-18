@@ -4,14 +4,14 @@
 #include "base/base.h"
 
 namespace io {
-class InputBuf;
-class OutputBuf;
+class InputStream;
+class OutputStream;
 }
 
 namespace test {
 
-bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf);
-bool Decode(io::InputBuf* buf, bool* is_last, uint32* data_len);
+bool Encode(const char* data_buf, uint32 len, io::OutputStream* buf);
+bool Decode(io::InputStream* buf, bool* is_last, uint32* data_len);
 
 }
 #endif /* ECHO_CODER_H_ */

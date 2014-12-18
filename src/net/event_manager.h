@@ -7,7 +7,7 @@
 #define EV_WRITE  (1<<2)
 #define EV_ERROR  (1<<3)
 
-namespace io {
+namespace net {
 
 struct Event {
     int fd;

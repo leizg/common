@@ -4,7 +4,7 @@
 #include "connection.h"
 #include "include/object_saver.h"
 
-namespace io {
+namespace net {
 class Protocol;
 class Connection;
 

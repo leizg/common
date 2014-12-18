@@ -5,15 +5,9 @@
 
 namespace io {
 
-class MemoryBlock : public RefCounted {
+class MemoryBlock {
   public:
-    explicit MemoryBlock(int size) {
-      CHECK_GT(size, 0);
-      size = ALIGN(size);
-      DCHECK_EQ(size % 4, 0);
-      mem_ = (char*) ::malloc(size);
-      end_ = mem_ + size;
-      rpos_ = wpos_ = mem_;
+    virtual ~MemoryBlock() {
     }
 
     int capacity() const {
@@ -38,49 +32,126 @@ class MemoryBlock : public RefCounted {
       rpos_ = wpos_ = mem_;
     }
 
-    void ensureLeft(int len);
-
-    char* peekR() {
+    const char* peekR() const {
       return rpos_;
     }
-    char* peekW() {
+    char* peekW() const {
       return wpos_;
     }
 
-  private:
-    virtual ~MemoryBlock() {
-      ::free(mem_);
-    }
-
+  protected:
     char* mem_;
-    char* rpos_;
+    mutable char* rpos_;
     char* wpos_;
     char* end_;
 
-    friend class InputBuf;
-    friend class OutputBuf;
+    MemoryBlock()
+        : mem_(NULL), rpos_(NULL), wpos_(NULL), end_(NULL) {
+    }
+    MemoryBlock(char* beg, char* end)
+        : mem_(beg), rpos_(beg), wpos_(beg), end_(end) {
+      DCHECK_NOTNULL(beg);
+      DCHECK_NOTNULL(end);
+    }
+    MemoryBlock(char* data, uint32 len)
+        : mem_(data), rpos_(data), wpos_(data), end_(data + len) {
+      DCHECK_NOTNULL(data);
+    }
 
+  private:
     DISALLOW_COPY_AND_ASSIGN(MemoryBlock);
 };
 
-inline void MemoryBlock::ensureLeft(int len) {
-  if (writeableSize() < len) {
-    int rn = readn(), wn = writen();
-    int new_size = capacity() * 2;
-    int free_size = new_size - wn;
-    if (free_size < len) {
-      new_size += len - free_size;
+class ReadonlyBytesChunk : public MemoryBlock {
+  public:
+    ReadonlyBytesChunk(char* data, uint32 len, bool auto_release = true)
+        : MemoryBlock(data, len), data_(data), auto_release_(auto_release) {
+    }
+    virtual ~ReadonlyBytesChunk() {
+      if (auto_release_) {
+        ::free(const_cast<char*>(data_));
+      }
     }
 
-    mem_ = (char*) ::realloc(mem_, new_size);
-    end_ = mem_ + new_size;
-    rpos_ = mem_ + rn;
-    wpos_ = mem_ + wn;
+  private:
+    const char* const data_;
+    const bool auto_release_;
 
-    DCHECK_GE(writeableSize(), len);
+    DISALLOW_COPY_AND_ASSIGN(ReadonlyBytesChunk);
+};
+
+class ReadonlyBlockChunk : public MemoryBlock {
+  public:
+    ReadonlyBlockChunk(const MemoryBlock* block, bool auto_release = true)
+        : MemoryBlock(block->rpos_, block->end_), block_(block), auto_release_(
+            auto_release) {
+    }
+    virtual ~ReadonlyBlockChunk() {
+      if (auto_release_) {
+        delete block_;
+      }
+    }
+
+  private:
+    const MemoryBlock* const block_;
+    const bool auto_release_;
+
+    DISALLOW_COPY_AND_ASSIGN(ReadonlyBlockChunk);
+};
+
+#if 0
+class WriteAbleChunk : public MemoryBlock {
+  public:
+  virtual ~WriteAbleChunk() {
   }
-}
 
-}
+  uint64 append(const char* data, uint64 len) = 0;
 
+  void backUp(uint64 len) = 0;
+
+  private:
+  DISALLOW_COPY_AND_ASSIGN(WriteAbleChunk);
+};
+#endif
+
+class ExternableChunk : public MemoryBlock {
+  public:
+    explicit ExternableChunk(uint32 size) {
+      CHECK_GT(size, 0);
+      size = ALIGN(size);
+      DCHECK_EQ(size % 4, 0);
+      mem_ = (char*) ::malloc(size);
+      end_ = mem_ + size;
+      rpos_ = wpos_ = mem_;
+    }
+    virtual ~ExternableChunk() {
+      ::free(mem_);
+    }
+
+    void ensureLeft(int len) {
+      if (writeableSize() < len) {
+        int rn = readn(), wn = writen();
+        int new_size = capacity() * 2;
+        int free_size = new_size - wn;
+        if (free_size < len) {
+          new_size += len - free_size;
+        }
+
+        mem_ = (char*) ::realloc(mem_, new_size);
+        end_ = mem_ + new_size;
+        rpos_ = mem_ + rn;
+        wpos_ = mem_ + wn;
+        DCHECK_GE(writeableSize(), len);
+      }
+    }
+
+    void skip(uint64 size) {
+      wpos_ += size;
+      DCHECK_LE(wpos_, end_);
+    }
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(ExternableChunk);
+};
+}
 #endif /* MEMORY_BLOCK_H_ */

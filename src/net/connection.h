@@ -3,7 +3,7 @@
 
 #include "include/object_saver.h"
 
-namespace io {
+namespace net {
 class InputBuf;
 class Protocol;
 

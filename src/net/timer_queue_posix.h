@@ -5,7 +5,7 @@
 
 #include "timer_queue.h"
 
-namespace io {
+namespace net {
 
 class TimerQueuePosix : public TimerQueue {
   public:

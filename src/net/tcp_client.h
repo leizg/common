@@ -3,7 +3,7 @@
 
 #include "base/base.h"
 
-namespace io {
+namespace net {
 class Protocol;
 class EventManager;
 

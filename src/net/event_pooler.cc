@@ -1,7 +1,7 @@
 #include "event_pooler.h"
 #include "event_manager.h"
 
-namespace io {
+namespace net {
 
 EventPooler::~EventPooler() {
   ScopedMutex l(&mutex_);

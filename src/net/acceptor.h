@@ -3,7 +3,7 @@
 
 #include "tcp_server.h"
 
-namespace io {
+namespace net {
 struct Event;
 
 class Acceptor : public TcpServer::Listener {

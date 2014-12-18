@@ -3,7 +3,7 @@
 
 #include "tcp_client.h"
 
-namespace io {
+namespace net {
 
 class Connector {
   public:

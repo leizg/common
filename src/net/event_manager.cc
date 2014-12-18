@@ -5,12 +5,12 @@
 #include "event_pipe.h"
 
 namespace {
-ThreadStorage<io::EventManager> ev_store;
+ThreadStorage<net::EventManager> ev_store;
 
-class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
-    public io::EventPipe {
+class ThreadsafePipe : public net::EventManager::ThreadSafeDelegate,
+    public net::EventPipe {
   private:
-    class PipeDelegate : public io::EventPipe::Delegate {
+    class PipeDelegate : public net::EventPipe::Delegate {
       public:
         PipeDelegate(Mutex* mutex, std::deque<Closure*>* cb_queue)
             : mutex_(mutex), cb_queue_(cb_queue) {
@@ -31,7 +31,7 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
 
   public:
     explicit ThreadsafePipe(io::EventManager* ev_mgr)
-        : io::EventPipe(new PipeDelegate(&mutex_, &cb_queue_)), ev_mgr_(ev_mgr) {
+        : net::EventPipe(new PipeDelegate(&mutex_, &cb_queue_)), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(ev_mgr);
     }
     virtual ~ThreadsafePipe() {
@@ -40,8 +40,8 @@ class ThreadsafePipe : public io::EventManager::ThreadSafeDelegate,
     }
 
   private:
-    io::Event event_;
-    io::EventManager* ev_mgr_;
+    net::Event event_;
+    net::EventManager* ev_mgr_;
 
     Mutex mutex_;
     std::deque<Closure*> cb_queue_;
@@ -59,7 +59,7 @@ void handleSignal(int fd, void* arg, uint8 revent,
 }
 
 bool ThreadsafePipe::Init() {
-  if (!io::EventPipe::initPipe()) return false;
+  if (!net::EventPipe::initPipe()) return false;
 
   event_.fd = readablePipeFd();
   event_.event = EV_READ;
@@ -93,32 +93,32 @@ void ThreadsafePipe::PipeDelegate::handleEvent() {
 }
 }
 
-namespace io {
+namespace net {
 
 bool EventManager::Init() {
-thread_safe_delegate_.reset(new ThreadsafePipe(this));
-if (!thread_safe_delegate_->Init()) {
-  thread_safe_delegate_.reset();
-  return false;
-}
+  thread_safe_delegate_.reset(new ThreadsafePipe(this));
+  if (!thread_safe_delegate_->Init()) {
+    thread_safe_delegate_.reset();
+    return false;
+  }
 
-ev_store.set(this);
-return true;
+  ev_store.set(this);
+  return true;
 }
 
 void EventManager::Stop() {
-ev_store.set(NULL);
+  ev_store.set(NULL);
 }
 
 EventManager* EventManager::current() {
-return ev_store.get();
+  return ev_store.get();
 }
 
 EventManager* CreateEventManager() {
 #ifdef __linux__
-return new EpollerImpl();
+  return new EpollerImpl();
 #else
-return new KqueueImpl();
+  return new KqueueImpl();
 #endif
 }
 }

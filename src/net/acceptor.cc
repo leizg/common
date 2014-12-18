@@ -7,13 +7,13 @@
 namespace {
 
 void HandleEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
-  io::Acceptor* a = static_cast<io::Acceptor*>(arg);
+  net::Acceptor* a = static_cast<net::Acceptor*>(arg);
   a->handleAccept();
 }
 
 }
 
-namespace io {
+namespace net {
 
 Acceptor::~Acceptor() {
   if (listen_fd_ != INVALID_FD) {

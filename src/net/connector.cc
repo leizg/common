@@ -2,7 +2,7 @@
 
 #include "poll.h"
 
-namespace io {
+namespace net {
 
 int Connector::CreateSocket() const {
   int fd = ::socket(AF_INET, SOCK_STREAM, 0);

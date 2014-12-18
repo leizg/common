@@ -3,7 +3,7 @@
 
 #include  "connection.h" // Connection::Attr
 
-namespace io {
+namespace net {
 class InputBuf;
 
 class Protocol {
