@@ -1,5 +1,6 @@
-#include "io_buf.h"
-#include "input_buf.h"
+#include "io/io_buf.h"
+#include "io/input_stream.h"
+
 #include "protocol.h"
 #include "connection.h"
 #include "event_manager.h"
@@ -61,15 +62,15 @@ void Connection::Init() {
     return;
   }
 
-  out_queue_.reset(new OutQueue);
-  input_buf_.reset(new InputBuf(FLAGS_input_buf_len));
+  out_queue_.reset(new io::OutQueue);
+  input_stream_.reset(new io::InputStream(FLAGS_input_buf_len));
 }
 
 void Connection::setAttr(Attr* attr) {
   attr_.reset(attr);
 }
 
-void Connection::Send(OutputObject* out_obj) {
+void Connection::Send(io::OutputObject* out_obj) {
   if (fd_ == INVALID_FD || closed_) {
     delete out_obj;
     return;
@@ -99,7 +100,7 @@ int32 Connection::Recv(uint32 len, int* err_no) {
 
   int32 ret, left = len;
   while (left != 0) {
-    ret = input_buf_->ReadFd(fd_, left, err_no);
+    ret = input_stream_->ReadFd(fd_, left, err_no);
     if (ret == 0) {
       ShutDown();
       return 0;
@@ -120,7 +121,7 @@ int32 Connection::Recv(uint32 len, int* err_no) {
 
 void Connection::handleRead(const TimeStamp& time_stamp) {
   if (fd_ != INVALID_FD && !closed_) {
-    protocol_->handleRead(this, input_buf_.get(), time_stamp);
+    protocol_->handleRead(this, input_stream_.get(), time_stamp);
   }
 }
 

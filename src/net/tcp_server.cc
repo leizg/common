@@ -10,10 +10,9 @@ namespace net {
 TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
     : MulityTableObjectSaver<int, Connection,
           ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> >(
-        100, false), worker_(worker), ev_mgr_(ev_mgr), protocol_(
-    NULL) {
+        100, false), worker_(worker), ev_mgr_(ev_mgr) {
+  protocol_ = NULL;
   CHECK_NOTNULL(ev_mgr);
-
   listeners_.reset(new ListenerMap);
 }
 

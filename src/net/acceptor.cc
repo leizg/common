@@ -1,16 +1,15 @@
+#include "acceptor.h"
 #include "protocol.h"
 #include "tcp_server.h"
-#include "acceptor.h"
 #include "connection.h"
 #include "event_manager.h"
 
 namespace {
 
-void HandleEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
+void handleAcceptEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
   net::Acceptor* a = static_cast<net::Acceptor*>(arg);
   a->handleAccept();
 }
-
 }
 
 namespace net {
@@ -22,7 +21,7 @@ Acceptor::~Acceptor() {
   }
 }
 
-bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
+bool Acceptor::createListenFd(const std::string& ip, uint16 port) {
   listen_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
   if (listen_fd_ == -1) {
     PLOG(WARNING)<< "socket error";
@@ -67,13 +66,13 @@ bool Acceptor::CreateListenFd(const std::string& ip, uint16 port) {
 
 bool Acceptor::doBind(const std::string& ip, uint16 port) {
   if (listen_fd_ != INVALID_FD) return true;
-  if (!CreateListenFd(ip, port)) return false;
+  if (!createListenFd(ip, port)) return false;
 
   event_.reset(new Event);
   event_->fd = listen_fd_;
   event_->arg = this;
   event_->event = EV_READ;
-  event_->cb = HandleEvent;
+  event_->cb = handleAcceptEvent;
 
   if (!ev_mgr_->Add(event_.get())) {
     event_.reset();

@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include "io/input_stream.h"
 
 namespace {
 
@@ -23,8 +24,8 @@ bool RecvPending(net::Connection* conn, net::Connection::Attr* attr) {
 
 namespace net {
 
-bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
-                        uint32 data_len) const {
+bool ProactorProtocol::recvData(Connection* conn, Connection::Attr* attr,
+                                uint32 data_len) const {
   DCHECK_EQ(attr->pending_size, 0);
   int err_no = 0;
 
@@ -44,8 +45,8 @@ bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
   return attr->pending_size == 0;
 }
 
-void Protocol::handleRead(Connection* conn, InputBuf* input_buf,
-                          const TimeStamp& time_stamp) const {
+void ProactorProtocol::handleRead(Connection* conn, InputStream* input_buf,
+                                  const TimeStamp& time_stamp) const {
   Connection::Attr* attr = conn->getAttr();
   RecvPending(conn, attr);
 
@@ -69,14 +70,13 @@ void Protocol::handleRead(Connection* conn, InputBuf* input_buf,
         }
 
       case IO_DATA:
+        attr->io_stat = IO_START;
         if (attr->is_last_pkg) {
           processor_->dispatch(conn, input_buf, time_stamp);
           attr->Init();
-          // FIXME: reset input buffer.
           return;
         }
         handlePackage(conn, attr, input_buf);
-        attr->io_stat = IO_START;
     }
   }
 }

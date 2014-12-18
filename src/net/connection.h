@@ -3,15 +3,17 @@
 
 #include "include/object_saver.h"
 
+namespace io {
+class OutQueue;
+class InputStream;
+class OutputObject;
+}
+
 namespace net {
-class InputBuf;
 class Protocol;
 
 struct Event;
 class EventManager;
-
-class OutQueue;
-class OutputObject;
 
 // Note: Connection shouldn't delete directly.
 class Connection : public RefCounted {
@@ -69,7 +71,7 @@ class Connection : public RefCounted {
 
     // out_obj will deleted by connection.
     // Note: not thread safe.
-    void Send(OutputObject* out_obj);
+    void Send(io::OutputObject* out_obj);
     int32 Recv(uint32 len, int* err_no);
 
     void handleRead(const TimeStamp& time_stamp);
@@ -90,8 +92,8 @@ class Connection : public RefCounted {
 
     scoped_ptr<Closure> close_closure_;
 
-    scoped_ptr<InputBuf> input_buf_;
-    scoped_ptr<OutQueue> out_queue_;
+    scoped_ptr<io::InputStream> input_stream_;
+    scoped_ptr<io::OutQueue> out_queue_;
 
     DISALLOW_COPY_AND_ASSIGN(Connection);
 };
