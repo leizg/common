@@ -16,10 +16,10 @@ class InputStream {
 
     // return false iif no data can be read.
     // buf and len must be null.
-    bool Next(const char** buf, uint64* len);
+    bool Next(const char** buf, uint64* len) const;
 
-    void Skip(uint64 len);
-    void Backup(uint64 len);
+    void Skip(uint64 len) const;
+    void Backup(uint64 len) const;
 
     // return the total number of bytes read since this object was created.
     int byteCount() const {
@@ -30,9 +30,9 @@ class InputStream {
     const std::vector<iovec> iov_;
     scoped_ref<ReadableAbstruct> reader_;
 
-    uint32 index_;
-    uint64 offset_;
-    uint64 total_;
+    mutable uint32 index_;
+    mutable uint64 offset_;
+    mutable uint64 total_;
 
     DISALLOW_COPY_AND_ASSIGN(InputStream);
 };

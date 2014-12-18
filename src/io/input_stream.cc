@@ -2,7 +2,7 @@
 
 namespace io {
 
-bool InputStream::Next(const char** buf, uint64* len) {
+bool InputStream::Next(const char** buf, uint64* len) const {
   for (; index_ < iov_.size(); ++index_) {
     const iovec& io = iov_[index_];
     DCHECK_GE(io.iov_len, offset_);
@@ -21,7 +21,7 @@ bool InputStream::Next(const char** buf, uint64* len) {
   return false;
 }
 
-void InputStream::Skip(uint64 len) {
+void InputStream::Skip(uint64 len) const {
   uint64 left = len;
   for (; left > 0 && index_ < iov_.size(); ++index_) {
     DCHECK_LT(index_, iov_.size());
@@ -43,7 +43,7 @@ void InputStream::Skip(uint64 len) {
   total_ += len - left;
 }
 
-void InputStream::Backup(uint64 len) {
+void InputStream::Backup(uint64 len) const {
   uint64 left = len;
   while (left > 0) {
     const iovec& io = iov_[index_];

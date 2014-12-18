@@ -13,7 +13,7 @@ class OutputStream {
     virtual ~OutputStream() {
     }
 
-    void Next(char** buf, int* len);
+    void Next(char** buf, uint64* len);
     void Backup(uint64 len) {
       block_->backup(len);
     }
@@ -36,7 +36,7 @@ class OutputStream {
     DISALLOW_COPY_AND_ASSIGN(OutputStream);
 };
 
-inline void OutputStream::Next(char** buf, int* len) {
+inline void OutputStream::Next(char** buf, uint64* len) {
   block_->ensureLeft(*len);
   *buf = block_->peekW();
   block_->skip(*len);
