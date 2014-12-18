@@ -12,17 +12,15 @@ class ThreadsafePipe : public net::EventManager::ThreadSafeDelegate,
   private:
     class PipeDelegate : public net::EventPipe::Delegate {
       public:
-        PipeDelegate(Mutex* mutex, std::deque<Closure*>* cb_queue)
-            : mutex_(mutex), cb_queue_(cb_queue) {
-          DCHECK_NOTNULL(mutex);
-          DCHECK_NOTNULL(cb_queue);
+        explicit PipeDelegate(ThreadsafePipe* p)
+            : p_(p) {
+          DCHECK_NOTNULL(p);
         }
         virtual ~PipeDelegate() {
         }
 
       private:
-        Mutex* mutex_;
-        std::deque<Closure*>* cb_queue_;
+        ThreadsafePipe* p_;
 
         virtual void handleEvent();
 
@@ -31,19 +29,24 @@ class ThreadsafePipe : public net::EventManager::ThreadSafeDelegate,
 
   public:
     explicit ThreadsafePipe(io::EventManager* ev_mgr)
-        : net::EventPipe(new PipeDelegate(&mutex_, &cb_queue_)), ev_mgr_(ev_mgr) {
+        : net::EventPipe(new PipeDelegate(this)), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(ev_mgr);
     }
     virtual ~ThreadsafePipe() {
-      ScopedMutex l(&mutex_);
+      ScopedSpinlock l(&lock_);
       STLClear(&cb_queue_);
+    }
+
+    void release(std::deque<Closure*>* tasks) {
+      ScopedSpinlock l(&lock_);
+      cb_queue_.swap(*tasks);
     }
 
   private:
     net::Event event_;
     net::EventManager* ev_mgr_;
 
-    Mutex mutex_;
+    SpinLock lock_;
     std::deque<Closure*> cb_queue_;
 
     virtual bool Init();
@@ -75,16 +78,16 @@ void ThreadsafePipe::runInLoop(Closure* cb) {
     return;
   }
 
-  cb_queue_.push_back(cb);
+  {
+    ScopedSpinlock l(&lock_);
+    cb_queue_.push_back(cb);
+  }
   triggerPipe();
 }
 
 void ThreadsafePipe::PipeDelegate::handleEvent() {
   std::deque<Closure*> cbs;
-  {
-    ScopedMutex l(mutex_);
-    cbs.swap(*cb_queue_);
-  }
+  p_->release(&cbs);
 
   for (uint32 i = 0; i < cbs.size(); ++i) {
     Closure* cb = cbs[i];

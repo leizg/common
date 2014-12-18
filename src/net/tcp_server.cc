@@ -36,6 +36,7 @@ bool TcpServer::Init() {
 
 bool TcpServer::bindIp(const std::string& ip, uint16 port) {
   CHECK_NOTNULL(protocol_);
+  ScopedMutex l(&mutex_);
   if (listeners_->Find(ip) != nullptr) return true;
 
   Acceptor* a = new Acceptor(ev_mgr_, this);
@@ -49,10 +50,12 @@ bool TcpServer::bindIp(const std::string& ip, uint16 port) {
 }
 
 void TcpServer::unBindIp(const std::string& ip) {
+  ScopedMutex l(&mutex_);
   listeners_->Remove(ip);
 }
 
 void TcpServer::unBindAll() {
+  ScopedMutex l(&mutex_);
   listeners_->clear();
 }
 
