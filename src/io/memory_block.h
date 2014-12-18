@@ -116,7 +116,7 @@ class WriteAbleChunk : public MemoryBlock {
 
 class ExternableChunk : public MemoryBlock {
   public:
-    explicit ExternableChunk(uint32 size) {
+    explicit ExternableChunk(uint64 size) {
       CHECK_GT(size, 0);
       size = ALIGN(size);
       DCHECK_EQ(size % 4, 0);
@@ -130,9 +130,9 @@ class ExternableChunk : public MemoryBlock {
 
     void ensureLeft(int len) {
       if (writeableSize() < len) {
-        int rn = readn(), wn = writen();
-        int new_size = capacity() * 2;
-        int free_size = new_size - wn;
+        uint64 rn = readn(), wn = writen();
+        uint64 new_size = capacity() * 2;
+        uint64 free_size = new_size - wn;
         if (free_size < len) {
           new_size += len - free_size;
         }
@@ -148,6 +148,10 @@ class ExternableChunk : public MemoryBlock {
     void skip(uint64 size) {
       wpos_ += size;
       DCHECK_LE(wpos_, end_);
+    }
+    void backup(uint64 size) {
+      wpos_ -= size;
+      DCHECK_LE(rpos_, wpos_);
     }
 
   private:
