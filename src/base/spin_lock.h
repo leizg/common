@@ -9,6 +9,7 @@ class SpinLock {
         : lock_(0) {
     }
     virtual ~SpinLock() {
+      DCHECK_EQ(lock_, 0);
     }
 
     void lock() {
