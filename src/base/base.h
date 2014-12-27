@@ -1,11 +1,6 @@
 #ifndef BASE_H_
 #define BASE_H_
 
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>              /* Obtain O_* constant definitions */
-#include <unistd.h>
-
 #include <errno.h>
 #include <sys/uio.h>
 #include <sys/signal.h>
@@ -14,6 +9,10 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>              /* Obtain O_* constant definitions */
 
 #include <set>
 #include <map>
