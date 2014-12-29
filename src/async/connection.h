@@ -9,7 +9,7 @@ class InputStream;
 class OutputObject;
 }
 
-namespace net {
+namespace aync {
 class Protocol;
 
 struct Event;

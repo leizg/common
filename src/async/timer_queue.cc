@@ -4,12 +4,12 @@ namespace {
 
 void handleTimerQueueEvent(int fd, void* arg, uint8 event,
                            const TimeStamp& time_stamp) {
-  net::TimerQueue* q = static_cast<net::TimerQueue*>(arg);
+  aync::TimerQueue* q = static_cast<aync::TimerQueue*>(arg);
   q->handleRead(time_stamp);
 }
 }
 
-namespace net {
+namespace aync {
 
 bool TimerQueue::Init() {
   event_.reset(new Event);

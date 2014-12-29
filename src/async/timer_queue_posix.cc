@@ -3,7 +3,7 @@
 #if __linux__
 #include <sys/timerfd.h>
 
-namespace net {
+namespace aync {
 
 TimerQueuePosix::~TimerQueuePosix() {
   if (timer_fd_ != INVALID_FD) {

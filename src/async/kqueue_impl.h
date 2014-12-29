@@ -5,7 +5,7 @@
 #include "event_manager.h"
 #include <sys/event.h> // for kevent.
 
-namespace net {
+namespace aync {
 
 class KqueueImpl : public EventManager {
   public:

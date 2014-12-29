@@ -3,7 +3,7 @@
 
 #include  "protocol.h" // Connection::Attr
 
-namespace net {
+namespace aync {
 class ProactorProtocol : public Protocol {
   public:
     virtual ~ProactorProtocol() {

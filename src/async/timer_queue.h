@@ -3,7 +3,7 @@
 
 #include "event_manager.h"
 
-namespace net {
+namespace aync {
 
 class TimerQueue : public EventManager::TimerDelegate {
   public:

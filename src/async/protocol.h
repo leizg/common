@@ -7,7 +7,7 @@ namespace io {
 class InputStream;
 }
 
-namespace net {
+namespace aync {
 
 class Protocol {
   public:

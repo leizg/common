@@ -3,7 +3,7 @@
 
 #include "timer_queue.h"
 
-namespace net {
+namespace aync {
 
 class TimerListImpl : public TimerQueue::Delegate {
   public:

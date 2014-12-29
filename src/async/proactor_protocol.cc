@@ -3,7 +3,7 @@
 
 namespace {
 
-bool RecvPending(net::Connection* conn, net::Connection::Attr* attr) {
+bool RecvPending(aync::Connection* conn, aync::Connection::Attr* attr) {
   if (attr->pending_size == 0) return true;
 
   int err_no;
@@ -22,7 +22,7 @@ bool RecvPending(net::Connection* conn, net::Connection::Attr* attr) {
 
 }
 
-namespace net {
+namespace aync {
 
 bool ProactorProtocol::recvData(Connection* conn, Connection::Attr* attr,
                                 uint32 data_len) const {

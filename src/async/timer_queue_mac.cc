@@ -3,7 +3,7 @@
 
 #ifdef __APPLE__
 
-namespace net {
+namespace aync {
 
 const std::string TimerQueueMac::dummy_path_ = std::string("/dev/zero");
 

@@ -5,7 +5,7 @@
 
 #include "timer_queue.h"
 
-namespace net {
+namespace aync {
 
 class TimerQueuePosix : public TimerQueue {
   public:

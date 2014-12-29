@@ -4,7 +4,7 @@
 #ifdef __APPLE__
 #include "timer_queue.h"
 
-namespace net {
+namespace aync {
 class KqueueImpl;
 
 class TimerQueueMac : public TimerQueue {

@@ -5,7 +5,7 @@
 #include "tcp_client.h"
 #include "event_manager.h"
 
-namespace net {
+namespace aync {
 
 TcpClient::TcpClient(EventManager* ev_mgr, const std::string& ip, uint16 port)
     : ip_(ip), port_(port), ev_mgr_(ev_mgr), protocol_(NULL) {

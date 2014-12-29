@@ -4,7 +4,7 @@
 
 namespace {
 
-class KQueueTimer : public net::EventManager::TimerDelegate {
+class KQueueTimer : public aync::EventManager::TimerDelegate {
   public:
     KQueueTimer(io::KqueueImpl* kq)
         : kq_(kq) {
@@ -32,7 +32,7 @@ void KQueueTimer::runAt(Closure* cb, const TimeStamp& ts) {
 }
 }
 
-namespace net {
+namespace aync {
 
 KqueueImpl::~KqueueImpl() {
   Stop();
