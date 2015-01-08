@@ -2,11 +2,11 @@
 
 namespace io {
 
-int32 ReadFdChunk::ReadFd(int fd, uint32 total_len, int32* err_no) {
-  wchunk_->ensureLeft(total_len);
+int32 ReadFdChunk::readFd(int fd, uint32 total_len, int32* err_no) {
+  ensureLeft(total_len);
   int left = total_len;
 
-  char* data = wchunk_->peekW();
+  char* data = wpos_;
   while (left > 0) {
     int readn = ::recv(fd, data, left, 0);
     if (readn == 0) return 0;
@@ -29,7 +29,7 @@ int32 ReadFdChunk::ReadFd(int fd, uint32 total_len, int32* err_no) {
     DCHECK_GT(readn, 0);
     left -= readn;
     data += readn;
-    wchunk_->skip(readn);
+    skip(readn);
   }
 
   return total_len - left;

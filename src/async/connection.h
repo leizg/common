@@ -5,7 +5,7 @@
 
 namespace io {
 class OutQueue;
-class InputStream;
+class ReadFdChunk;
 class OutputObject;
 }
 
@@ -77,7 +77,7 @@ class Connection : public RefCounted {
     void handleRead(const TimeStamp& time_stamp);
     void handleWrite(const TimeStamp& time_stamp);
 
-    void ShutDown();
+    void shutDownFromServer();
 
   private:
     int fd_;
@@ -92,7 +92,7 @@ class Connection : public RefCounted {
 
     scoped_ptr<Closure> close_closure_;
 
-    scoped_ptr<io::InputStream> input_stream_;
+    scoped_ptr<io::ReadFdChunk> input_chunk_;
     scoped_ptr<io::OutQueue> out_queue_;
 
     DISALLOW_COPY_AND_ASSIGN(Connection);

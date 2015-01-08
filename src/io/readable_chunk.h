@@ -52,30 +52,22 @@ class ReadalbeBytes : public ReadableAbstruct {
     DISALLOW_COPY_AND_ASSIGN(ReadalbeBytes);
 };
 
-class ReadFdChunk : public ReadableAbstruct {
+class ReadFdChunk : public ReadableAbstruct, public ExternableChunk {
   public:
-    ReadFdChunk(ExternableChunk* wchunk, bool auto_release = true)
-        : auto_release_(auto_release), wchunk_(wchunk) {
-      DCHECK_NOTNULL(wchunk);
+    explicit ReadFdChunk(uint64 size) {
     }
     virtual ~ReadFdChunk() {
-      if (auto_release_) {
-        delete wchunk_;
-      }
     }
 
     virtual void buildData() {
       if (iov_.empty()) {
-        attatchData(wchunk_->peekR(), wchunk_->readableSize());
+        attatchData(rpos_, readableSize());
       }
     }
 
-    int32 ReadFd(int fd, uint32 len, int32* err_no);
+    int32 readFd(int fd, uint32 len, int32* err_no);
 
   private:
-    const bool auto_release_;
-    ExternableChunk* const wchunk_;
-
     DISALLOW_COPY_AND_ASSIGN(ReadFdChunk);
 };
 

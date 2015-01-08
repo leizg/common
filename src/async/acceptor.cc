@@ -101,7 +101,7 @@ void Acceptor::handleAccept() {
       return;
     }
 
-#if not __linux__
+#ifndef __linux__
     setFdNonBlock(fd);
     setFdCloExec(fd);
 #endif

@@ -15,7 +15,6 @@ class Acceptor {
         : listen_fd_(INVALID_FD), serv_(serv), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(serv);
       DCHECK_NOTNULL(ev_mgr);
-      port_ = 0;
       protocol_ = nullptr;
     }
     ~Acceptor();
@@ -30,9 +29,6 @@ class Acceptor {
 
   private:
     int listen_fd_;
-
-    std::string ip_;
-    uint16 port_;
 
     TcpServer* serv_;
     EventManager* ev_mgr_;

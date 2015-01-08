@@ -63,7 +63,7 @@ void Connection::Init() {
   }
 
   out_queue_.reset(new io::OutQueue);
-  input_stream_.reset(new io::InputStream(FLAGS_input_buf_len));
+  input_chunk_.reset(new io::InputStream(FLAGS_input_buf_len));
 }
 
 void Connection::setAttr(Attr* attr) {
@@ -83,7 +83,7 @@ void Connection::Send(io::OutputObject* out_obj) {
       return;
     } else if (err_no != EWOULDBLOCK) {
       delete out_obj;
-      ShutDown();
+      shutDownFromServer();
       return;
     }
   }
@@ -100,15 +100,15 @@ int32 Connection::Recv(uint32 len, int* err_no) {
 
   int32 ret, left = len;
   while (left != 0) {
-    ret = input_stream_->ReadFd(fd_, left, err_no);
+    ret = input_chunk_->ReadFd(fd_, left, err_no);
     if (ret == 0) {
-      ShutDown();
+      shutDownFromServer();
       return 0;
     } else if (ret == -1) {
       if (*err_no == EWOULDBLOCK) {
         break;
       }
-      ShutDown();
+      shutDownFromServer();
       return -1;
     }
 
@@ -121,7 +121,7 @@ int32 Connection::Recv(uint32 len, int* err_no) {
 
 void Connection::handleRead(const TimeStamp& time_stamp) {
   if (fd_ != INVALID_FD && !closed_) {
-    protocol_->handleRead(this, input_stream_.get(), time_stamp);
+    protocol_->handleRead(this, input_chunk_.get(), time_stamp);
   }
 }
 
@@ -142,11 +142,11 @@ void Connection::handleWrite(const TimeStamp& time_stamp) {
   }
 
   if (err_no != EWOULDBLOCK) {
-    ShutDown();
+    shutDownFromServer();
   }
 }
 
-void Connection::ShutDown() {
+void Connection::shutDownFromServer() {
   if (closed_) return;
   ::shutdown(fd_, SHUT_WR);
 

@@ -24,7 +24,7 @@ bool RecvPending(aync::Connection* conn, aync::Connection::Attr* attr) {
 
 namespace aync {
 
-bool ProactorProtocol::recvData(Connection* conn, Connection::Attr* attr,
+bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
                                 uint32 data_len) const {
   DCHECK_EQ(attr->pending_size, 0);
   int err_no = 0;
@@ -45,7 +45,7 @@ bool ProactorProtocol::recvData(Connection* conn, Connection::Attr* attr,
   return attr->pending_size == 0;
 }
 
-void ProactorProtocol::handleRead(Connection* conn, InputStream* input_buf,
+void Protocol::handleRead(Connection* conn, InputStream* input_buf,
                                   const TimeStamp& time_stamp) const {
   Connection::Attr* attr = conn->getAttr();
   RecvPending(conn, attr);

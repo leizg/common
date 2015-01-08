@@ -4,17 +4,16 @@
 namespace aync {
 
 EventPooler::~EventPooler() {
-  ScopedMutex l(&mutex_);
+  ev_mgr_->assertThreadSafe();
   STLClear(&ev_vec_);
 }
 
 bool EventPooler::Init() {
-  ScopedMutex l(&mutex_);
+  ev_mgr_->assertThreadSafe();
 
   for (uint8 i = 0; i < worker_; ++i) {
     EventManager* ev_mgr = CreateEventManager();
     if (!ev_mgr->Init()) {
-      LOG(WARNING)<< "evmgr init error";
       STLClear(&ev_vec_);
       return false;
     }
@@ -27,7 +26,7 @@ bool EventPooler::Init() {
 }
 
 EventManager* EventPooler::getPoller() {
-  ScopedMutex l(&mutex_);
+  ev_mgr_->assertThreadSafe();
   if (ev_vec_.empty()) return ev_mgr_;
 
   if (index_ == ev_vec_.size()) {
@@ -35,7 +34,7 @@ EventManager* EventPooler::getPoller() {
     return ev_mgr_;
   }
 
-  CHECK_LT(index_, ev_vec_.size());
+  DCHECK_LT(index_, ev_vec_.size());
   return ev_vec_[index_++];
 }
 

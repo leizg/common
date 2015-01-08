@@ -34,8 +34,9 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
 
     // threadsafe, can be called from any thread.
     bool bindIp(const std::string& ip, uint16 port);
-    void unBindIp(const std::string& ip);
+
     void unBindAll();
+    void unBindIp(const std::string& ip);
 
   private:
     const uint8 worker_;

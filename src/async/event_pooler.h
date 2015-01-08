@@ -21,7 +21,6 @@ class EventPooler {
     uint8 worker_;
     EventManager* ev_mgr_;
 
-    Mutex mutex_;
     uint8 index_;
     typedef std::vector<EventManager*> EvVec;
     EvVec ev_vec_;

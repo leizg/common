@@ -28,7 +28,10 @@ class MemoryBlock {
       return end_ - wpos_;
     }
 
-    void review() {
+    void retrieve(uint64 size) {
+      rpos_ -= size;
+    }
+    void retrieveAll() {
       rpos_ = wpos_ = mem_;
     }
 
@@ -99,21 +102,6 @@ class ReadonlyBlockChunk : public MemoryBlock {
     DISALLOW_COPY_AND_ASSIGN(ReadonlyBlockChunk);
 };
 
-#if 0
-class WriteAbleChunk : public MemoryBlock {
-  public:
-  virtual ~WriteAbleChunk() {
-  }
-
-  uint64 append(const char* data, uint64 len) = 0;
-
-  void backUp(uint64 len) = 0;
-
-  private:
-  DISALLOW_COPY_AND_ASSIGN(WriteAbleChunk);
-};
-#endif
-
 class ExternableChunk : public MemoryBlock {
   public:
     explicit ExternableChunk(uint64 size) {
@@ -131,12 +119,18 @@ class ExternableChunk : public MemoryBlock {
     void ensureLeft(int len) {
       if (writeableSize() < len) {
         uint64 rn = readn(), wn = writen();
+        if (rn >= len) {
+          ::memcpy(mem_, rpos_, rn);
+          rpos_ = mem_;
+          wpos_ = mem_ + wn;
+          return;
+        }
+
         uint64 new_size = capacity() * 2;
         uint64 free_size = new_size - wn;
         if (free_size < len) {
           new_size += len - free_size;
         }
-
         mem_ = (char*) ::realloc(mem_, new_size);
         end_ = mem_ + new_size;
         rpos_ = mem_ + rn;
