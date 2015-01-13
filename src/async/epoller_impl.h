@@ -6,7 +6,7 @@
 #include <sys/epoll.h>
 #include "event_manager.h"
 
-namespace aync {
+namespace async {
 
 class EpollerImpl : public EventManager {
   public:

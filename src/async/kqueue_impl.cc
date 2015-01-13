@@ -4,9 +4,9 @@
 
 namespace {
 
-class KQueueTimer : public aync::EventManager::TimerDelegate {
+class KQueueTimer : public async::EventManager::TimerDelegate {
   public:
-    KQueueTimer(io::KqueueImpl* kq)
+    KQueueTimer(async::KqueueImpl* kq)
         : kq_(kq) {
       DCHECK_NOTNULL(kq);
     }
@@ -14,7 +14,7 @@ class KQueueTimer : public aync::EventManager::TimerDelegate {
     }
 
   private:
-    io::KqueueImpl* kq_;
+    async::KqueueImpl* kq_;
 
     // called by EventManager::Init.
     virtual bool Init();
@@ -32,7 +32,7 @@ void KQueueTimer::runAt(Closure* cb, const TimeStamp& ts) {
 }
 }
 
-namespace aync {
+namespace async {
 
 KqueueImpl::~KqueueImpl() {
   Stop();

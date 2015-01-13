@@ -1,7 +1,7 @@
 #include "event_pooler.h"
 #include "event_manager.h"
 
-namespace aync {
+namespace async {
 
 EventPooler::~EventPooler() {
   ev_mgr_->assertThreadSafe();

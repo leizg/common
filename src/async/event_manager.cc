@@ -5,12 +5,12 @@
 #include "event_pipe.h"
 
 namespace {
-ThreadStorage<aync::EventManager> ev_store;
+ThreadStorage<async::EventManager> ev_store;
 
-class ThreadsafePipe : public aync::EventManager::ThreadSafeDelegate,
-    public aync::EventPipe {
+class ThreadsafePipe : public async::EventManager::ThreadSafeDelegate,
+    public async::EventPipe {
   private:
-    class PipeDelegate : public aync::EventPipe::Delegate {
+    class PipeDelegate : public async::EventPipe::Delegate {
       public:
         explicit PipeDelegate(ThreadsafePipe* p)
             : p_(p) {
@@ -29,7 +29,7 @@ class ThreadsafePipe : public aync::EventManager::ThreadSafeDelegate,
 
   public:
     explicit ThreadsafePipe(io::EventManager* ev_mgr)
-        : aync::EventPipe(new PipeDelegate(this)), ev_mgr_(ev_mgr) {
+        : async::EventPipe(new PipeDelegate(this)), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(ev_mgr);
     }
     virtual ~ThreadsafePipe() {
@@ -43,8 +43,8 @@ class ThreadsafePipe : public aync::EventManager::ThreadSafeDelegate,
     }
 
   private:
-    aync::Event event_;
-    aync::EventManager* ev_mgr_;
+    async::Event event_;
+    async::EventManager* ev_mgr_;
 
     SpinLock lock_;
     std::deque<Closure*> cb_queue_;
@@ -62,7 +62,7 @@ void handleSignal(int fd, void* arg, uint8 revent,
 }
 
 bool ThreadsafePipe::Init() {
-  if (!aync::EventPipe::initPipe()) return false;
+  if (!async::EventPipe::initPipe()) return false;
 
   event_.fd = readablePipeFd();
   event_.event = EV_READ;
@@ -96,7 +96,7 @@ void ThreadsafePipe::PipeDelegate::handleEvent() {
 }
 }
 
-namespace aync {
+namespace async {
 
 bool EventManager::Init() {
   thread_safe_delegate_.reset(new ThreadsafePipe(this));

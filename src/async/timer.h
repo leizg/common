@@ -3,7 +3,7 @@
 
 #include "event_manager.h"
 
-namespace aync {
+namespace async {
 
 namespace detail {
 template<bool is_repeat>

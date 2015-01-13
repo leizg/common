@@ -5,7 +5,7 @@
 #include "timer_list.h"
 #include "timer_queue_posix.h"
 
-namespace aync {
+namespace async {
 
 EpollerImpl::~EpollerImpl() {
   Stop();

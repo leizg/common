@@ -9,7 +9,7 @@ class ReadFdChunk;
 class OutputObject;
 }
 
-namespace aync {
+namespace async {
 class Protocol;
 
 struct Event;

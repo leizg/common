@@ -20,6 +20,7 @@
 #include <deque>
 #include <vector>
 #include <string>
+#include <memory>
 #include <algorithm>
 
 #include "macro_def.h"

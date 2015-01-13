@@ -3,7 +3,7 @@
 
 #include "event_manager.h"
 
-namespace aync {
+namespace async {
 
 class TimerQueue : public EventManager::TimerDelegate {
   public:

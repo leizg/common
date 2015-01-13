@@ -3,7 +3,7 @@
 
 namespace {
 
-bool RecvPending(aync::Connection* conn, aync::Connection::Attr* attr) {
+bool RecvPending(async::Connection* conn, async::Connection::Attr* attr) {
   if (attr->pending_size == 0) return true;
 
   int err_no;
@@ -22,7 +22,7 @@ bool RecvPending(aync::Connection* conn, aync::Connection::Attr* attr) {
 
 }
 
-namespace aync {
+namespace async {
 
 bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
                                 uint32 data_len) const {

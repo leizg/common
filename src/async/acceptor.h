@@ -3,8 +3,10 @@
 
 #include "base/base.h"
 
-namespace aync {
+namespace async {
 struct Event;
+class EventManager;
+
 class Protocol;
 class TcpServer;
 

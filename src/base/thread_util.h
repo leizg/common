@@ -3,8 +3,11 @@
 
 #include "macro_def.h"
 #include "data_types.h"
+#include "time_stamp.h"
 
 #include <pthread.h>
+
+void microSleep(uint64 micro_secs, bool ignore_eintr = true);
 
 class Mutex {
   public:
@@ -156,8 +159,6 @@ class SyncEvent {
 
     pthread_cond_t cond_;
     Mutex mutex_;
-
-    const static uint64 kNanoPerSec = 1000ULL * 1000 * 1000;
 
     DISALLOW_COPY_AND_ASSIGN(SyncEvent);
 };

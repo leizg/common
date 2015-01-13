@@ -10,7 +10,7 @@ DEFINE_int32(input_buf_len, 128, "the size of inputbuf");
 namespace {
 
 void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
-  aync::Connection* conn = static_cast<aync::Connection*>(arg);
+	async::Connection* conn = static_cast<async::Connection*>(arg);
 
   if (revent & EV_READ) {
     conn->handleRead(time_stamp);
@@ -22,7 +22,7 @@ void handleEvent(int fd, void* arg, uint8 revent, const TimeStamp& time_stamp) {
 
 }
 
-namespace aync {
+namespace async {
 
 // default implemetion.
 void Connection::Attr::Init() {

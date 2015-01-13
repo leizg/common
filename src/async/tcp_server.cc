@@ -5,7 +5,7 @@
 #include "event_manager.h"
 #include "event_pooler.h"
 
-namespace aync {
+namespace async {
 
 TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
     : MulityTableObjectSaver<int, Connection,

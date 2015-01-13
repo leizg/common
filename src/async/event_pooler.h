@@ -3,7 +3,7 @@
 
 #include "base/base.h"
 
-namespace aync {
+namespace async {
 class EventManager;
 
 class EventPooler {

@@ -1,6 +1,6 @@
 #include "timer.h"
 
-namespace aync {
+namespace async {
 
 
 }

@@ -7,7 +7,7 @@ namespace io {
 class ReadableAbstruct;
 }
 
-namespace aync {
+namespace async {
 
 class Protocol {
   public:

@@ -3,7 +3,7 @@
 
 #include "tcp_client.h"
 
-namespace aync {
+namespace async {
 
 class Connector {
   public:

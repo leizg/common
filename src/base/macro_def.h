@@ -28,7 +28,7 @@
         case EINTR: \
           continue; \
         default: \
-          PLOG(WARNING) << "close error"; \
+          PLOG(ERROR) << "close error"; \
       } \
     } \
     fd = INVALID_FD; \

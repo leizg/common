@@ -1,6 +1,6 @@
 #include "event_pipe.h"
 
-namespace aync {
+namespace async {
 
 bool EventPipe::initPipe() {
   int ret;
