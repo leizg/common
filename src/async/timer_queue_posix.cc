@@ -3,6 +3,28 @@
 #if __linux__
 #include <sys/timerfd.h>
 
+namespace {
+
+bool createTimerFd(int* fd) {
+  /*
+   * The clockid argument specifies the clock that is used to
+   * mark the progress of the timer, and must be either
+   * CLOCK_REALTIME or CLOCK_MONOTONIC.  CLOCK_REALTIME is a
+   * settable system-wide clock.  CLOCK_MONOTONIC is a nonsettable
+   * clock that is not affected by  discontinuous  changes  in  the
+   * system clock (e.g., manual changes to system time).
+   */
+  int timer_fd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+  if (timer_fd == -1) {
+    PLOG(WARNING)<< "timerfd_create error";
+    return false;
+  }
+
+  *fd = timer_fd;
+  return true;
+}
+}
+
 namespace async {
 
 TimerQueuePosix::~TimerQueuePosix() {
@@ -14,34 +36,23 @@ TimerQueuePosix::~TimerQueuePosix() {
 
 bool TimerQueuePosix::Init() {
   if (timer_fd_ != INVALID_FD) return false;
-  /*
-   * The clockid argument specifies the clock that is used to
-   * mark the progress of the timer, and must be either
-   * CLOCK_REALTIME or CLOCK_MONOTONIC.  CLOCK_REALTIME is a
-   * settable system-wide clock.  CLOCK_MONOTONIC is a nonsettable
-   * clock that is not affected by  discontinuous  changes  in  the
-   * system clock (e.g., manual changes to system time).
-   */
-  timer_fd_ = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-  if (timer_fd_ == -1) {
-    PLOG(WARNING)<< "timerfd_create error";
-    return false;
-  }
+  if (!createTimerFd(&timer_fd_)) return false;
 
   TimerQueue::Init();
   event_->fd = timer_fd_;
   if (!ev_mgr_->Add(event_.get())) {
     closeWrapper(timer_fd_);
     event_.reset();
+    return false;
   }
 
   return true;
 }
 
-void TimerQueuePosix::reset(const TimeStamp time_stamp) {
+void TimerQueuePosix::reset(TimeStamp time_stamp) {
   itimerspec ts;
   ::memset(&ts, 0, sizeof(ts));
-  ts.it_value = time_stamp.timeSpec();
+  ts.it_value = time_stamp.toTimeSpec();
 
   int ret = ::timerfd_settime(timer_fd_, 0, &ts, NULL);
   if (ret != 0) {
@@ -68,6 +79,7 @@ void TimerQueuePosix::clearData() {
         default:
           break;
       }
+
       DLOG(WARNING)<<"read timerfd error, fd:" << timer_fd_;
       return;
     }

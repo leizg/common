@@ -21,11 +21,12 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
   public:
     // event_manager must initialized successfully.
     TcpServer(EventManager* ev_mgr, uint8 worker);
-    ~TcpServer();
+    virtual ~TcpServer();
 
     bool Init();  // set protocol first.
     void setProtocol(Protocol* p) {  // not threadsafe.
       DCHECK_NOTNULL(p);
+      DCHECK(protocol_ == NULL);
       protocol_ = p;
     }
 
@@ -34,7 +35,6 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
 
     // threadsafe, can be called from any thread.
     bool bindIp(const std::string& ip, uint16 port);
-
     void unBindAll();
     void unBindIp(const std::string& ip);
 

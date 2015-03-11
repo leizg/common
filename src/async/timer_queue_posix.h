@@ -10,9 +10,10 @@ namespace async {
 class TimerQueuePosix : public TimerQueue {
   public:
     TimerQueuePosix(EventManager* ev_mgr, Delegate* delegate)
-        : TimerQueue(ev_mgr, delegate), timer_fd_(INVALID_FD) {
+        : TimerQueue(ev_mgr, delegate) {
+      timer_fd_ = INVALID_FD;
     }
-    ~TimerQueuePosix();
+    virtual ~TimerQueuePosix();
 
   private:
     int timer_fd_;
@@ -20,10 +21,12 @@ class TimerQueuePosix : public TimerQueue {
     virtual bool Init();
 
     virtual void clearData();
-    virtual void reset(const TimeStamp time_stamp);
+    virtual void reset(TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(TimerQueuePosix);
 };
+
 }
 #endif  // end for __linux__
+
 #endif  // end for  TIMER_QUEUE_POSIX_H_

@@ -1,11 +1,13 @@
 #ifndef TIMER_QUEUE_H_
 #define TIMER_QUEUE_H_
 
-#include "event_manager.h"
+#include "base/base.h"
 
 namespace async {
+struct Event;
+class EventManager;
 
-class TimerQueue : public EventManager::TimerDelegate {
+class TimerQueue {
   public:
     class Delegate {
       public:
@@ -32,7 +34,8 @@ class TimerQueue : public EventManager::TimerDelegate {
     // only used for trigger expired events
     // called by event_manager, you shouldn't call this method forever.
     // not threadsafe. must in loop thread.
-    virtual void handleRead(const TimeStamp& time_stamp);
+    virtual void handleRead(TimeStamp time_stamp);
+    void runAt(Closure* closure, TimeStamp time_stamp);
 
   protected:
     bool actived_;
@@ -44,12 +47,12 @@ class TimerQueue : public EventManager::TimerDelegate {
     scoped_ptr<Delegate> delegate_;
 
     virtual bool Init();
+
     virtual void clearData() = 0;
     virtual void reset(const TimeStamp time_stamp) = 0;
 
   private:
-    void runAt(Closure* closure, const TimeStamp& time_stamp);
-    void runAtInternal(Closure* closure, const TimeStamp time_stamp);
+    void runAtInternal(Closure* closure, TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(TimerQueue);
 };

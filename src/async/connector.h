@@ -11,14 +11,14 @@ class Connector {
     }
 
     // return INVALID_FD if connected failed.
-    // timeout: wait for seconds.
-    int Connect(const std::string& ip, uint16 port, uint32 timeout) const;
+    // timeout: wait for micro seconds.
+    int Connect(const std::string& ip, uint16 port, uint64 timeout) const;
 
   private:
     int CreateSocket() const;
 
     // return true iif connected successfully.
-    bool WaitForConnected(int fd, uint32 time_out) const;
+    bool WaitForConnected(int fd, uint64 time_out) const;
 
     DISALLOW_COPY_AND_ASSIGN(Connector);
 };

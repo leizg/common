@@ -4,6 +4,8 @@
 #include "base/base.h"
 
 namespace async {
+struct Event;
+class EventManager;
 
 class EventPipe {
   public:
@@ -12,36 +14,38 @@ class EventPipe {
         virtual ~Delegate() {
         }
 
-        virtual void handleEvent() = 0;
+        virtual void handleEvent(TimeStamp ts) = 0;
     };
 
     virtual ~EventPipe() {
       destory();
     }
 
-    int readablePipeFd() const {
-      return event_fd_[0];
-    }
-    void handlePipeRead();
+    virtual bool init();
+
+    void handleRead(TimeStamp ts);
 
   protected:
-    explicit EventPipe(Delegate* delegate)
-        : deletate_(delegate) {
+    EventPipe(EventManager* ev_mgr, Delegate* delegate)
+        : ev_mgr_(ev_mgr), deletate_(delegate) {
+      DCHECK_NOTNULL(ev_mgr);
       DCHECK_NOTNULL(delegate);
       event_fd_[0] = INVALID_FD;
       event_fd_[1] = INVALID_FD;
     }
 
-    bool initPipe();
-    void destory();
+    EventManager* ev_mgr_;
 
+    void destory();
     void triggerPipe();
 
-    private:
+  private:
     int event_fd_[2];
+    scoped_ptr<Event> event_;
+
     scoped_ptr<Delegate> deletate_;
 
     DISALLOW_COPY_AND_ASSIGN(EventPipe);
-  };
+};
 }
 #endif /* EVENT_PIPE_H_ */

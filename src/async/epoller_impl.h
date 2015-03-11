@@ -3,7 +3,7 @@
 
 #ifdef __linux__
 
-#include <sys/epoll.h>
+#include <sys/epoll.h> // todo: move it to .cc
 #include "event_manager.h"
 
 namespace async {
@@ -13,9 +13,11 @@ class EpollerImpl : public EventManager {
     EpollerImpl()
         : ep_fd_(INVALID_FD), stop_(true) {
     }
-    virtual ~EpollerImpl();
+    virtual ~EpollerImpl() {
+      Stop();
+      closeWrapper(ep_fd_);
+    }
 
-  private:
     virtual bool Init();
     virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
@@ -29,7 +31,6 @@ class EpollerImpl : public EventManager {
     int ep_fd_;
     bool stop_;
 
-    // no need lock.
     typedef std::map<int, Event*> EvMap;
     EvMap ev_map_;
 

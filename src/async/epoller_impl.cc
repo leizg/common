@@ -1,55 +1,47 @@
 #include "epoller_impl.h"
+#include "closure_proxy.h"
 
 #ifdef __linux__
 
-#include "timer_list.h"
-#include "timer_queue_posix.h"
+namespace {
 
-namespace async {
-
-EpollerImpl::~EpollerImpl() {
-  Stop();
-  closeWrapper(ep_fd_);
-}
-
-bool EpollerImpl::Init() {
-  if (ep_fd_ != INVALID_FD) return false;
-
-  /*
-   * In the initial epoll_create() implementation, the size argument
-   * informed the kernel of the number of file descriptors that the
-   * caller expected to add to the epoll instance.  The kernel used
-   * this information  as  a  hint  for  the  amount of space to
-   * initially allocate in internal data structures describing events.
-   * (If necessary, the kernel would allocate more space if the caller's
-   * usage exceeded the hint given in size.)  Nowadays, this hint is
-   * no longer required (the kernel dynamically sizes the required data
-   * structures without needing the hint), but size must still  be
-   * greater than zero, in order to ensure backward compatibility
-   * when new epoll applications are run on older kernels.
-   */
-  ep_fd_ = ::epoll_create1(EPOLL_CLOEXEC);
-  if (ep_fd_ == INVALID_FD) {
+bool createEventFd(int* epfd) {
+  int fd = ::epoll_create1(EPOLL_CLOEXEC);
+  if (fd == INVALID_FD) {
     PLOG(WARNING)<< "epoll_create error";
     return false;
   }
 
-  setFdNonBlock(ep_fd_);
+  setFdNonBlock(fd);
+
+  *epfd = fd;
+  return true;
+}
+}
+
+namespace async {
+
+bool EpollerImpl::Init() {
+  if (ep_fd_ != INVALID_FD) return false;
+  if (!createEventFd(&ep_fd_)) return false;
+
+  cb_delegate_.reset(new ClosureProxy(this));
+  if (!cb_delegate_->Init()) {
+    closeWrapper(ep_fd_);
+    cb_delegate_.reset();
+    LOG(WARNING)<< "callback delegate init error";
+    return false;
+  }
 
   if (!EventManager::Init()) {
     closeWrapper(ep_fd_);
-  }
-  timer_delegate_.reset(new TimerQueuePosix(this, new TimerListImpl));
-  if (!timer_delegate_->Init()) {
-    DLOG(INFO)<< "timer delegate init error";
-    closeWrapper(ep_fd_);
-    thread_safe_delegate_.reset();
     return false;
   }
 
   epoll_event ev;
-  ::memset(&ev, 0, sizeof(ev));
+  ::memset(&ev, 0, sizeof ev);
   events_.resize(kTriggerNumber, ev);
+
   return true;
 }
 
@@ -70,7 +62,7 @@ void EpollerImpl::Loop(SyncEvent* start_event) {
       continue;
     }
 
-    TimeStamp time_stamp = Now();
+    TimeStamp time_stamp = TimeStamp::now();
     DCHECK_LE(trigger_number, kTriggerNumber);
     for (uint32 i = 0; i < trigger_number; ++i) {
       Event* event = static_cast<Event*>(events_[i].data.ptr);
@@ -107,10 +99,10 @@ bool EpollerImpl::LoopInAnotherThread() {
 }
 
 void EpollerImpl::Stop() {
-  if (stop_) return;
-
-  stop_ = true;
-  loop_pthread_.reset();
+  if (!stop_) {
+    stop_ = true;
+    loop_pthread_.reset();
+  }
 }
 
 uint32 EpollerImpl::convertEvent(uint8 event) {
@@ -127,6 +119,7 @@ uint32 EpollerImpl::convertEvent(uint8 event) {
 
 bool EpollerImpl::Add(Event* ev) {
   CHECK_NOTNULL(ev);
+  this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it != ev_map_.end()) {
     LOG(WARNING)<< "already registe fd: " << ev->fd;
@@ -149,6 +142,7 @@ bool EpollerImpl::Add(Event* ev) {
 
 void EpollerImpl::Mod(Event* ev) {
   CHECK_NOTNULL(ev);
+  this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it == ev_map_.end()) {
     LOG(WARNING)<< "not registe fd: " << ev->fd;
@@ -165,6 +159,7 @@ void EpollerImpl::Mod(Event* ev) {
 }
 
 void EpollerImpl::Del(const Event& ev) {
+  this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev.fd);
   if (it == ev_map_.end()) {
     DLOG(WARNING)<< "not registe fd: " << ev.fd;

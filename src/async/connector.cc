@@ -17,30 +17,35 @@ int Connector::CreateSocket() const {
   return fd;
 }
 
-bool Connector::WaitForConnected(int fd, uint32 time_out) const {
+bool Connector::WaitForConnected(int fd, uint64 time_out) const {
   pollfd pfd[1];
   ::memset(&pfd[0], 0, sizeof(pollfd));
 
   pfd[0].fd = fd;
   pfd[0].events = POLLOUT;
-  while (true) {
-    int ret = ::poll(pfd, 1, 1);
+  while (time_out > 0) {
+    TimeStamp before(TimeStamp::now());
+    int ret = ::poll(pfd, 1, time_out % TimeStamp::kMicroSecsPerMilliSecond);
     if (ret == -1) {
-      if (errno == EINTR) continue;
-      break;
+      if (errno == EINTR) {
+        TimeStamp delta(TimeStamp::now() -= before);
+        time_out -= delta.microSecs();
+        continue;
+      }
+      LOG(WARNING)<< "poll fd error, fd: " << pfd;
     } else if (ret == 1) {
       uint32 err = 0, len = sizeof(err);
       ::getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
       if (err == 0) return true;
+      LOG(WARNING) << "socket error: " << ::strerror(err);
     }
-    break;
   }
 
   return false;
 }
 
 int Connector::Connect(const std::string& ip, uint16 port,
-                       uint32 time_out) const {
+                       uint64 time_out) const {
   int fd = CreateSocket();
   if (fd == INVALID_FD) return INVALID_FD;
 
@@ -58,14 +63,8 @@ int Connector::Connect(const std::string& ip, uint16 port,
     return INVALID_FD;
   }
 
-  TimeStamp time_stamp(Now());
-  while (time_out > 0) {
-    if (WaitForConnected(fd, time_out)) {
-      return fd;
-    }
-
-    TimeStamp now(Now());
-    time_out -= TimeDiff(now, time_stamp) / 1000;
+  if (WaitForConnected(fd, time_out)) {
+    return fd;
   }
 
   ::close(fd);

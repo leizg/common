@@ -5,15 +5,14 @@
 #include "event_manager.h"
 
 namespace {
-
-void handleAcceptEvent(int fd, void* arg, uint8 event, const TimeStamp& time_stamp) {
-	async::Acceptor* a = static_cast<async::Acceptor*>(arg);
-  a->handleAccept();
+void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts) {
+  async::Acceptor* a = static_cast<async::Acceptor*>(arg);
+  a->handleAccept(ts);
 }
+
 }
 
 namespace async {
-
 Acceptor::~Acceptor() {
   if (listen_fd_ != INVALID_FD) {
     ev_mgr_->Del(*event_);
@@ -27,8 +26,9 @@ bool Acceptor::createListenFd(const std::string& ip, uint16 port) {
     PLOG(WARNING)<< "socket error";
     return false;
   }
-  setFdNonBlock(listen_fd_);
+
   setFdCloExec(listen_fd_);
+  setFdNonBlock(listen_fd_);
 
   int val = 1;
   int ret = ::setsockopt(listen_fd_, SOL_SOCKET, SO_REUSEADDR, &val,
@@ -85,7 +85,7 @@ bool Acceptor::doBind(const std::string& ip, uint16 port) {
   return true;
 }
 
-void Acceptor::handleAccept() {
+void Acceptor::handleAccept(TimeStamp ts) {
   int fd;
   while (true) {
 #if __linux__
@@ -105,6 +105,7 @@ void Acceptor::handleAccept() {
     setFdNonBlock(fd);
     setFdCloExec(fd);
 #endif
+
     EventManager* ev_mgr = serv_->getPoller();
     scoped_ref<Connection> conn(new Connection(fd, ev_mgr));
     conn->setProtocol(protocol_);
@@ -112,8 +113,7 @@ void Acceptor::handleAccept() {
     conn->setAttr(protocol_->NewConnectionAttr());
     serv_->Add(fd, conn.get());
 
-    // FIXME: return value
-    ev_mgr->runInLoop(NewCallback(conn.get(), &Connection::Init));
+    ev_mgr->runInLoop(::NewCallback(conn.get(), &Connection::Init));
   }
 }
 }

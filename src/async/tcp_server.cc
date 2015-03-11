@@ -11,7 +11,7 @@ TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
     : MulityTableObjectSaver<int, Connection,
           ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> >(
         100, false), worker_(worker), ev_mgr_(ev_mgr) {
-  protocol_ = NULL;
+  protocol_ = nullptr;
   CHECK_NOTNULL(ev_mgr);
   listeners_.reset(new ListenerMap);
 }
@@ -23,7 +23,7 @@ TcpServer::~TcpServer() {
 }
 
 bool TcpServer::Init() {
-  if (event_poller_.get() != NULL) return false;
+  if (event_poller_ != nullptr) return false;
 
   event_poller_.reset(new EventPooler(ev_mgr_, worker_));
   if (!event_poller_->Init()) {
@@ -35,7 +35,7 @@ bool TcpServer::Init() {
 }
 
 bool TcpServer::bindIp(const std::string& ip, uint16 port) {
-  CHECK_NOTNULL(protocol_);
+  DCHECK_NOTNULL(protocol_);
   ScopedMutex l(&mutex_);
   if (listeners_->Find(ip) != nullptr) return true;
 
