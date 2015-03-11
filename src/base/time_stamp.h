@@ -18,7 +18,7 @@ class TimeStamp {
     const static uint64 kNanoSecsPerSecond = kMicroSecsPerSecond
         * kNanoSecsPerMicroSecond;
 
-    static TimeStamp Now();
+    static TimeStamp now();
     static TimeStamp afterSeconds(uint64 secs);
     static TimeStamp afterMicroSeconds(uint64 micro_secs);
 
@@ -40,11 +40,13 @@ class TimeStamp {
     void operator -(uint64 micro_sec) {
       ms_ -= micro_sec;
     }
-    void operator +=(uint64 micro_sec) {
+    TimeStamp& operator +=(uint64 micro_sec) {
       ms_ += micro_sec;
+      return *this;
     }
-    void operator -=(uint64 micro_sec) {
+    TimeStamp& operator -=(uint64 micro_sec) {
       ms_ -= micro_sec;
+      return *this;
     }
 
   private:
@@ -71,10 +73,10 @@ inline TimeStamp Now() {
   return TimeStamp(tv.tv_sec * TimeStamp::kMicroSecsPerSecond + tv.tv_usec);
 }
 inline TimeStamp TimeStamp::afterMicroSeconds(uint64 micro_secs) {
-  return TimeStamp(Now().microSecs() + micro_secs);
+  return TimeStamp(now().microSecs() + micro_secs);
 }
 inline TimeStamp TimeStamp::afterSeconds(uint64 secs) {
-  return TimeStamp(Now().microSecs() + secs * 1000);
+  return TimeStamp(now().microSecs() + secs * 1000);
 }
 
 #endif /* TIME_STAMP_H_ */

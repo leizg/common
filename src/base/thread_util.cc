@@ -2,19 +2,20 @@
 #include <sys/time.h>
 
 void microSleep(uint64 micro_secs, bool ignore_eintr) {
-  while (true) {
-    TimeStamp before = Now();
-    timespec req = timespecFromMicrosecs(micro_secs);
+  while (micro_secs != 0) {
+    TimeStamp before = TimeStamp::now();
+    struct timespec req = timespecFromMicrosecs(micro_secs);
+
     int ret = nanosleep(&req, NULL);
     switch (ret) {
       case -1:
         if (ignore_eintr && errno == EINTR) {
+          micro_secs -= (TimeStamp::now() - before).microSecs();
           continue;
         }  // fall though.
       default:
         break;
     }
-    micro_secs -= TimeDiff(Now(), before);
   }
 }
 

@@ -12,8 +12,8 @@ class Waiter {
     }
 
     void wait() {
-      if (++guard_ > 3000) {
-        microSleep(interval_, true /*ignore eintr*/);
+      if (++guard_ > 1024) {
+        microSleep(interval_, false /*ignore eintr*/);
       }
     }
 
@@ -64,6 +64,8 @@ class ScopedSpinlock {
 
   private:
     SpinLock* lock_;
+
+    friend class SpinLock;
 
     DISALLOW_COPY_AND_ASSIGN(ScopedSpinlock);
 };
