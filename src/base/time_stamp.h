@@ -6,61 +6,75 @@
 
 class TimeStamp {
   public:
-    explicit TimeStamp(const timeval& tv)
-        : stamp_(tv) {
-    }
-    explicit TimeStamp(uint64 micro_secs) {
-      stamp_.tv_sec = micro_secs / 1000;
-      stamp_.tv_usec = micro_secs % 1000;
+    explicit TimeStamp(uint64 micro_secs)
+        : ms_(micro_secs) {
     }
 
+    const static uint64 kMilliSecsPerSecond = 1000ULL;
+    const static uint64 kMicroSecsPerMilliSecond = 1000ULL;
+    const static uint64 kMicroSecsPerSecond = kMicroSecsPerMilliSecond
+        * kMilliSecsPerSecond;
+    const static uint64 kNanoSecsPerMicroSecond = 1000ULL;
+    const static uint64 kNanoSecsPerSecond = kMicroSecsPerSecond
+        * kNanoSecsPerMicroSecond;
+
+    static TimeStamp Now();
     static TimeStamp afterSeconds(uint64 secs);
     static TimeStamp afterMicroSeconds(uint64 micro_secs);
 
     uint64 microSecs() const {
-      return stamp_.tv_sec * 1000 + stamp_.tv_usec;
+      return ms_;
     }
-
-    const timeval& timeVal() const {
-      return stamp_;
-    }
-    timespec timeSpec() const {
-      timespec ts = { 0 };
-      ts.tv_sec = stamp_.tv_sec;
-      ts.tv_nsec = stamp_.tv_usec * 1000;
-      return ts;
-    }
+    struct timeval toTimeVal() const;
+    struct timespec toTimeSpec() const;
 
     bool operator <(const TimeStamp& t) const {
-      if (stamp_.tv_sec < t.stamp_.tv_sec) return true;
-      return stamp_.tv_usec < t.stamp_.tv_usec;
+      return ms_ < t.ms_;
     }
     bool operator >(const TimeStamp& t) const {
       return !operator <(t);
     }
+    void operator +(uint64 micro_sec) {
+      ms_ += micro_sec;
+    }
+    void operator -(uint64 micro_sec) {
+      ms_ -= micro_sec;
+    }
+    void operator +=(uint64 micro_sec) {
+      ms_ += micro_sec;
+    }
+    void operator -=(uint64 micro_sec) {
+      ms_ -= micro_sec;
+    }
 
   private:
-    timeval stamp_;
+    uint64 ms_;
 };
+
+inline struct timeval TimeStamp::toTimeVal() const {
+  struct timeval tv = { 0 };
+  tv.tv_sec = ms_ /= kMicroSecsPerSecond;
+  tv.tv_usec = ms_ % kMicroSecsPerSecond;
+  return tv;
+}
+
+inline struct timespec TimeStamp::toTimeSpec() const {
+  timespec ts = { 0 };
+  ts.tv_sec = ms_ / kMicroSecsPerSecond;
+  ts.tv_nsec = ms_ % kMicroSecsPerSecond * kNanoSecsPerMicroSecond;
+  return ts;
+}
 
 inline TimeStamp Now() {
   timeval tv;
   ::gettimeofday(&tv, NULL);
-  return TimeStamp(tv);
+  return TimeStamp(tv.tv_sec * TimeStamp::kMicroSecsPerSecond + tv.tv_usec);
 }
-
 inline TimeStamp TimeStamp::afterMicroSeconds(uint64 micro_secs) {
   return TimeStamp(Now().microSecs() + micro_secs);
 }
 inline TimeStamp TimeStamp::afterSeconds(uint64 secs) {
   return TimeStamp(Now().microSecs() + secs * 1000);
-}
-
-inline TimeStamp TimeAdd(const TimeStamp& t, uint sec) {
-  return TimeStamp(t.microSecs() + sec * 1000);
-}
-inline uint64 TimeDiff(const TimeStamp& t1, const TimeStamp& t2) {
-  return t1.microSecs() - t2.microSecs();
 }
 
 #endif /* TIME_STAMP_H_ */
