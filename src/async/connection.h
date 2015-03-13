@@ -3,97 +3,84 @@
 
 #include "include/object_saver.h"
 
-namespace io {
-class OutQueue;
-class ReadFdChunk;
-class OutputObject;
-}
-
 namespace async {
-class Protocol;
-
 struct Event;
+class Protocol;
 class EventManager;
 
 // Note: Connection shouldn't delete directly.
 class Connection : public RefCounted {
   public:
-    struct Attr {
-        virtual ~Attr() {
-        }
-        virtual void Init() = 0;
-
-        uint32 io_stat;
-        uint32 pending_size;
-        uint32 data_len;
-
-        bool is_last_pkg;
+    struct UserData {
+        Connection* conn;
     };
 
-    Connection(int fd, EventManager* ev_mgr);
+    Connection(int fd, EventManager* ev_mgr)
+        : fd_(fd), closed_(false), ev_mgr_(ev_mgr) {
+      DCHECK_NE(fd, INVALID_FD);
+      DCHECK_NOTNULL(ev_mgr);
+      saver_ = nullptr;
+      protocol_ = nullptr;
+    }
     virtual ~Connection();
 
-    void Init();
+    bool init();
 
-    const int& FileHandle() const {
+    int fileHandle() const {
       return fd_;
     }
     EventManager* getEventLoop() const {
       return ev_mgr_;
     }
-
-    void setSaver(ObjectSaver<int, Connection>* saver) {
-      DCHECK_NE(saver_, saver);
-      if (saver_ != NULL) {
-        saver_->Remove(fd_);
-        saver_ = NULL;
-      }
-      if (saver != NULL) {
-        saver->Add(fd_, this);
-        saver_ = saver;
-      }
-    }
-
-    void setAttr(Attr* attr);
-    Attr* getAttr() const {
-      return attr_.get();
-    }
     void setProtocol(Protocol* p) {
       protocol_ = p;
     }
-
     void setCloseClosure(Closure* cb, bool run_old_if_exist = false) {
-      if (run_old_if_exist && close_closure_.get() != NULL) {
+      if (run_old_if_exist && close_closure_ != nullptr) {
         close_closure_->Run();
       }
       close_closure_.reset(cb);
     }
 
-    // out_obj will deleted by connection.
-    // Note: not thread safe.
-    void Send(io::OutputObject* out_obj);
-    int32 Recv(uint32 len, int* err_no);
+    void setSaver(ObjectSaver<int, Connection>* saver) {
+      DCHECK_NE(saver_, saver);
+      if (saver_ != nullptr) {
+        saver_->Remove(fd_);
+        saver_ = nullptr;
+      }
+      if (saver != nullptr) {
+        saver->Add(fd_, this);
+        saver_ = saver;
+      }
+    }
 
-    void handleRead(const TimeStamp& time_stamp);
-    void handleWrite(const TimeStamp& time_stamp);
+    void setData(UserData* attr);
+    UserData* getData() const {
+      return data_.get();
+    }
 
+    bool read(char* buf, int32* len);
+    bool write(const char* buf, int32* len);
+    bool write(const std::vector<iovec>& iov, int32* len);
+
+    void handleRead(TimeStamp time_stamp);
+    void handleWrite(TimeStamp time_stamp);
+
+    void updateChannel(uint8 event);
     void shutDownFromServer();
 
   private:
     int fd_;
     bool closed_;
+
     EventManager* ev_mgr_;
     scoped_ptr<Event> event_;
 
     Protocol* protocol_;
-    scoped_ptr<Attr> attr_;
+    scoped_ptr<Closure> close_closure_;
+    scoped_ptr<UserData> data_;
 
     ObjectSaver<int, Connection>* saver_;
-
-    scoped_ptr<Closure> close_closure_;
-
-    scoped_ptr<io::ReadFdChunk> input_chunk_;
-    scoped_ptr<io::OutQueue> out_queue_;
 
     DISALLOW_COPY_AND_ASSIGN(Connection);
 };

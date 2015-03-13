@@ -1,11 +1,7 @@
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
 
-#include  "connection.h" // Connection::Attr
-
-namespace io {
-class ReadableAbstruct;
-}
+#include  "connection.h"
 
 namespace async {
 
@@ -14,9 +10,25 @@ class Protocol {
     virtual ~Protocol() {
     }
 
-    enum IoStat {
-      IO_START = 0, IO_HEADER, IO_DATA,
-    };
+    virtual Connection::UserData* NewConnectionData() const = 0;
+
+    virtual void handleRead(Connection* conn, TimeStamp time_stamp) = 0;
+    virtual void handleWrite(Connection* conn, TimeStamp time_stamp) = 0;
+    virtual void handleError(Connection* conn) = 0;
+    virtual void handleClose(Connection* conn) = 0;
+
+  protected:
+    Protocol() {
+    }
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(Protocol);
+};
+
+class ProReactorProtocol : public Protocol {
+  public:
+    virtual ~ProReactorProtocol() {
+    }
 
     class ErrorReporter {
       public:
@@ -31,28 +43,45 @@ class Protocol {
         virtual ~Scheluder() {
         }
 
-        virtual void dispatch(Connection* conn, io::ReadableAbstruct* input_buf,
-                              const TimeStamp& time_stamp) = 0;
+        virtual void dispatch(Connection* conn, TimeStamp time_stamp) = 0;
     };
 
-    virtual Connection::Attr* NewConnectionAttr() const = 0;
+    enum IoStat {
+      IO_START = 0, IO_HEADER, IO_DATA, IO_END,
+    };
 
-    void handleRead(Connection* conn, io::ReadableAbstruct* input_buf,
-                    const TimeStamp& time_stamp) const;
+    struct UserData : public Connection::UserData {
+        UserData()
+            : is_last(true) {
+          io_stat = IO_START;
+          pending_size = 0;
+        }
+
+        bool is_last;
+        IoStat io_stat;
+        uint32 pending_size;
+    };
 
   protected:
-    explicit Protocol(Scheluder* scheluder)
-        : scheluder_(scheluder) {
+    ProReactorProtocol(Scheluder* scheluder, ErrorReporter* reporter)
+        : scheluder_(scheluder), reporter_(reporter) {
       DCHECK_NOTNULL(scheluder);
     }
 
+    virtual uint32 headerLength() const = 0;
+    virtual bool parseHeader(Connection* conn) const;
+
   private:
     scoped_ptr<Scheluder> scheluder_;
+    scoped_ptr<ErrorReporter> reporter_;
 
-    bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
-                            uint32 data_len) const;
+    virtual void handleRead(Connection* conn, TimeStamp time_stamp);
+    virtual void handleWrite(Connection* conn, TimeStamp time_stamp);
+    virtual void handleError(Connection* conn);
+    virtual void handleClose(Connection* conn);
 
-    DISALLOW_COPY_AND_ASSIGN(Protocol);
+    DISALLOW_COPY_AND_ASSIGN(ProReactorProtocol);
 };
+
 }
 #endif /* PROTOCOL_H_ */

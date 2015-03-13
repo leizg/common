@@ -28,11 +28,21 @@ class MemoryBlock {
       return end_ - wpos_;
     }
 
-    void retrieve(uint64 size) {
+    void retrieveRead(uint64 size) {
       rpos_ -= size;
+    }
+    void retrieveWrite(uint64 size) {
+      wpos_ -= size;
     }
     void retrieveAll() {
       rpos_ = wpos_ = mem_;
+    }
+
+    void skipRead(uint64 size) {
+      rpos_ += size;
+    }
+    void skipWrite(uint64 size) {
+      wpos_ += size;
     }
 
     const char* peekR() const {
@@ -49,7 +59,7 @@ class MemoryBlock {
     char* end_;
 
     MemoryBlock()
-        : mem_(NULL), rpos_(NULL), wpos_(NULL), end_(NULL) {
+        : mem_(nullptr), rpos_(nullptr), wpos_(nullptr), end_(nullptr) {
     }
     MemoryBlock(char* beg, char* end)
         : mem_(beg), rpos_(beg), wpos_(beg), end_(end) {
@@ -68,28 +78,31 @@ class MemoryBlock {
 class ReadonlyBytesChunk : public MemoryBlock {
   public:
     ReadonlyBytesChunk(char* data, uint32 len, bool auto_release = true)
-        : MemoryBlock(data, len), data_(data), auto_release_(auto_release) {
+        : MemoryBlock(data, len), data_(data) {
+      auto_release_ = auto_release;
+      wpos_ = end_;
     }
     virtual ~ReadonlyBytesChunk() {
       if (auto_release_) {
-        ::free(const_cast<char*>(data_));
+        ::free(data_);
       }
     }
 
   private:
-    const char* const data_;
-    const bool auto_release_;
+    char* data_;
+    bool auto_release_;
 
     DISALLOW_COPY_AND_ASSIGN(ReadonlyBytesChunk);
 };
 
-class ReadonlyBlockChunk : public MemoryBlock {
+class ReadonlyChunk : public MemoryBlock {
   public:
-    ReadonlyBlockChunk(const MemoryBlock* block, bool auto_release = true)
-        : MemoryBlock(block->rpos_, block->end_), block_(block), auto_release_(
-            auto_release) {
+    explicit ReadonlyChunk(const MemoryBlock* block, bool auto_release = true)
+        : MemoryBlock(block->rpos_, block->end_), block_(block) {
+      wpos_ = end_;
+      auto_release_ = auto_release;
     }
-    virtual ~ReadonlyBlockChunk() {
+    virtual ~ReadonlyChunk() {
       if (auto_release_) {
         delete block_;
       }
@@ -97,15 +110,15 @@ class ReadonlyBlockChunk : public MemoryBlock {
 
   private:
     const MemoryBlock* const block_;
-    const bool auto_release_;
+    bool auto_release_;
 
-    DISALLOW_COPY_AND_ASSIGN(ReadonlyBlockChunk);
+    DISALLOW_COPY_AND_ASSIGN(ReadonlyChunk);
 };
 
 class ExternableChunk : public MemoryBlock {
   public:
     explicit ExternableChunk(uint64 size) {
-      CHECK_GT(size, 0);
+      DCHECK_GT(size, 0);
       size = ALIGN(size);
       DCHECK_EQ(size % 4, 0);
       mem_ = (char*) ::malloc(size);
@@ -126,26 +139,20 @@ class ExternableChunk : public MemoryBlock {
           return;
         }
 
-        uint64 new_size = capacity() * 2;
-        uint64 free_size = new_size - wn;
-        if (free_size < len) {
-          new_size += len - free_size;
+        uint64 new_size = 512, min_size = len + wn;
+        while (new_size <= min_size) {
+          new_size *= 2;
         }
-        mem_ = (char*) ::realloc(mem_, new_size);
+        char* data = (char*) ::malloc(new_size);
+        DCHECK_NOTNULL(mem_);
+        ::memcpy(data, rpos_, rn);
+        ::free(mem_);
+        mem_ = data;
         end_ = mem_ + new_size;
         rpos_ = mem_ + rn;
         wpos_ = mem_ + wn;
         DCHECK_GE(writeableSize(), len);
       }
-    }
-
-    void skip(uint64 size) {
-      wpos_ += size;
-      DCHECK_LE(wpos_, end_);
-    }
-    void backup(uint64 size) {
-      wpos_ -= size;
-      DCHECK_LE(rpos_, wpos_);
     }
 
   private:
