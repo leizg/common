@@ -3,97 +3,101 @@
 
 namespace {
 
-#if 0
-bool RecvPending(async::Connection* conn, async::Connection::Attr* attr) {
-  if (attr->pending_size == 0) return true;
-
-  int err_no;
-  int32 ret = conn->Recv(attr->pending_size, &err_no);
-  if (ret != attr->pending_size) {
-    if (ret != -1) {
-      attr->pending_size -= ret;
-      return false;
-    }
-    return false;
-  }
-
-  attr->pending_size = 0;
-  return true;
-}
-#endif
-
 }
 
 namespace async {
 
+ProReactorProtocol::UserData::UserData()
+    : is_last(true), io_stat(IO_START), pending_size(0) {
+  chunk.reset(new io::ExternableChunk);
+  src.reset(new io::ConcatenaterSource);
+}
+
+void ProReactorProtocol::UserData::newPackage() {
+  src->push(new io::ChunkSource(chunk.release()));
+  chunk.reset(new io::ExternableChunk);
+}
+
+io::InputStream* ProReactorProtocol::UserData::releaseStream() {
+  newPackage();
+
+  io::InputStream* stream(new io::InputStream(src.release()));
+  src.reset(new io::ConcatenaterSource);
+
+  return stream;
+}
+
+ProReactorProtocol::UserData::~UserData() {
+}
+
 void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
+  UserData* u = reinterpret_cast<UserData*>(conn->getData());
+  if (!RecvPending(conn, u)) return;
+
+  switch (u->io_stat) {
+    case IO_START:
+      u->io_stat = IO_HEADER;
+      if (!recvData(conn, u, headerLength())) {
+        return;
+      }
+
+    case IO_HEADER:
+      u->io_stat = IO_BODY;
+      if (!parseHeader(conn)) {
+        reporter_->report(conn);
+        return;
+      }
+
+    case IO_BODY:
+      u->io_stat = IO_END;
+      if (!recvData(conn, u, u->pending_size)) {
+        return;
+      }
+
+    case IO_END:
+      if (u->is_last) {
+        scheluder_->dispatch(conn, u->releaseStream(), time_stamp);
+        u->is_last = false;
+      }
+      u->newPackage();
+      u->io_stat = IO_START;
+      break;
+  }
 }
 
 void ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp) {
 }
 
 void ProReactorProtocol::handleError(Connection* conn) {
+  reporter_->report(conn);
 }
 
 void ProReactorProtocol::handleClose(Connection* conn) {
+  reporter_->report(conn);
 }
 
-#if 0
-bool Protocol::recvData(Connection* conn, Connection::Attr* attr,
-  uint32 data_len) const {
-DCHECK_EQ(attr->pending_size, 0);
-int err_no = 0;
+bool ProReactorProtocol::recvData(Connection* conn, UserData* u,
+                                  uint32 data_len) {
+  DCHECK_EQ(u->pending_size, 0);
 
-int32 ret = conn->Recv(data_len, &err_no);
-if (ret == 0) return false;
-else if (ret == -1) {
-  if (err_no == EWOULDBLOCK || err_no == EAGAIN) {
-    attr->pending_size = data_len;
+  u->pending_size = data_len;
+  return RecvPending(conn, u);
+}
+
+bool ProReactorProtocol::RecvPending(Connection* conn, UserData* ud) {
+  if (ud->pending_size == 0) return true;
+
+  int size = ud->pending_size;
+  ud->chunk->ensureLeft(size);
+  if (!conn->read(ud->chunk->peekW(), &size)) {
+    handleError(conn);
     return false;
   }
-  reporter_->report(conn);
-  return false;
+
+  ud->pending_size -= size;
+  ud->chunk->skipWrite(size);
+
+  return 0 == ud->pending_size;
 }
 
-DCHECK_GT(ret, 0);
-attr->pending_size = data_len - ret;
-return attr->pending_size == 0;
-}
-
-void Protocol::handleRead(Connection* conn, InputStream* input_buf,
-  const TimeStamp& time_stamp) const {
-Connection::Attr* attr = conn->getAttr();
-RecvPending(conn, attr);
-
-DCHECK_EQ(attr->pending_size, 0);
-while (true) {
-  switch (attr->io_stat) {  // fall through.
-    case IO_START:
-    attr->io_stat = IO_HEADER;
-    if (!recvData(conn, attr, parser_->headerLength())) {
-      return;
-    }
-
-    case IO_HEADER:
-    attr->io_stat = IO_DATA;
-    if (!parser_->parse(conn, input_buf)) {
-      reporter_->report(conn);
-      return;
-    }
-    if (!recvData(conn, attr, attr->data_len)) {
-      return;
-    }
-
-    case IO_DATA:
-    attr->io_stat = IO_START;
-    if (attr->is_last_pkg) {
-      processor_->dispatch(conn, input_buf, time_stamp);
-      attr->Init();
-      return;
-    }
-    handlePackage(conn, attr, input_buf);
-  }
-}
-}
-#endif
 }

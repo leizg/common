@@ -1,7 +1,8 @@
 #include "protocol.h"
 #include "connection.h"
 #include "event_manager.h"
-#include "connection_data.h"
+
+#include <sys/sendfile.h>
 
 namespace {
 
@@ -125,6 +126,34 @@ bool Connection::write(const char* buf, int32* len) {
   std::vector<iovec> iov;
   iov.push_back(iovec(buf, *len));
   return write(iov, len);
+}
+
+bool Connection::write(int fd, off_t offset, int32* len) {
+  if (fd_ == INVALID_FD || closed_) {
+    return false;
+  }
+
+  uint32 count = *len;
+  off_t pos = offset;
+  while (count != 0) {
+    int32 ret = ::sendfile(fd_, fd, &pos, count);
+    if (ret == -1) {
+      switch (errno) {
+        case EINTR:
+          continue;
+        case EWOULDBLOCK:
+          break;
+        default:
+          protocol_->handleError(this);
+          return false;
+      }
+    }
+
+    count -= ret;
+  }
+
+  *len = pos - offset;
+  return true;
 }
 
 bool Connection::write(const std::vector<iovec>& iov, int32* len) {

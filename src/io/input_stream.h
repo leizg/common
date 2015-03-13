@@ -115,5 +115,32 @@ class ChunkSource : public InputStream::Source {
 
     DISALLOW_COPY_AND_ASSIGN(ChunkSource);
 };
+
+class ConcatenaterSource : public InputStream::Source {
+  public:
+    typedef InputStream::Source SelfType;
+
+    explicit ConcatenaterSource(SelfType* src = NULL) {
+      if (src != NULL) {
+        push(src);
+      }
+    }
+    virtual ~ConcatenaterSource() {
+      STLClear(&src_vec_);
+    }
+
+    void push(SelfType* src) {
+      DCHECK_NOTNULL(src);
+      const std::vector<iovec>& iov = src->iov();
+      for (auto it = iov.begin(); it != iov.end(); ++it) {
+        iov_.push_back(*it);
+      }
+    }
+
+  private:
+    std::vector<SelfType*> src_vec_;
+
+    DISALLOW_COPY_AND_ASSIGN(ConcatenaterSource);
+};
 }
 #endif /* INPUT_BUF_H_ */

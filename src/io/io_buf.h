@@ -10,8 +10,7 @@ class OutputObject {
     virtual ~OutputObject() {
     }
 
-    // return true iif no data need to send.
-    virtual bool send(int fd, int32* err_no) = 0;
+    virtual bool send(int fd, int32* size) = 0;
 
   protected:
     OutputObject()
@@ -48,7 +47,7 @@ class OutVectorObject : public OutputObject {
 
     void buildData(std::vector<iovec>* io_vec) const;
 
-    virtual bool send(int fd, int32* err_no);
+    virtual bool send(int fd, int32* size);
 
     DISALLOW_COPY_AND_ASSIGN(OutVectorObject);
 };

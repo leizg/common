@@ -12,6 +12,9 @@ class EventManager;
 class Connection : public RefCounted {
   public:
     struct UserData {
+        virtual ~UserData() {
+        }
+
         Connection* conn;
     };
 
@@ -61,6 +64,7 @@ class Connection : public RefCounted {
 
     bool read(char* buf, int32* len);
     bool write(const char* buf, int32* len);
+    bool write(int fd, off_t offset, int32* len);
     bool write(const std::vector<iovec>& iov, int32* len);
 
     void handleRead(TimeStamp time_stamp);

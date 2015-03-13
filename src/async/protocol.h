@@ -3,6 +3,11 @@
 
 #include  "connection.h"
 
+namespace io {
+class ExternableChunk;
+class ConcatenaterSource;
+}
+
 namespace async {
 
 class Protocol {
@@ -43,23 +48,28 @@ class ProReactorProtocol : public Protocol {
         virtual ~Scheluder() {
         }
 
-        virtual void dispatch(Connection* conn, TimeStamp time_stamp) = 0;
+        virtual void dispatch(Connection* conn, io::InputStream* in_stream,
+                              TimeStamp time_stamp) = 0;
     };
 
     enum IoStat {
-      IO_START = 0, IO_HEADER, IO_DATA, IO_END,
+      IO_START = 0, IO_HEADER, IO_BODY, IO_END,
     };
 
     struct UserData : public Connection::UserData {
-        UserData()
-            : is_last(true) {
-          io_stat = IO_START;
-          pending_size = 0;
-        }
+        UserData();
+        virtual ~UserData();
+
+        io::InputStream* releaseStream();
+        void newPackage();
 
         bool is_last;
         IoStat io_stat;
         uint32 pending_size;
+        scoped_ptr<io::ExternableChunk> chunk;
+        scoped_ptr<io::ConcatenaterSource> src;
+
+        // todo: out queue.
     };
 
   protected:
@@ -79,6 +89,9 @@ class ProReactorProtocol : public Protocol {
     virtual void handleWrite(Connection* conn, TimeStamp time_stamp);
     virtual void handleError(Connection* conn);
     virtual void handleClose(Connection* conn);
+
+    bool recvData(Connection* conn, UserData* u, uint32 data_len);
+    bool RecvPending(Connection* conn, UserData* ud);
 
     DISALLOW_COPY_AND_ASSIGN(ProReactorProtocol);
 };
