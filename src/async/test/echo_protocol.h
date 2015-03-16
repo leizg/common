@@ -7,8 +7,12 @@ namespace test {
 class EchoDispatcher;
 
 class EchoProtocol : public async::ProReactorProtocol {
+  public:
+    explicit EchoProtocol(EchoDispatcher* p);
+    virtual ~EchoProtocol();
+
   private:
-    class EchoParser : public Parser {
+    class EchoParser : public async::ProReactorProtocol::Parser {
       public:
         EchoParser() {
         }
@@ -16,9 +20,8 @@ class EchoProtocol : public async::ProReactorProtocol {
         }
 
       private:
-
         virtual uint32 headerLength() const {
-          return sizeof uint32;
+          return sizeof(uint32);
         }
 
         virtual bool parseHeader(async::Connection* conn) const;
@@ -26,14 +29,6 @@ class EchoProtocol : public async::ProReactorProtocol {
         DISALLOW_COPY_AND_ASSIGN(EchoParser);
     };
 
-  public:
-    explicit EchoProtocol(EchoDispatcher* p)
-        : async::ProReactorProtocol(new EchoParser, p) {
-    }
-    virtual ~EchoProtocol() {
-    }
-
-  private:
     virtual async::Connection::UserData* NewConnectionData() const {
       return new UserData;
     }

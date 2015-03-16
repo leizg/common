@@ -1,6 +1,7 @@
 #include "echo_protocol.h"
 #include "async/connection.h"
 #include "async/test/echo_coder.h"
+#include "async/test/serv/echo_dispatcher.h"
 
 #include "io/input_stream.h"
 
@@ -9,7 +10,7 @@ namespace test {
 bool EchoProtocol::EchoParser::parseHeader(async::Connection* conn) const {
   ProReactorProtocol::UserData* ud =
       static_cast<ProReactorProtocol::UserData*>(conn->getData());
-  char* data = ud->peekHeader();
+  const char* data = ud->peekHeader();
 
   bool is_last;
   uint32 data_len;
@@ -24,6 +25,13 @@ bool EchoProtocol::EchoParser::parseHeader(async::Connection* conn) const {
   ud->pending_size = data_len;
 
   return true;
+}
+
+EchoProtocol::EchoProtocol(EchoDispatcher* p)
+    : async::ProReactorProtocol(new EchoParser, p) {
+}
+
+EchoProtocol::~EchoProtocol() {
 }
 
 }

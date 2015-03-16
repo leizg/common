@@ -50,7 +50,7 @@ class ProReactorProtocol : public Protocol {
         }
 
         virtual uint32 headerLength() const = 0;
-        virtual bool parseHeader(Connection* conn) const;
+        virtual bool parseHeader(Connection* conn) const = 0;
     };
 
     class Scheluder {
@@ -70,7 +70,7 @@ class ProReactorProtocol : public Protocol {
         UserData();
         virtual ~UserData();
 
-        char* peekHeader();
+        const char* peekHeader() const;
         io::InputStream* releaseStream();
         void newPackage();
 

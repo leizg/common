@@ -1,6 +1,7 @@
 #include "protocol.h"
 #include "connection.h"
 #include "event_manager.h"
+#include "io/io_buf.h"
 
 #include <sys/sendfile.h>
 
@@ -44,6 +45,14 @@ void skipData(std::vector<iovec>* iov, uint32 len) {
 
 namespace async {
 
+Connection::Connection(int fd, EventManager* ev_mgr)
+    : fd_(fd), closed_(false), ev_mgr_(ev_mgr) {
+  DCHECK_NE(fd, INVALID_FD);
+  DCHECK_NOTNULL(ev_mgr);
+  saver_ = nullptr;
+  protocol_ = nullptr;
+}
+
 Connection::~Connection() {
   closed_ = true;
 
@@ -86,7 +95,19 @@ void Connection::handleRead(TimeStamp time_stamp) {
 
 void Connection::handleWrite(TimeStamp time_stamp) {
   if (fd_ != INVALID_FD && !closed_) {
-    protocol_->handleWrite(this, time_stamp);
+    if (out_queue_->empty()) {
+      updateChannel(EV_READ);
+      protocol_->handleWrite(this, time_stamp);
+      return;
+    }
+
+    int32 err_no;
+    if (out_queue_->send(fd_, &err_no)) {
+      updateChannel(EV_READ);
+      protocol_->handleWrite(this, time_stamp);
+      return;
+    }
+    if (err_no != EWOULDBLOCK) protocol_->handleClose(this);
   }
 }
 
@@ -120,6 +141,30 @@ bool Connection::read(char* buf, int32* len) {
 
   *len -= left;
   return true;
+}
+
+void Connection::send(io::OutputObject* out_obj) {
+  if (fd_ == INVALID_FD || closed_) {
+    delete out_obj;
+    return;
+  }
+  if (!out_queue_->empty()) {
+    out_queue_->push(out_obj);
+    return;
+  }
+
+  int32 err_no;
+  if (out_obj->send(fd_, &err_no)) {
+    delete out_obj;
+    return;
+  }
+  if (err_no != EWOULDBLOCK) {
+    protocol_->handleClose(this);
+    return;
+  }
+
+  out_queue_->push(out_obj);
+  updateChannel(EV_READ | EV_WRITE);
 }
 
 bool Connection::write(const char* buf, int32* len) {

@@ -3,6 +3,11 @@
 
 #include "include/object_saver.h"
 
+namespace io {
+class OutQueue;
+class OutputObject;
+}
+
 namespace async {
 struct Event;
 class Protocol;
@@ -18,13 +23,7 @@ class Connection : public RefCounted {
         Connection* conn;
     };
 
-    Connection(int fd, EventManager* ev_mgr)
-        : fd_(fd), closed_(false), ev_mgr_(ev_mgr) {
-      DCHECK_NE(fd, INVALID_FD);
-      DCHECK_NOTNULL(ev_mgr);
-      saver_ = nullptr;
-      protocol_ = nullptr;
-    }
+    Connection(int fd, EventManager* ev_mgr);
     virtual ~Connection();
 
     bool init();
@@ -63,6 +62,7 @@ class Connection : public RefCounted {
     }
 
     bool read(char* buf, int32* len);
+    void send(io::OutputObject* out_obj);
     bool write(const char* buf, int32* len);
     bool write(int fd, off_t offset, int32* len);
     bool write(const std::vector<iovec>& iov, int32* len);
@@ -70,7 +70,6 @@ class Connection : public RefCounted {
     void handleRead(TimeStamp time_stamp);
     void handleWrite(TimeStamp time_stamp);
 
-    void updateChannel(uint8 event);
     void shutDownFromServer();
 
   private:
@@ -83,6 +82,9 @@ class Connection : public RefCounted {
     Protocol* protocol_;
     scoped_ptr<Closure> close_closure_;
     scoped_ptr<UserData> data_;
+
+    void updateChannel(uint8 event);
+    scoped_ptr<io::OutQueue> out_queue_;
 
     ObjectSaver<int, Connection>* saver_;
 

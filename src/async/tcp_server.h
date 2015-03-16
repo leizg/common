@@ -6,8 +6,6 @@
 
 namespace async {
 class Protocol;
-class Connection;
-
 class Acceptor;
 class EventPooler;
 class EventManager;
@@ -15,7 +13,7 @@ class EventManager;
 typedef ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> ConnTable;
 
 // master + workers.
-// master accept new connection, and dispatch it to worker.
+// master accept new connection, and dispatch it to worker thread.
 // thread pool + event loop per thread.
 class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
   public:

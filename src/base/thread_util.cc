@@ -1,4 +1,5 @@
 #include "thread_util.h"
+#include "time_stamp.h"
 #include <sys/time.h>
 
 void microSleep(uint64 micro_secs, bool ignore_eintr) {

@@ -21,6 +21,10 @@ void ProReactorProtocol::UserData::newPackage() {
   chunk.reset(new io::ExternableChunk);
 }
 
+const char* ProReactorProtocol::UserData::peekHeader() const {
+  return chunk->peekR();
+}
+
 io::InputStream* ProReactorProtocol::UserData::releaseStream() {
   newPackage();
 
@@ -69,6 +73,7 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
 }
 
 void ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp) {
+  // todo:
 }
 
 void ProReactorProtocol::handleError(Connection* conn) {

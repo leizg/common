@@ -185,6 +185,34 @@ class MethodClosure2 : public Closure {
     Arg2 arg2_;
 };
 
+template<typename Class, typename Arg1, typename Arg2, typename Arg3>
+class MethodClosure3 : public Closure {
+  public:
+    typedef void (Class::*MethodType)(Arg1 arg1, Arg2 arg2, Arg3 arg3);
+
+    MethodClosure3(Class* object, MethodType method, bool self_deleting,
+                   Arg1 arg1, Arg2 arg2, Arg3 arg3)
+        : object_(object), method_(method), self_deleting_(self_deleting), arg1_(
+            arg1), arg2_(arg2), arg3_(arg3) {
+    }
+    ~MethodClosure3() {
+    }
+
+    void Run() {
+      bool needs_delete = self_deleting_;  // read in case callback deletes
+      (object_->*method_)(arg1_, arg2_, arg3_);
+      if (needs_delete) delete this;
+    }
+
+  private:
+    Class* object_;
+    MethodType method_;
+    bool self_deleting_;
+    Arg1 arg1_;
+    Arg2 arg2_;
+    Arg3 arg3_;
+};
+
 inline Closure* NewCallback(void (*function)()) {
   return new FunctionClosure0(function, true);
 }
@@ -238,6 +266,20 @@ inline Closure* NewPermanentCallback(Class* object,
                                      Arg1 arg1, Arg2 arg2) {
   return new MethodClosure2<Class, Arg1, Arg2>(object, method, false, arg1,
                                                arg2);
+}
+template<typename Class, typename Arg1, typename Arg2, typename Arg3>
+inline Closure* NewCallback(Class* object,
+                            void (Class::*method)(Arg1, Arg2, Arg3), Arg1 arg1,
+                            Arg2 arg2, Arg3 arg3) {
+  return new MethodClosure3<Class, Arg1, Arg2, Arg3>(object, method, true, arg1,
+                                                     arg2, arg3);
+}
+template<typename Class, typename Arg1, typename Arg2, typename Arg3>
+inline Closure* NewPermanentCallback(Class* object,
+                                     void (Class::*method)(Arg1, Arg2, Arg3),
+                                     Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+  return new MethodClosure3<Class, Arg1, Arg2, Arg3>(object, method, false,
+                                                     arg1, arg2, arg3);
 }
 
 #endif

@@ -87,7 +87,7 @@ inline struct timespec TimeStamp::toTimeSpec() const {
   return ts;
 }
 
-inline TimeStamp Now() {
+inline TimeStamp TimeStamp::now() {
   timeval tv;
   ::gettimeofday(&tv, NULL);
   return TimeStamp(tv.tv_sec * TimeStamp::kMicroSecsPerSecond + tv.tv_usec);

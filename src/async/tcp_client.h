@@ -3,51 +3,53 @@
 
 #include "base/base.h"
 
+namespace io {
+class OutputObject;
+}
+
 namespace async {
 class Protocol;
 class EventManager;
 
-class Connection;
-class OutputObject;
-
-class TcpClient {  // todo: object_saver.h
+class TcpClient {
   public:
-    TcpClient(EventManager* ev, const std::string& ip, uint16 port);
-    ~TcpClient();
+    virtual ~TcpClient() {
+    }
+
+    static TcpClient* create(EventManager* ev_mgr, const std::string& ip,
+                             uint16 port);
 
     // not thread safe.
-    void SetProtocol(Protocol* p) {
+    void setProtocol(Protocol* p) {
       protocol_ = p;
     }
     // not thread safe.
-    void SetCloseClosure(Closure* c) {
+    void setCloseClosure(Closure* c) {
       close_closure_.reset(c);
     }
 
-    bool IsConnected() {
-      ScopedMutex l(&mutex_);
-      return connection_.get() != NULL;
+    // please set protocol and closeClosure first.
+    // thread safe.
+    virtual bool connect(uint32 time_out) = 0;
+
+    // threadsafe, can be called from any thread.
+    virtual void send(io::OutputObject* out_obj) = 0;
+
+  protected:
+    TcpClient(EventManager* ev_mgr, const std::string& ip, uint16 port)
+        : ip_(ip), port_(port), ev_mgr_(ev_mgr), protocol_(NULL) {
+      DCHECK(!ip.empty());
+      DCHECK_NOTNULL(ev_mgr);
     }
 
-    // please set protocol and closeClosure first.
-    bool Connect(uint32 time_out);
-    // threadsafe, can be called from any thread.
-    void Send(OutputObject* io_obj);
-
-  private:
     const std::string ip_;
     uint16 port_;
-
     EventManager* ev_mgr_;
-
-    Mutex mutex_;
-    scoped_ref<Connection> connection_;
 
     Protocol* protocol_;
     scoped_ptr<Closure> close_closure_;
 
-    void Remove(Connection* conn);
-
+  private:
     DISALLOW_COPY_AND_ASSIGN(TcpClient);
 };
 

@@ -13,7 +13,7 @@ void handleTimerQueueEvent(int fd, void* arg, uint8 event,
 namespace async {
 
 TimerQueue::TimerQueue(EventManager* ev_mgr, Delegate* delegate)
-    : actived_(false), ev_mgr_(ev_mgr), expired_time_(Now()), delegate_(
+    : actived_(false), ev_mgr_(ev_mgr), expired_time_(TimeStamp::now()), delegate_(
         delegate) {
   DCHECK_NOTNULL(ev_mgr);
   DCHECK_NOTNULL(delegate);
