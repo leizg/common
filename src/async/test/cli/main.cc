@@ -12,7 +12,7 @@ DEFINE_int32(client_number, 1, "number of clients used for testing");
 
 bool buildClients(async::EventManager* ev_mgr,
                   std::vector<test::EchoClient*>* clients) {
-  for (uint32 i = 0; i < FLAGS_client_number; ++i) {
+  for (int32 i = 0; i < FLAGS_client_number; ++i) {
     test::EchoClient* cli = new test::EchoClient(ev_mgr, FLAGS_count);
     if (!cli->connect(FLAGS_ip, FLAGS_port)) {
       LOG(WARNING)<< "connect error";
@@ -41,9 +41,9 @@ static async::EventManager* createEventManager() {
   scoped_ptr<async::EventManager> ev_mgr;
 
   ev_mgr.reset(async::CreateEventManager());
-  if (ev_mgr == NULL || !ev_mgr->Init()) {
+  if (ev_mgr == nullptr || !ev_mgr->Init()) {
     LOG(WARNING)<< "create event manager error";
-    return -1;
+    return nullptr;
   }
 
   ev_mgr->LoopInAnotherThread();

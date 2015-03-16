@@ -1,6 +1,6 @@
 #include <sys/inotify.h>
 
-#include "io/event_manager.h"
+#include "async/event_manager.h"
 
 #include "watch_object.h"
 #include "file_system_watcher.h"
@@ -16,7 +16,7 @@ void handleWatcher(int fd, void* arg, uint8 event,
 
 namespace util {
 
-FileSystemWatcher::FileSystemWatcher(io::EventManager* ev_mgr)
+FileSystemWatcher::FileSystemWatcher(async::EventManager* ev_mgr)
     : fd_(INVALID_FD), ev_mgr_(ev_mgr) {
   DCHECK_NOTNULL(ev_mgr);
 }
@@ -44,7 +44,7 @@ bool FileSystemWatcher::Init() {
   setFdCloExec(fd_);
 #endif
 
-  event_.reset(new io::Event);
+  event_.reset(new async::Event);
   event_->fd = fd_;
   event_->event = EV_READ;
   event_->arg = this;

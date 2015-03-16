@@ -8,7 +8,7 @@ class EchoDispatcher;
 
 class EchoProtocol : public async::ProReactorProtocol {
   public:
-    explicit EchoProtocol(EchoDispatcher* p);
+    explicit EchoProtocol(async::ProReactorProtocol::Scheluder* scheluder);
     virtual ~EchoProtocol();
 
   private:

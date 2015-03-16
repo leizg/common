@@ -4,9 +4,9 @@ from glob import glob
 env = Environment()
 ccflags = ['-std=c++11', ]
 if ARGUMENTS.get('release', '0') == '0':
-  ccflags += ['-O0', '-g3', '-Werror', ]
+  ccflags += ['-O0', '-g3', '-Wall', ]
 else:
-  ccflags += ['-O3', '-g0', '-Wall', ]
+  ccflags += ['-O2', '-g0', '-Werror', ]
 env.Append(CPPFLAGS = ccflags)
 env.Append(CPPPATH = ['../', '/usr/local/include'])
 
@@ -28,8 +28,9 @@ env.Append(LIBS=libs)
 source_files = glob('../io/*.cc') + \
                glob('../base/*.cc') + \
                glob('../util/*.cc') + \
-               glob('../io/test/*.cc') + \
-               glob('../io/test/cli/*.cc')
+               glob('../async/*.cc') + \
+               glob('../async/test/*.cc') + \
+               glob('../async/test/cli/*.cc')
 
 print("souce code list: >>")
 for s in source_files:

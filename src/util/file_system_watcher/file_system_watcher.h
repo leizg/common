@@ -3,7 +3,7 @@
 
 #include "base/base.h"
 
-namespace io {
+namespace async {
 struct Event;
 class EventManager;
 }
@@ -13,7 +13,7 @@ class WatchObject;
 
 class FileSystemWatcher {
   public:
-    explicit FileSystemWatcher(io::EventManager* ev_mgr);
+    explicit FileSystemWatcher(async::EventManager* ev_mgr);
     virtual ~FileSystemWatcher();
 
     bool Init();
@@ -28,8 +28,8 @@ class FileSystemWatcher {
   private:
     int fd_;
 
-    io::EventManager* ev_mgr_;
-    scoped_ptr<io::Event> event_;
+    async::EventManager* ev_mgr_;
+    scoped_ptr<async::Event> event_;
 
     typedef std::map<int, WatchObject*> Map;
     Map map_;

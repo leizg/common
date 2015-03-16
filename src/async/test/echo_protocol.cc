@@ -27,8 +27,8 @@ bool EchoProtocol::EchoParser::parseHeader(async::Connection* conn) const {
   return true;
 }
 
-EchoProtocol::EchoProtocol(EchoDispatcher* p)
-    : async::ProReactorProtocol(new EchoParser, p) {
+EchoProtocol::EchoProtocol(async::ProReactorProtocol::Scheluder* scheluder)
+    : async::ProReactorProtocol(new EchoParser, scheluder) {
 }
 
 EchoProtocol::~EchoProtocol() {
