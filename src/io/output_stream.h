@@ -3,37 +3,38 @@
 
 #include "memory_block.h"
 
-namespace io {
+namespace async {
 
+#if 0
 class OutputStream {
   public:
-    explicit OutputStream(uint64 size = 512) {
-      block_.reset(new ExternableChunk(size));
-    }
-    virtual ~OutputStream() {
-    }
+  explicit OutputStream(uint64 size = 512) {
+    block_.reset(new ExternableChunk(size));
+  }
+  virtual ~OutputStream() {
+  }
 
-    void Next(char** buf, uint64* len);
-    void Backup(uint64 len) {
-      block_->backup(len);
-    }
+  void Next(char** buf, uint64* len);
+  void Backup(uint64 len) {
+    block_->backup(len);
+  }
 
-    uint64 ByteCount() const {
-      return block_->writen();
-    }
+  uint64 ByteCount() const {
+    return block_->writen();
+  }
 
-    void ensureLeft(int64 size) {
-      block_->ensureLeft(size);
-    }
+  void ensureLeft(int64 size) {
+    block_->ensureLeft(size);
+  }
 
-    char* peek() {
-      return block_->peekW();
-    }
+  char* peek() {
+    return block_->peekW();
+  }
 
   private:
-    scoped_ref<ExternableChunk> block_;
+  scoped_ref<ExternableChunk> block_;
 
-    DISALLOW_COPY_AND_ASSIGN(OutputStream);
+  DISALLOW_COPY_AND_ASSIGN(OutputStream);
 };
 
 inline void OutputStream::Next(char** buf, uint64* len) {
@@ -41,5 +42,6 @@ inline void OutputStream::Next(char** buf, uint64* len) {
   *buf = block_->peekW();
   block_->skip(*len);
 }
+#endif
 }
 #endif /* OUTPUT_STREAM_H_ */

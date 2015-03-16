@@ -22,14 +22,8 @@ class TimerQueue {
                                       TimeStamp* next_expired) = 0;
     };
 
-    TimerQueue(EventManager* ev_mgr, Delegate* delegate)
-        : actived_(false), ev_mgr_(ev_mgr), expired_time_(Now()), delegate_(
-            delegate) {
-      DCHECK_NOTNULL(ev_mgr);
-      DCHECK_NOTNULL(delegate);
-    }
-    virtual ~TimerQueue() {
-    }
+    TimerQueue(EventManager* ev_mgr, Delegate* delegate);
+    virtual ~TimerQueue();
 
     // only used for trigger expired events
     // called by event_manager, you shouldn't call this method forever.

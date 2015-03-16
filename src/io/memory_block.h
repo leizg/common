@@ -10,21 +10,21 @@ class MemoryBlock {
     virtual ~MemoryBlock() {
     }
 
-    int capacity() const {
+    uint32 capacity() const {
       return end_ - mem_;
     }
 
-    int readn() const {
+    uint32 readn() const {
       return rpos_ - mem_;
     }
-    int writen() const {
+    uint32 writen() const {
       return wpos_ - mem_;
     }
 
-    int readableSize() const {
+    uint32 readableSize() const {
       return wpos_ - rpos_;
     }
-    int writeableSize() const {
+    uint32 writeableSize() const {
       return end_ - wpos_;
     }
 
@@ -95,29 +95,9 @@ class ReadonlyBytesChunk : public MemoryBlock {
     DISALLOW_COPY_AND_ASSIGN(ReadonlyBytesChunk);
 };
 
-class ReadonlyChunk : public MemoryBlock {
-  public:
-    explicit ReadonlyChunk(const MemoryBlock* block, bool auto_release = true)
-        : MemoryBlock(block->rpos_, block->end_), block_(block) {
-      wpos_ = end_;
-      auto_release_ = auto_release;
-    }
-    virtual ~ReadonlyChunk() {
-      if (auto_release_) {
-        delete block_;
-      }
-    }
-
-  private:
-    const MemoryBlock* const block_;
-    bool auto_release_;
-
-    DISALLOW_COPY_AND_ASSIGN(ReadonlyChunk);
-};
-
 class ExternableChunk : public MemoryBlock {
   public:
-    explicit ExternableChunk(uint64 size) {
+    explicit ExternableChunk(uint64 size = 512) {
       DCHECK_GT(size, 0);
       size = ALIGN(size);
       DCHECK_EQ(size % 4, 0);
@@ -129,7 +109,7 @@ class ExternableChunk : public MemoryBlock {
       ::free(mem_);
     }
 
-    void ensureLeft(int len) {
+    void ensureLeft(uint32 len) {
       if (writeableSize() < len) {
         uint64 rn = readn(), wn = writen();
         if (rn >= len) {

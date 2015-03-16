@@ -3,7 +3,7 @@
 
 #include "base/base.h"
 
-namespace io {
+namespace async {
 class TcpServer;
 class EventManager;
 }
@@ -24,8 +24,8 @@ class EchoServer {
     uint32 worker_;
     scoped_ptr<EchoProtocol> protocol_;
 
-    scoped_ptr<io::EventManager> ev_mgr_;
-    scoped_ptr<io::TcpServer> server_;
+    scoped_ptr<async::EventManager> ev_mgr_;
+    scoped_ptr<async::TcpServer> server_;
 
     DISALLOW_COPY_AND_ASSIGN(EchoServer);
 };

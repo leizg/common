@@ -3,7 +3,7 @@
 
 #include "base/base.h"
 
-namespace io {
+namespace async {
 class Protocol;
 class TcpClient;
 class EventManager;
@@ -13,7 +13,7 @@ namespace test {
 
 class EchoClient {
   public:
-    EchoClient(io::EventManager* ev_mgr, uint32 count);
+    EchoClient(async::EventManager* ev_mgr, uint32 count);
     ~EchoClient();
 
     bool connect(const std::string& ip, uint16 port);
@@ -24,9 +24,9 @@ class EchoClient {
   private:
     uint32 test_number_;
 
-    io::EventManager* ev_mgr_;
-    scoped_ptr<io::Protocol> protocol_;
-    scoped_ptr<io::TcpClient> client_;
+    async::EventManager* ev_mgr_;
+    scoped_ptr<async::Protocol> protocol_;
+    scoped_ptr<async::TcpClient> client_;
 
     scoped_ptr<StoppableThread> thread_;
 

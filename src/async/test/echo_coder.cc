@@ -1,12 +1,10 @@
 #include "echo_coder.h"
 
-#include "io/input_buf.h"
-#include "io/output_buf.h"
-
 #define LAST_GUARD (1UL << 31)
 
 namespace test {
 
+#if 0
 bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
   uint32 hdr = htonl(len | LAST_GUARD);
   DLOG(INFO)<< "encode hdr: " << hdr;
@@ -30,21 +28,11 @@ bool Encode(const char* data_buf, uint32 len, io::OutputBuf* buf) {
 
   return true;
 }
+#endif
 
-bool Decode(io::InputBuf* buf, bool* is_last, uint32* data_len) {
-  int len = sizeof(uint32);
-  const char* data;
-  if (!buf->Next(&data, &len)) {
-    LOG(WARNING)<< "decode header error";
-    return false;
-  }
-  if (len != sizeof(uint32)) {
-    LOG(WARNING)<< "header is too short";
-    return false;
-  }
-
+bool Decode(const char* buf, bool* is_last, uint32* data_len) {
   uint32 val = 0;
-  ::memcpy(&val, data, sizeof(uint32));
+  ::memcpy(&val, buf, sizeof(uint32));
   uint32 hdr = ntohl(val);
   DLOG(INFO)<< "decode hdr: " << hdr;
 

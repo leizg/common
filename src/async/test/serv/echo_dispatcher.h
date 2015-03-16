@@ -1,11 +1,11 @@
 #ifndef ECHO_DISPATCHER_H_
 #define ECHO_DISPATCHER_H_
 
-#include "io/protocol.h"
+#include "async/protocol.h"
 
 namespace test {
 
-class EchoDispatcher : public io::Protocol::Processor {
+class EchoDispatcher : public async::ProReactorProtocol::Scheluder {
   public:
     EchoDispatcher() {
     }
@@ -13,8 +13,8 @@ class EchoDispatcher : public io::Protocol::Processor {
     }
 
   private:
-    virtual void dispatch(io::Connection* conn, io::InputBuf* input_buf,
-                          const TimeStamp& time_stamp);
+    virtual void dispatch(async::Connection* conn, io::InputStream* in_stream,
+                          TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(EchoDispatcher);
 };

@@ -4,6 +4,7 @@
 #include "base/base.h"
 
 namespace io {
+class MemoryBlock;
 
 class InputStream {
   public:
@@ -34,8 +35,6 @@ class InputStream {
 
       private:
         std::vector<iovec> iov_;
-
-        DISALLOW_COPY_AND_ASSIGN(Source);
     };
 
     explicit InputStream(Source* reader, bool auto_release = true)
@@ -97,17 +96,8 @@ class BytesSource : public InputStream::Source {
 
 class ChunkSource : public InputStream::Source {
   public:
-    explicit ChunkSource(MemoryBlock* chunk, bool auto_release = true)
-        : chunk_(chunk), auto_release_(auto_release) {
-      if (chunk != nullptr) {
-        attatchData(chunk->peekR(), chunk->readableSize());
-      }
-    }
-    virtual ~ChunkSource() {
-      if (auto_release_) {
-        delete chunk_;
-      }
-    }
+    explicit ChunkSource(MemoryBlock* chunk, bool auto_release = true);
+    virtual ~ChunkSource();
 
   private:
     MemoryBlock* chunk_;
@@ -133,7 +123,7 @@ class ConcatenaterSource : public InputStream::Source {
       DCHECK_NOTNULL(src);
       const std::vector<iovec>& iov = src->iov();
       for (auto it = iov.begin(); it != iov.end(); ++it) {
-        iov_.push_back(*it);
+        attatchData(*it);
       }
     }
 

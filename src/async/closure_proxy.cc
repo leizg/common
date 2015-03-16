@@ -7,6 +7,13 @@
 
 namespace async {
 
+ClosureProxy::ClosureProxy(EventManager* ev_mgr)
+    : EventManager::ClosureDelegate(ev_mgr) {
+}
+
+ClosureProxy::~ClosureProxy() {
+}
+
 bool ClosureProxy::Init() {
   channel_.reset(new ChannelProxy(ev_mgr_));
   if (!channel_->init()) {

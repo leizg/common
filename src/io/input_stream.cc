@@ -1,4 +1,5 @@
 #include "input_stream.h"
+#include "memory_block.h"
 
 namespace io {
 
@@ -63,6 +64,19 @@ void InputStream::backup(uint64 len) const {
   }
 
   total_ -= len - left;
+}
+
+ChunkSource::ChunkSource(MemoryBlock* chunk, bool auto_release)
+    : chunk_(chunk), auto_release_(auto_release) {
+  if (chunk != nullptr) {
+    attatchData(chunk->peekR(), chunk->readableSize());
+  }
+}
+
+ChunkSource::~ChunkSource() {
+  if (auto_release_) {
+    delete chunk_;
+  }
 }
 
 }

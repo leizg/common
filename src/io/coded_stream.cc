@@ -12,7 +12,7 @@ bool CodedInputStream::readBytes(char* buf, uint64 len) const {
   const char* data;
   uint64 offset = 0;
   for (uint64 size = len; size != 0; size = len - offset) {
-    if (!stream_->Next(&data, &size)) {
+    if (!stream_->read(&data, &size)) {
       return false;
     }
     ::memcpy(buf + offset, data, size);
@@ -22,6 +22,7 @@ bool CodedInputStream::readBytes(char* buf, uint64 len) const {
   return true;
 }
 
+#if 0
 void CodedOutputStream::writeBytes(const char* data, uint64 len) {
   char* ptr;
   uint64 offset = 0;
@@ -34,6 +35,7 @@ void CodedOutputStream::writeBytes(const char* data, uint64 len) {
     offset += size;
   }
 }
+#endif
 
 }
 

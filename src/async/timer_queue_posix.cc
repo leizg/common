@@ -1,4 +1,5 @@
 #include "timer_queue_posix.h"
+#include "event_manager.h"
 
 #if __linux__
 #include <sys/timerfd.h>

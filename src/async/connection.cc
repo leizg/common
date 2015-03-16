@@ -17,7 +17,7 @@ void handleEvent(int fd, void* arg, uint8 revent, TimeStamp time_stamp) {
   }
 }
 
-void skipData(std::vector<iovec>* iov, int32 len) {
+void skipData(std::vector<iovec>* iov, uint32 len) {
   std::vector<iovec> data;
   for (auto it = iov->begin(); it != iov->end(); ++it) {
     const iovec& io = *it;
@@ -124,7 +124,10 @@ bool Connection::read(char* buf, int32* len) {
 
 bool Connection::write(const char* buf, int32* len) {
   std::vector<iovec> iov;
-  iov.push_back(iovec(buf, *len));
+  iovec io;
+  io.iov_base = const_cast<char*>(buf);
+  io.iov_len = static_cast<uint32>(*len);
+  iov.push_back(io);
   return write(iov, len);
 }
 

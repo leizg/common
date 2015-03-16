@@ -4,6 +4,7 @@
 #include  "connection.h"
 
 namespace io {
+class InputStream;
 class ExternableChunk;
 class ConcatenaterSource;
 }
@@ -43,6 +44,15 @@ class ProReactorProtocol : public Protocol {
         virtual void report(Connection* conn) = 0;
     };
 
+    class Parser {
+      public:
+        virtual ~Parser() {
+        }
+
+        virtual uint32 headerLength() const = 0;
+        virtual bool parseHeader(Connection* conn) const;
+    };
+
     class Scheluder {
       public:
         virtual ~Scheluder() {
@@ -60,6 +70,7 @@ class ProReactorProtocol : public Protocol {
         UserData();
         virtual ~UserData();
 
+        char* peekHeader();
         io::InputStream* releaseStream();
         void newPackage();
 
@@ -73,15 +84,15 @@ class ProReactorProtocol : public Protocol {
     };
 
   protected:
-    ProReactorProtocol(Scheluder* scheluder, ErrorReporter* reporter)
-        : scheluder_(scheluder), reporter_(reporter) {
+    ProReactorProtocol(Parser* parser, Scheluder* scheluder,
+                       ErrorReporter* reporter = NULL)
+        : parser_(parser), scheluder_(scheluder), reporter_(reporter) {
+      DCHECK_NOTNULL(parser);
       DCHECK_NOTNULL(scheluder);
     }
 
-    virtual uint32 headerLength() const = 0;
-    virtual bool parseHeader(Connection* conn) const;
-
   private:
+    scoped_ptr<Parser> parser_;
     scoped_ptr<Scheluder> scheluder_;
     scoped_ptr<ErrorReporter> reporter_;
 

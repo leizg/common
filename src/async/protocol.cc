@@ -1,4 +1,7 @@
 #include "protocol.h"
+#include "connection.h"
+#include "event_manager.h"
+#include "io/memory_block.h"
 #include "io/input_stream.h"
 
 namespace {
@@ -37,13 +40,13 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
   switch (u->io_stat) {
     case IO_START:
       u->io_stat = IO_HEADER;
-      if (!recvData(conn, u, headerLength())) {
+      if (!recvData(conn, u, parser_->headerLength())) {
         return;
       }
 
     case IO_HEADER:
       u->io_stat = IO_BODY;
-      if (!parseHeader(conn)) {
+      if (!parser_->parseHeader(conn)) {
         reporter_->report(conn);
         return;
       }

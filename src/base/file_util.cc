@@ -332,6 +332,9 @@ uint8 DirIterator::typeConvert(Type type) const {
     case SYMBOLIC_LINK:
       return DT_LNK;
   }
+
+  CHECK(false) << "should not here";
+  return 0;
 }
 
 const std::string* DirIterator::next(Type type) {

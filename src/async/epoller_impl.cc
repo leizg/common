@@ -64,7 +64,7 @@ void EpollerImpl::Loop(SyncEvent* start_event) {
 
     TimeStamp time_stamp = TimeStamp::now();
     DCHECK_LE(trigger_number, kTriggerNumber);
-    for (uint32 i = 0; i < trigger_number; ++i) {
+    for (int32 i = 0; i < trigger_number; ++i) {
       Event* event = static_cast<Event*>(events_[i].data.ptr);
 
       uint8 flags = 0;

@@ -9,11 +9,8 @@ class ChannelProxy;
 
 class ClosureProxy : public EventManager::ClosureDelegate {
   public:
-    explicit ClosureProxy(EventManager* ev_mgr)
-        : EventManager::ClosureDelegate(ev_mgr) {
-    }
-    virtual ~ClosureProxy() {
-    }
+    explicit ClosureProxy(EventManager* ev_mgr);
+    virtual ~ClosureProxy();
 
   private:
     scoped_ptr<ChannelProxy> channel_;

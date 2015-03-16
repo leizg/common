@@ -34,18 +34,38 @@ class TimeStamp {
     bool operator >(const TimeStamp& t) const {
       return !operator <(t);
     }
-    void operator +(uint64 micro_sec) {
+
+    TimeStamp& operator +(uint64 micro_sec) {
       ms_ += micro_sec;
+      return *this;
     }
-    void operator -(uint64 micro_sec) {
+    TimeStamp& operator +(const TimeStamp& rhs) {
+      ms_ += rhs.ms_;
+      return *this;
+    }
+    TimeStamp& operator -(const TimeStamp& rhs) {
+      ms_ -= rhs.ms_;
+      return *this;
+    }
+    TimeStamp& operator -(uint64 micro_sec) {
       ms_ -= micro_sec;
+      return *this;
     }
+
     TimeStamp& operator +=(uint64 micro_sec) {
       ms_ += micro_sec;
       return *this;
     }
     TimeStamp& operator -=(uint64 micro_sec) {
       ms_ -= micro_sec;
+      return *this;
+    }
+    TimeStamp& operator +=(const TimeStamp& rhs) {
+      ms_ += rhs.ms_;
+      return *this;
+    }
+    TimeStamp& operator -=(const TimeStamp& rhs) {
+      ms_ -= rhs.ms_;
       return *this;
     }
 
@@ -55,7 +75,7 @@ class TimeStamp {
 
 inline struct timeval TimeStamp::toTimeVal() const {
   struct timeval tv = { 0 };
-  tv.tv_sec = ms_ /= kMicroSecsPerSecond;
+  tv.tv_sec = ms_ / kMicroSecsPerSecond;
   tv.tv_usec = ms_ % kMicroSecsPerSecond;
   return tv;
 }

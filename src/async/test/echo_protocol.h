@@ -1,11 +1,12 @@
 #ifndef ECHO_PROTOCOL_H_
 #define ECHO_PROTOCOL_H_
 
-#include "io/protocol.h"
+#include "async/protocol.h"
 
 namespace test {
+class EchoDispatcher;
 
-class EchoProtocol : public io::Protocol {
+class EchoProtocol : public async::ProReactorProtocol {
   private:
     class EchoParser : public Parser {
       public:
@@ -17,38 +18,24 @@ class EchoProtocol : public io::Protocol {
       private:
 
         virtual uint32 headerLength() const {
-          return sizeof(uint32);
+          return sizeof uint32;
         }
-        virtual bool parse(io::Connection* const conn,
-                           io::InputBuf* const input_buf) const;
+
+        virtual bool parseHeader(async::Connection* conn) const;
 
         DISALLOW_COPY_AND_ASSIGN(EchoParser);
     };
 
-    class EchoAttr : public io::Connection::Attr {
-      public:
-        EchoAttr() {
-          Init();
-        }
-        virtual ~EchoAttr() {
-        }
-
-      private:
-        virtual void Init();
-
-        DISALLOW_COPY_AND_ASSIGN(EchoAttr);
-    };
-
   public:
-    EchoProtocol(Processor* p)
-        : io::Protocol(p, new EchoParser) {
+    explicit EchoProtocol(EchoDispatcher* p)
+        : async::ProReactorProtocol(new EchoParser, p) {
     }
     virtual ~EchoProtocol() {
     }
 
   private:
-    virtual io::Connection::Attr* NewConnectionAttr() const {
-      return new EchoAttr;
+    virtual async::Connection::UserData* NewConnectionData() const {
+      return new UserData;
     }
 
     DISALLOW_COPY_AND_ASSIGN(EchoProtocol);

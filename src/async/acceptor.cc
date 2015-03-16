@@ -10,6 +10,29 @@ void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts) {
   a->handleAccept(ts);
 }
 
+class ReassignConnectionClosure : public Closure {
+  public:
+    ReassignConnectionClosure(async::EventManager* ev_mgr,
+                              async::Connection* conn)
+        : ev_mgr_(ev_mgr), conn_(conn) {
+      conn->Ref();
+    }
+    virtual ~ReassignConnectionClosure() {
+    }
+
+  private:
+    async::EventManager* ev_mgr_;
+    scoped_ref<async::Connection> conn_;
+
+    void Run() {
+      if (!conn_->init()) {
+        // handle error;
+      }
+    }
+
+    DISALLOW_COPY_AND_ASSIGN(ReassignConnectionClosure);
+};
+
 }
 
 namespace async {
@@ -110,10 +133,10 @@ void Acceptor::handleAccept(TimeStamp ts) {
     scoped_ref<Connection> conn(new Connection(fd, ev_mgr));
     conn->setProtocol(protocol_);
     conn->setSaver(serv_);
-    conn->setAttr(protocol_->NewConnectionAttr());
+    conn->setData(protocol_->NewConnectionData());
     serv_->Add(fd, conn.get());
 
-    ev_mgr->runInLoop(::NewCallback(conn.get(), &Connection::Init));
+    ev_mgr->runInLoop(new ReassignConnectionClosure(ev_mgr, conn.get()));
   }
 }
 }
