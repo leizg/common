@@ -16,7 +16,7 @@ bool EventManager::Init() {
   return true;
 }
 
-void EventManager::Stop() {
+void EventManager::Stop(SyncEvent*) {
   ev_store.set(NULL);
 }
 

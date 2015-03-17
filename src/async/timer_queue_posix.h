@@ -19,6 +19,7 @@ class TimerQueuePosix : public TimerQueue {
     int timer_fd_;
 
     virtual bool init();
+    virtual void destory();
 
     virtual void clearData();
     virtual void reset(TimeStamp time_stamp);

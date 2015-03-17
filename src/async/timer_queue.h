@@ -26,6 +26,7 @@ class TimerQueue {
     virtual ~TimerQueue();
 
     virtual bool init();
+    virtual void destory();
 
     // only used for trigger expired events
     // called by event_manager, you shouldn't call this method forever.
@@ -46,6 +47,7 @@ class TimerQueue {
     virtual void reset(const TimeStamp time_stamp) = 0;
 
   private:
+    void destoryInternal(SyncEvent* ev);
     void runAtInternal(Closure* closure, TimeStamp time_stamp);
 
     DISALLOW_COPY_AND_ASSIGN(TimerQueue);

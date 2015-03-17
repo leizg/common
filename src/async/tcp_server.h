@@ -28,6 +28,8 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
       protocol_ = p;
     }
 
+    void stop();
+
     // thread safe.
     EventManager* getPoller();
 
@@ -43,10 +45,14 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
     EventManager* ev_mgr_;
     scoped_ptr<EventPooler> event_poller_;
 
+    void stopInternal(SyncEvent* ev);
+
     void bindIpInternal(const std::string ip, uint16 port, bool* success,
                         SyncEvent* ev);
+
     void unBindAllInternal(SyncEvent* ev);
     void unBindIpInternal(const std::string ip, SyncEvent* ev);
+
     typedef ThreadSafeObjectSaver<std::string, Acceptor, ObjectMapSaver> ListenerMap;
     scoped_ptr<ListenerMap> listeners_;
 

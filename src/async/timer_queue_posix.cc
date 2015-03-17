@@ -29,10 +29,7 @@ bool createTimerFd(int* fd) {
 namespace async {
 
 TimerQueuePosix::~TimerQueuePosix() {
-  if (timer_fd_ != INVALID_FD) {
-    ev_mgr_->Del(*event_);
-    ::close(timer_fd_);
-  }
+
 }
 
 bool TimerQueuePosix::init() {
@@ -48,6 +45,12 @@ bool TimerQueuePosix::init() {
   }
 
   return true;
+}
+
+void TimerQueuePosix::destory() {
+  TimerQueue::destory();
+
+  closeWrapper(timer_fd_);
 }
 
 void TimerQueuePosix::reset(TimeStamp time_stamp) {

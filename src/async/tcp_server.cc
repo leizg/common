@@ -17,9 +17,6 @@ TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
 }
 
 TcpServer::~TcpServer() {
-  unBindAll();
-
-  // todo: remote all connections.
 }
 
 bool TcpServer::Init() {
@@ -107,6 +104,29 @@ void TcpServer::unBindAllInternal(SyncEvent* ev) {
 void TcpServer::unBindIpInternal(const std::string ip, SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
   listeners_->Remove(ip);
+  if (ev != nullptr) ev->Signal();
+}
+
+void TcpServer::stop() {
+  if (ev_mgr_->inValidThread()) {
+    stopInternal(NULL);
+    return;
+  }
+
+  SyncEvent ev;
+  ev_mgr_->runInLoop(NewCallback(this, &TcpServer::stopInternal, &ev));
+  ev.Wait();
+}
+
+void TcpServer::stopInternal(SyncEvent* ev) {
+  clear();
+  unBindAll();
+
+  if (event_poller_ != nullptr) {
+    event_poller_->stop();
+    event_poller_.reset();
+  }
+
   if (ev != nullptr) ev->Signal();
 }
 

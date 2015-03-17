@@ -32,6 +32,11 @@ bool Stat(const std::string& path, struct stat* st) {
 }
 }
 
+void RemoveFile(const std::string& path) {
+  int ret = ::unlink(path.c_str());
+  PLOG_IF(WARNING, ret != 0) << "unlink failed: " << path;
+}
+
 bool FileExist(const std::string& path) {
   return ::access(path.c_str(), F_OK) == 0;
 }

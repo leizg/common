@@ -13,9 +13,21 @@ EchoServer::EchoServer(uint32 worker)
 }
 
 EchoServer::~EchoServer() {
+  DLOG(INFO)<< "stop tcp server";
+  if (server_ != nullptr) {
+    server_->stop();
+    server_.reset();
+  }
+
+  DLOG(INFO)<< "stop main thread";
+  if (ev_mgr_ != nullptr) {
+    SyncEvent ev;
+    ev_mgr_->Stop(&ev);
+    ev.Wait();
+  }
 }
 
-bool EchoServer::Init(const std::string& ip, uint16 port) {
+bool EchoServer::init(const std::string& ip, uint16 port) {
   protocol_.reset(new EchoProtocol(new EchoDispatcher));
   ev_mgr_.reset(async::CreateEventManager());
   DCHECK_NOTNULL(ev_mgr_.get());

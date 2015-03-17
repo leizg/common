@@ -18,10 +18,12 @@ class EventPipe {
     };
 
     virtual ~EventPipe() {
-      destory();
+      DCHECK_EQ(event_fd_[0], -1);
+      DCHECK_EQ(event_fd_[1], -1);
     }
 
     virtual bool init();
+    void destory();
 
     void handleRead(TimeStamp ts);
 
@@ -36,7 +38,6 @@ class EventPipe {
 
     EventManager* ev_mgr_;
 
-    void destory();
     void triggerPipe();
 
   private:

@@ -4,8 +4,8 @@
 namespace async {
 
 EventPooler::~EventPooler() {
-  ev_mgr_->assertThreadSafe();
-  STLClear(&ev_vec_);
+//  ev_mgr_->assertThreadSafe();
+  DCHECK(ev_vec_.empty());
 }
 
 bool EventPooler::Init() {
@@ -14,7 +14,8 @@ bool EventPooler::Init() {
   for (uint8 i = 0; i < worker_; ++i) {
     EventManager* ev_mgr = CreateEventManager();
     if (!ev_mgr->Init()) {
-      STLClear(&ev_vec_);
+      stop();
+      delete ev_mgr;
       return false;
     }
 
@@ -23,6 +24,18 @@ bool EventPooler::Init() {
   }
 
   return true;
+}
+
+void EventPooler::stop() {
+  for (auto it = ev_vec_.begin(); it != ev_vec_.end(); ++it) {
+    SyncEvent stop_ev;
+    EventManager* ev_mgr = *it;
+    ev_mgr->Stop(&stop_ev);
+    stop_ev.Wait();
+    delete ev_mgr;
+  }
+
+  ev_vec_.clear();
 }
 
 EventManager* EventPooler::getPoller() {

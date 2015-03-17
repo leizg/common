@@ -49,7 +49,7 @@ void EpollerImpl::Loop(SyncEvent* start_event) {
   stop_ = false;
   DCHECK_NE(ep_fd_, INVALID_FD);
   if (!inValidThread()) update();
-  if (start_event != NULL) start_event->Signal();
+  if (start_event != nullptr) start_event->Signal();
 
   DLOG(INFO)<< "start event loop...";
   while (!stop_) {
@@ -98,11 +98,30 @@ bool EpollerImpl::LoopInAnotherThread() {
   return false;
 }
 
-void EpollerImpl::Stop() {
-  if (!stop_) {
-    stop_ = true;
-    loop_pthread_.reset();
+void EpollerImpl::Stop(SyncEvent* ev) {
+  if (stop_) {
+    if (ev != nullptr) ev->Signal();
+    return;
   }
+
+  if (inValidThread()) {
+    stopInternal(ev);
+  } else {
+    runInLoop(NewCallback(this, &EpollerImpl::stopInternal, ev));
+  }
+}
+
+void EpollerImpl::stopInternal(SyncEvent* ev) {
+  EventManager::Stop(ev);
+
+  if (cb_delegate_ != nullptr) {
+    cb_delegate_->destory();
+    cb_delegate_.reset();
+  }
+
+  stop_ = true;
+  if (loop_pthread_ != nullptr) loop_pthread_->Join();
+  if (ev != nullptr) ev->Signal();
 }
 
 uint32 EpollerImpl::convertEvent(uint8 event) {

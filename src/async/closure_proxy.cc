@@ -12,6 +12,10 @@ ClosureProxy::ClosureProxy(EventManager* ev_mgr)
 }
 
 ClosureProxy::~ClosureProxy() {
+  if (timer_queue_ != nullptr) {
+    timer_queue_->destory();
+    timer_queue_.reset();
+  }
 }
 
 bool ClosureProxy::Init() {
@@ -35,6 +39,13 @@ bool ClosureProxy::Init() {
   }
 
   return true;
+}
+
+void ClosureProxy::destory() {
+  channel_->destory();
+  channel_.reset();
+
+  timer_queue_.reset();
 }
 
 void ClosureProxy::runInLoop(Closure* cb) {

@@ -52,9 +52,9 @@
 #define save64(c, v) (*((uint64*)c) = v)
 
 #define setFdBlock(fd) \
-  ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_NONBLOCK)
-#define setFdNonBlock(fd) \
   ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) & ~O_NONBLOCK)
+#define setFdNonBlock(fd) \
+  ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_NONBLOCK)
 #define setFdCloExec(fd) \
   ::fcntl(fd, F_SETFL, ::fcntl(fd, F_GETFL) | O_EXCL)
 

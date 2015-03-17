@@ -14,14 +14,14 @@ class EpollerImpl : public EventManager {
         : ep_fd_(INVALID_FD), stop_(true) {
     }
     virtual ~EpollerImpl() {
-      Stop();
+      DCHECK(stop_);
       closeWrapper(ep_fd_);
     }
 
     virtual bool Init();
     virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
-    virtual void Stop();
+    virtual void Stop(SyncEvent* ev);
 
     virtual bool Add(Event* ev);
     virtual void Mod(Event* ev);
@@ -39,6 +39,7 @@ class EpollerImpl : public EventManager {
 
     scoped_ptr<StoppableThread> loop_pthread_;
 
+    void stopInternal(SyncEvent* ev);
     uint32 convertEvent(uint8 event);
 
     DISALLOW_COPY_AND_ASSIGN(EpollerImpl);

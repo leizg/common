@@ -8,7 +8,7 @@ class ObjectSaver {
   public:
     virtual ~ObjectSaver() {
       if (check_empty_) {
-        DCHECK(empty());
+//        DCHECK(empty());
       }
     }
 

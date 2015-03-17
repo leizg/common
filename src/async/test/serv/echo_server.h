@@ -16,7 +16,7 @@ class EchoServer {
     explicit EchoServer(uint32 worker);
     ~EchoServer();
 
-    bool Init(const std::string& ip, uint16 port);
+    bool init(const std::string& ip, uint16 port);
 
     void loop(bool in_another_thread = true);
 
@@ -29,5 +29,7 @@ class EchoServer {
 
     DISALLOW_COPY_AND_ASSIGN(EchoServer);
 };
+
 }
+
 #endif /* ECHO_SERVER_H_ */

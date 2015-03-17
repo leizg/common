@@ -12,13 +12,14 @@ int main(int argc, char* argv[]) {
   ::google::ParseCommandLineFlags(&argc, &argv, true);
 
   scoped_ptr<test::EchoServer> serv(new test::EchoServer(FLAGS_worker));
-  if (!serv->Init(FLAGS_ip, FLAGS_port)) {
+  if (!serv->init(FLAGS_ip, FLAGS_port)) {
     return -1;
   }
 
   serv->loop(true);
 
   const std::string stop_file("/tmp/.serv.stop");
+  RemoveFile(stop_file);
   while (!FileExist(stop_file)) {
     sleep(2);
   }

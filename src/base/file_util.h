@@ -33,6 +33,8 @@ class FileAbstruct {
 };
 }  // end for namespace named detail
 
+void RemoveFile(const std::string& path);
+
 bool IsDir(const std::string& path);
 bool IsRegular(const std::string& path);
 bool FileExist(const std::string& path);

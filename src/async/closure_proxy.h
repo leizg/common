@@ -17,6 +17,7 @@ class ClosureProxy : public EventManager::ClosureDelegate {
     scoped_ptr<TimerQueue> timer_queue_;
 
     virtual bool Init();
+    virtual void destory();
 
     virtual void runInLoop(Closure* cb);
     virtual void runAt(Closure* cb, TimeStamp ts);

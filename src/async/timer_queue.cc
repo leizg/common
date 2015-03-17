@@ -34,6 +34,26 @@ bool TimerQueue::init() {
   return true;
 }
 
+void TimerQueue::destory() {
+  if (ev_mgr_->inValidThread()) {
+    destoryInternal(NULL);
+    return;
+  }
+
+  SyncEvent ev;
+  ev_mgr_->runInLoop(NewCallback(this, &TimerQueue::destoryInternal, &ev));
+  ev.Wait();
+}
+
+void TimerQueue::destoryInternal(SyncEvent* ev) {
+  if (event_ != nullptr && event_->fd != INVALID_FD) {
+    ev_mgr_->Del(*event_);
+  }
+
+  event_.reset();
+  if (ev != nullptr) ev->Signal();
+}
+
 void TimerQueue::runAt(Closure* cb, TimeStamp time_stamp) {
   if (ev_mgr_->inValidThread()) {
     runAtInternal(cb, time_stamp);

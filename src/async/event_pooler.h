@@ -14,6 +14,7 @@ class EventPooler {
     ~EventPooler();
 
     bool Init();
+    void stop();
 
     EventManager* getPoller();
 

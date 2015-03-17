@@ -25,7 +25,7 @@ class EventManager : public ThreadSafe {
     virtual bool Init() = 0;
     virtual void Loop(SyncEvent* start_event = NULL) = 0;
     virtual bool LoopInAnotherThread() = 0;
-    virtual void Stop() = 0;
+    virtual void Stop(SyncEvent* stop_event) = 0;
 
     virtual bool Add(Event* ev) = 0;
     virtual void Mod(Event* ev) = 0;
@@ -38,6 +38,7 @@ class EventManager : public ThreadSafe {
 
         // called after EventManager::Init.
         virtual bool Init() = 0;
+        virtual void destory() = 0;
 
         virtual void runInLoop(Closure* cb) = 0;
         virtual void runAt(Closure* cb, TimeStamp ts) = 0;
