@@ -1,14 +1,14 @@
-## dreamio
+## common
 library about network programing(c++ implement).
 
 run test:
 ```
   step1: start echo server
-      cd src/io/test/serv
+      cd src/async/test/serv
       ./run.sh build
 
   step2: start echo client
-      cd src/io/test/cli
+      cd src/sync/test/cli
       ./run.sh build
 
 ```
