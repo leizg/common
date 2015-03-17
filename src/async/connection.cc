@@ -54,15 +54,8 @@ Connection::Connection(int fd, EventManager* ev_mgr)
 }
 
 Connection::~Connection() {
-  closed_ = true;
-
-  if (event_ != nullptr) {
-    ev_mgr_->Del(*event_);
-  }
-  if (close_closure_ != nullptr) {
-    close_closure_->Run();
-  }
-
+  DCHECK(closed_);
+  DLOG(INFO)<< "close fd: " << fd_;
   closeWrapper(fd_);
 }
 
@@ -80,6 +73,7 @@ bool Connection::init() {
     return false;
   }
 
+  out_queue_.reset(new io::OutQueue);
   return true;
 }
 
@@ -111,6 +105,19 @@ void Connection::handleWrite(TimeStamp time_stamp) {
   }
 }
 
+void Connection::handleClose() {
+  if (closed_) return;
+  closed_ = true;
+
+  ev_mgr_->Del(*event_);
+  if (close_closure_ != nullptr) {
+    close_closure_->Run();
+  }
+  if (saver_ != nullptr) {
+    saver_->Remove(fd_);
+  }
+}
+
 bool Connection::read(char* buf, int32* len) {
   if (fd_ == INVALID_FD || closed_) {
     return false;
@@ -121,6 +128,7 @@ bool Connection::read(char* buf, int32* len) {
     ret = ::recv(fd_, buf, left, 0);
     if (ret == 0) {
       protocol_->handleClose(this);
+      handleClose();
       return false;
     } else if (ret < 0) {
       switch (errno) {
@@ -130,6 +138,7 @@ bool Connection::read(char* buf, int32* len) {
           continue;
         default:
           protocol_->handleError(this);
+          handleClose();
           return false;
       }
     }
@@ -160,6 +169,7 @@ void Connection::send(io::OutputObject* out_obj) {
   }
   if (err_no != EWOULDBLOCK) {
     protocol_->handleClose(this);
+    handleClose();
     return;
   }
 
@@ -193,6 +203,7 @@ bool Connection::write(int fd, off_t offset, int32* len) {
           break;
         default:
           protocol_->handleError(this);
+          handleClose();
           return false;
       }
     }
@@ -221,6 +232,7 @@ bool Connection::write(const std::vector<iovec>& iov, int32* len) {
           break;
         default:
           protocol_->handleError(this);
+          handleClose();
           return false;
       }
     }
@@ -239,14 +251,9 @@ void Connection::updateChannel(uint8 event) {
 }
 
 void Connection::shutDownFromServer() {
-  if (closed_) return;
-
-  if (close_closure_ != nullptr) {
-    close_closure_->Run();
+  if (!closed_) {
+    ::shutdown(fd_, SHUT_WR);
   }
-
-  ::shutdown(fd_, SHUT_WR);
-  closed_ = true;
 }
 
 }

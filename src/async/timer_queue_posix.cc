@@ -35,11 +35,11 @@ TimerQueuePosix::~TimerQueuePosix() {
   }
 }
 
-bool TimerQueuePosix::Init() {
+bool TimerQueuePosix::init() {
   if (timer_fd_ != INVALID_FD) return false;
   if (!createTimerFd(&timer_fd_)) return false;
 
-  TimerQueue::Init();
+  TimerQueue::init();
   event_->fd = timer_fd_;
   if (!ev_mgr_->Add(event_.get())) {
     closeWrapper(timer_fd_);

@@ -43,8 +43,11 @@ class TcpServer : public MulityTableObjectSaver<int, Connection, ConnTable> {
     EventManager* ev_mgr_;
     scoped_ptr<EventPooler> event_poller_;
 
+    void bindIpInternal(const std::string ip, uint16 port, bool* success,
+                        SyncEvent* ev);
+    void unBindAllInternal(SyncEvent* ev);
+    void unBindIpInternal(const std::string ip, SyncEvent* ev);
     typedef ThreadSafeObjectSaver<std::string, Acceptor, ObjectMapSaver> ListenerMap;
-    Mutex mutex_;
     scoped_ptr<ListenerMap> listeners_;
 
     DISALLOW_COPY_AND_ASSIGN(TcpServer);

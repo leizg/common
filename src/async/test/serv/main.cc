@@ -11,12 +11,18 @@ int main(int argc, char* argv[]) {
   ::google::InitGoogleLogging(argv[0]);
   ::google::ParseCommandLineFlags(&argc, &argv, true);
 
-  test::EchoServer serv(FLAGS_worker);
-  if (!serv.Init(FLAGS_ip, FLAGS_port)) {
+  scoped_ptr<test::EchoServer> serv(new test::EchoServer(FLAGS_worker));
+  if (!serv->Init(FLAGS_ip, FLAGS_port)) {
     return -1;
   }
 
-  serv.loop(false);
+  serv->loop(true);
 
+  const std::string stop_file("/tmp/.serv.stop");
+  while (!FileExist(stop_file)) {
+    sleep(2);
+  }
+
+  serv.reset();
   return 0;
 }

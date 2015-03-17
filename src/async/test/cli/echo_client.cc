@@ -38,9 +38,9 @@ void EchoObject::buildData() {
   buf_.reset(new io::ExternableChunk(64));
   uint64 val = value_++;
   iovec io;
-  const char* begin = buf_->peekR();
+  const char* begin = buf_->peekW();
   CHECK(test::Encode((const char* )&val, sizeof(val), buf_.get()));
-  char* end = (char*)buf_->peekR();
+  char* end = (char*)buf_->peekW();
   io.iov_base = (char*) begin;
   io.iov_len = end - begin;
   DCHECK_EQ(io.iov_len, 4 + 8);
@@ -62,7 +62,7 @@ EchoClient::~EchoClient() {
 bool EchoClient::connect(const std::string& ip, uint16 port) {
   client_.reset(async::TcpClient::create(ev_mgr_, ip, port));
   client_->setProtocol(protocol_.get());
-  if (!client_->connect(3)) {
+  if (!client_->connect(3 * TimeStamp::kMicroSecsPerSecond)) {
     LOG(WARNING)<< "connect error: " << ip << ": " << port;
     return false;
   }

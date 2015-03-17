@@ -22,7 +22,7 @@ TimerQueue::TimerQueue(EventManager* ev_mgr, Delegate* delegate)
 TimerQueue::~TimerQueue() {
 }
 
-bool TimerQueue::Init() {
+bool TimerQueue::init() {
   if (event_ != NULL) return false;
 
   event_.reset(new Event);

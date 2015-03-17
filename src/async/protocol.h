@@ -80,7 +80,6 @@ class ProReactorProtocol : public Protocol {
         scoped_ptr<io::ExternableChunk> chunk;
         scoped_ptr<io::ConcatenaterSource> src;
 
-        // todo: out queue.
     };
 
   protected:

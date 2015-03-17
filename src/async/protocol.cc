@@ -51,7 +51,9 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
     case IO_HEADER:
       u->io_stat = IO_BODY;
       if (!parser_->parseHeader(conn)) {
-        reporter_->report(conn);
+        if (reporter_ != nullptr) {
+          reporter_->report(conn);
+        }
         return;
       }
 
@@ -65,6 +67,8 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
       if (u->is_last) {
         scheluder_->dispatch(conn, u->releaseStream(), time_stamp);
         u->is_last = false;
+        u->io_stat = IO_START;
+        return;
       }
       u->newPackage();
       u->io_stat = IO_START;
@@ -77,17 +81,19 @@ void ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp) {
 }
 
 void ProReactorProtocol::handleError(Connection* conn) {
-  reporter_->report(conn);
+  if (reporter_ != nullptr) {
+    reporter_->report(conn);
+  }
 }
 
 void ProReactorProtocol::handleClose(Connection* conn) {
-  reporter_->report(conn);
+  if (reporter_ != nullptr) {
+    reporter_->report(conn);
+  }
 }
 
 bool ProReactorProtocol::recvData(Connection* conn, UserData* u,
                                   uint32 data_len) {
-  DCHECK_EQ(u->pending_size, 0);
-
   u->pending_size = data_len;
   return RecvPending(conn, u);
 }
@@ -102,6 +108,8 @@ bool ProReactorProtocol::RecvPending(Connection* conn, UserData* ud) {
     return false;
   }
 
+  DCHECK_GT(size, 0);
+  DCHECK_GE(ud->pending_size, size);
   ud->pending_size -= size;
   ud->chunk->skipWrite(size);
 

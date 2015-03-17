@@ -25,6 +25,8 @@ class TimerQueue {
     TimerQueue(EventManager* ev_mgr, Delegate* delegate);
     virtual ~TimerQueue();
 
+    virtual bool init();
+
     // only used for trigger expired events
     // called by event_manager, you shouldn't call this method forever.
     // not threadsafe. must in loop thread.
@@ -39,8 +41,6 @@ class TimerQueue {
 
     TimeStamp expired_time_;
     scoped_ptr<Delegate> delegate_;
-
-    virtual bool Init();
 
     virtual void clearData() = 0;
     virtual void reset(const TimeStamp time_stamp) = 0;

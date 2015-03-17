@@ -28,6 +28,7 @@ class ReassignConnectionClosure : public Closure {
       if (!conn_->init()) {
         // handle error;
       }
+      delete this;
     }
 
     DISALLOW_COPY_AND_ASSIGN(ReassignConnectionClosure);

@@ -28,7 +28,7 @@ bool ClosureProxy::Init() {
                      /* todo: mac os */
 #endif
                      (ev_mgr_, new TimerListImpl));
-  if (!channel_->init()) {
+  if (!timer_queue_->init()) {
     channel_.reset();
     timer_queue_.reset();
     return false;

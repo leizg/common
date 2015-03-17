@@ -69,7 +69,6 @@ class Connection : public RefCounted {
 
     void handleRead(TimeStamp time_stamp);
     void handleWrite(TimeStamp time_stamp);
-
     void shutDownFromServer();
 
   private:
@@ -83,6 +82,7 @@ class Connection : public RefCounted {
     scoped_ptr<Closure> close_closure_;
     scoped_ptr<UserData> data_;
 
+    void handleClose();
     void updateChannel(uint8 event);
     scoped_ptr<io::OutQueue> out_queue_;
 

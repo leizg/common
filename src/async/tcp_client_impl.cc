@@ -34,20 +34,23 @@ void TcpClientImpl::connectInternal(uint32 time_out, bool* success,
   *success = false;
   Connector connector;
   int fd = connector.Connect(ip_, port_, time_out);
-  if (fd != INVALID_FD) {
-    conn_.reset(new Connection(fd, ev_mgr_));
-    conn_->setProtocol(protocol_);
-    conn_->setData(protocol_->NewConnectionData());
-    conn_->setCloseClosure(
-        NewPermanentCallback(this, &TcpClientImpl::handleConnectionAbort));
-    if (!conn_->init()) {
-      conn_.reset();
-      return;
-    }
-
-    if (ev != nullptr) ev->Signal();
-    *success = true;
+  if (fd == INVALID_FD) {
+    LOG(WARNING) << "connect error";
+    return;
   }
+
+  conn_.reset(new Connection(fd, ev_mgr_));
+  conn_->setProtocol(protocol_);
+  conn_->setData(protocol_->NewConnectionData());
+  conn_->setCloseClosure(
+      NewPermanentCallback(this, &TcpClientImpl::handleConnectionAbort));
+  if (!conn_->init()) {
+    conn_.reset();
+    return;
+  }
+
+  *success = true;
+  if (ev != nullptr) ev->Signal();
 }
 
 bool TcpClientImpl::connect(uint32 time_out) {

@@ -6,7 +6,7 @@ is_build=0
 build_command='scons -j4'
 
 bin='../../../build/cli'
-args='-alsologtostderr '
+args='-alsologtostderr -client_number=100 -count=10'
 
 if [ $is_build -eq 1 ] 
 then
