@@ -39,7 +39,7 @@ class ReassignConnectionClosure : public Closure {
 namespace async {
 Acceptor::~Acceptor() {
   if (listen_fd_ != INVALID_FD) {
-    ev_mgr_->Del(*event_);
+    ev_mgr_->del(*event_);
     ::close(listen_fd_);
   }
 }
@@ -98,7 +98,7 @@ bool Acceptor::doBind(const std::string& ip, uint16 port) {
   event_->event = EV_READ;
   event_->cb = handleAcceptEvent;
 
-  if (!ev_mgr_->Add(event_.get())) {
+  if (!ev_mgr_->add(event_.get())) {
     event_.reset();
     ::close(listen_fd_);
     listen_fd_ = INVALID_FD;

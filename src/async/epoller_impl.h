@@ -18,14 +18,14 @@ class EpollerImpl : public EventManager {
       closeWrapper(ep_fd_);
     }
 
-    virtual bool Init();
-    virtual void Loop(SyncEvent* start_event = NULL);
-    virtual bool LoopInAnotherThread();
-    virtual void Stop(SyncEvent* ev);
+    virtual bool init();
+    virtual void loop(SyncEvent* start_event = NULL);
+    virtual bool loopInAnotherThread();
+    virtual void stop(SyncEvent* ev);
 
-    virtual bool Add(Event* ev);
-    virtual void Mod(Event* ev);
-    virtual void Del(const Event& ev);
+    virtual bool add(Event* ev);
+    virtual void mod(Event* ev);
+    virtual void del(const Event& ev);
 
   private:
     int ep_fd_;

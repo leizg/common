@@ -47,7 +47,7 @@ void TimerQueue::destory() {
 
 void TimerQueue::destoryInternal(SyncEvent* ev) {
   if (event_ != nullptr && event_->fd != INVALID_FD) {
-    ev_mgr_->Del(*event_);
+    ev_mgr_->del(*event_);
   }
 
   event_.reset();

@@ -22,14 +22,14 @@ class EventManager : public ThreadSafe {
     virtual ~EventManager() {
     }
 
-    virtual bool Init() = 0;
-    virtual void Loop(SyncEvent* start_event = NULL) = 0;
-    virtual bool LoopInAnotherThread() = 0;
-    virtual void Stop(SyncEvent* stop_event) = 0;
+    virtual bool init() = 0;
+    virtual void loop(SyncEvent* start_event = NULL) = 0;
+    virtual bool loopInAnotherThread() = 0;
+    virtual void stop(SyncEvent* stop_event) = 0;
 
-    virtual bool Add(Event* ev) = 0;
-    virtual void Mod(Event* ev) = 0;
-    virtual void Del(const Event& ev) = 0;
+    virtual bool add(Event* ev) = 0;
+    virtual void mod(Event* ev) = 0;
+    virtual void del(const Event& ev) = 0;
 
     class ClosureDelegate {
       public:
@@ -37,7 +37,7 @@ class EventManager : public ThreadSafe {
         }
 
         // called after EventManager::Init.
-        virtual bool Init() = 0;
+        virtual bool init() = 0;
         virtual void destory() = 0;
 
         virtual void runInLoop(Closure* cb) = 0;

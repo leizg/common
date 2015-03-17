@@ -49,7 +49,7 @@ bool FileSystemWatcher::Init() {
   event_->event = EV_READ;
   event_->arg = this;
   event_->cb = handleWatcher;
-  if (!ev_mgr_->Add(event_.get())) {
+  if (!ev_mgr_->add(event_.get())) {
     closeWrapper(fd_);
     return false;
   }
@@ -88,7 +88,7 @@ void FileSystemWatcher::rmWatch(int wd) {
 
 void FileSystemWatcher::stopWatch() {
   if (event_ != NULL) {
-    ev_mgr_->Del(*event_);
+    ev_mgr_->del(*event_);
   }
 
   // TODO: clear map_.

@@ -18,7 +18,7 @@ ClosureProxy::~ClosureProxy() {
   }
 }
 
-bool ClosureProxy::Init() {
+bool ClosureProxy::init() {
   channel_.reset(new ChannelProxy(ev_mgr_));
   if (!channel_->init()) {
     channel_.reset();

@@ -11,12 +11,12 @@ ThreadStorage<async::EventManager> ev_store;
 
 namespace async {
 
-bool EventManager::Init() {
+bool EventManager::init() {
   ev_store.set(this);
   return true;
 }
 
-void EventManager::Stop(SyncEvent*) {
+void EventManager::stop(SyncEvent*) {
   ev_store.set(NULL);
 }
 

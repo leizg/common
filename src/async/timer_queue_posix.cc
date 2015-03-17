@@ -38,7 +38,7 @@ bool TimerQueuePosix::init() {
 
   TimerQueue::init();
   event_->fd = timer_fd_;
-  if (!ev_mgr_->Add(event_.get())) {
+  if (!ev_mgr_->add(event_.get())) {
     closeWrapper(timer_fd_);
     event_.reset();
     return false;

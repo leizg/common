@@ -22,7 +22,7 @@ EchoServer::~EchoServer() {
   DLOG(INFO)<< "stop main thread";
   if (ev_mgr_ != nullptr) {
     SyncEvent ev;
-    ev_mgr_->Stop(&ev);
+    ev_mgr_->stop(&ev);
     ev.Wait();
   }
 }
@@ -31,7 +31,7 @@ bool EchoServer::init(const std::string& ip, uint16 port) {
   protocol_.reset(new EchoProtocol(new EchoDispatcher));
   ev_mgr_.reset(async::CreateEventManager());
   DCHECK_NOTNULL(ev_mgr_.get());
-  if (!ev_mgr_->Init()) {
+  if (!ev_mgr_->init()) {
     ev_mgr_.reset();
     return false;
   }
@@ -51,11 +51,11 @@ bool EchoServer::init(const std::string& ip, uint16 port) {
 void EchoServer::loop(bool in_another_thread) {
   DCHECK_NOTNULL(ev_mgr_.get());
   if (!in_another_thread) {
-    ev_mgr_->Loop();
+    ev_mgr_->loop();
     return;
   }
 
-  ev_mgr_->LoopInAnotherThread();
+  ev_mgr_->loopInAnotherThread();
 }
 
 }

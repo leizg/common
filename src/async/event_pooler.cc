@@ -13,13 +13,13 @@ bool EventPooler::Init() {
 
   for (uint8 i = 0; i < worker_; ++i) {
     EventManager* ev_mgr = CreateEventManager();
-    if (!ev_mgr->Init()) {
+    if (!ev_mgr->init()) {
       stop();
       delete ev_mgr;
       return false;
     }
 
-    ev_mgr->LoopInAnotherThread();
+    ev_mgr->loopInAnotherThread();
     ev_vec_.push_back(ev_mgr);
   }
 
@@ -30,7 +30,7 @@ void EventPooler::stop() {
   for (auto it = ev_vec_.begin(); it != ev_vec_.end(); ++it) {
     SyncEvent stop_ev;
     EventManager* ev_mgr = *it;
-    ev_mgr->Stop(&stop_ev);
+    ev_mgr->stop(&stop_ev);
     stop_ev.Wait();
     delete ev_mgr;
   }

@@ -21,19 +21,19 @@ bool createEventFd(int* epfd) {
 
 namespace async {
 
-bool EpollerImpl::Init() {
+bool EpollerImpl::init() {
   if (ep_fd_ != INVALID_FD) return false;
   if (!createEventFd(&ep_fd_)) return false;
 
   cb_delegate_.reset(new ClosureProxy(this));
-  if (!cb_delegate_->Init()) {
+  if (!cb_delegate_->init()) {
     closeWrapper(ep_fd_);
     cb_delegate_.reset();
     LOG(WARNING)<< "callback delegate init error";
     return false;
   }
 
-  if (!EventManager::Init()) {
+  if (!EventManager::init()) {
     closeWrapper(ep_fd_);
     return false;
   }
@@ -45,7 +45,7 @@ bool EpollerImpl::Init() {
   return true;
 }
 
-void EpollerImpl::Loop(SyncEvent* start_event) {
+void EpollerImpl::loop(SyncEvent* start_event) {
   stop_ = false;
   DCHECK_NE(ep_fd_, INVALID_FD);
   if (!inValidThread()) update();
@@ -79,11 +79,11 @@ void EpollerImpl::Loop(SyncEvent* start_event) {
   }
 }
 
-bool EpollerImpl::LoopInAnotherThread() {
+bool EpollerImpl::loopInAnotherThread() {
   SyncEvent start_event(false, false);
   loop_pthread_.reset(
       new StoppableThread(
-          ::NewPermanentCallback(this, &EpollerImpl::Loop, &start_event)));
+          ::NewPermanentCallback(this, &EpollerImpl::loop, &start_event)));
   if (loop_pthread_->Start()) {
     if (!start_event.TimeWait(3 * 1000)) {
       loop_pthread_.reset();
@@ -98,7 +98,7 @@ bool EpollerImpl::LoopInAnotherThread() {
   return false;
 }
 
-void EpollerImpl::Stop(SyncEvent* ev) {
+void EpollerImpl::stop(SyncEvent* ev) {
   if (stop_) {
     if (ev != nullptr) ev->Signal();
     return;
@@ -112,7 +112,7 @@ void EpollerImpl::Stop(SyncEvent* ev) {
 }
 
 void EpollerImpl::stopInternal(SyncEvent* ev) {
-  EventManager::Stop(ev);
+  EventManager::stop(ev);
 
   if (cb_delegate_ != nullptr) {
     cb_delegate_->destory();
@@ -136,7 +136,7 @@ uint32 EpollerImpl::convertEvent(uint8 event) {
   return flags;
 }
 
-bool EpollerImpl::Add(Event* ev) {
+bool EpollerImpl::add(Event* ev) {
   CHECK_NOTNULL(ev);
   this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
@@ -159,7 +159,7 @@ bool EpollerImpl::Add(Event* ev) {
   return true;
 }
 
-void EpollerImpl::Mod(Event* ev) {
+void EpollerImpl::mod(Event* ev) {
   CHECK_NOTNULL(ev);
   this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
@@ -177,7 +177,7 @@ void EpollerImpl::Mod(Event* ev) {
   PLOG_IF(WARNING, ret != 0) << "epoll_ctl error";
 }
 
-void EpollerImpl::Del(const Event& ev) {
+void EpollerImpl::del(const Event& ev) {
   this->assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev.fd);
   if (it == ev_map_.end()) {

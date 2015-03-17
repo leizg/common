@@ -46,7 +46,7 @@ bool EventPipe::init() {
   event_->event = EV_READ;
   event_->arg = this;
   event_->cb = handlePipe;
-  if (!ev_mgr_->Add(event_.get())) {
+  if (!ev_mgr_->add(event_.get())) {
     destory();
     return false;
   }
@@ -56,7 +56,7 @@ bool EventPipe::init() {
 
 void EventPipe::destory() {
   if (event_ != NULL) {
-    ev_mgr_->Del(*event_);
+    ev_mgr_->del(*event_);
     event_.reset();
   }
 

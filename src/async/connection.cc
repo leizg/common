@@ -68,7 +68,7 @@ bool Connection::init() {
   event_->arg = this;
   event_->cb = handleEvent;
 
-  if (!ev_mgr_->Add(event_.get())) {
+  if (!ev_mgr_->add(event_.get())) {
     event_.reset();
     return false;
   }
@@ -109,7 +109,7 @@ void Connection::handleClose() {
   if (closed_) return;
   closed_ = true;
 
-  ev_mgr_->Del(*event_);
+  ev_mgr_->del(*event_);
   if (close_closure_ != nullptr) {
     close_closure_->Run();
   }
@@ -247,7 +247,7 @@ bool Connection::write(const std::vector<iovec>& iov, int32* len) {
 
 void Connection::updateChannel(uint8 event) {
   event_->event = event;
-  ev_mgr_->Mod(event_.get());
+  ev_mgr_->mod(event_.get());
 }
 
 void Connection::shutDownFromServer() {

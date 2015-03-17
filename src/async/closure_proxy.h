@@ -16,7 +16,7 @@ class ClosureProxy : public EventManager::ClosureDelegate {
     scoped_ptr<ChannelProxy> channel_;
     scoped_ptr<TimerQueue> timer_queue_;
 
-    virtual bool Init();
+    virtual bool init();
     virtual void destory();
 
     virtual void runInLoop(Closure* cb);

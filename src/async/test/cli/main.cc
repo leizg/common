@@ -41,12 +41,12 @@ static async::EventManager* createEventManager() {
   scoped_ptr<async::EventManager> ev_mgr;
 
   ev_mgr.reset(async::CreateEventManager());
-  if (ev_mgr == nullptr || !ev_mgr->Init()) {
+  if (ev_mgr == nullptr || !ev_mgr->init()) {
     LOG(WARNING)<< "create event manager error";
     return nullptr;
   }
 
-  ev_mgr->LoopInAnotherThread();
+  ev_mgr->loopInAnotherThread();
 
   return ev_mgr.release();
 }
