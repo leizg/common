@@ -36,6 +36,7 @@
 #include "scoped_ptr.h"
 #include "scoped_ref.h"
 #include "ref_counted.h"
+#include "linked_list.h"
 
 #include "file_util.h"
 #include "time_stamp.h"
