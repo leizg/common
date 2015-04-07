@@ -13,10 +13,17 @@ class SnappyCompression : public Compression {
     virtual ~SnappyCompression() {
     }
 
-    virtual bool compress(InBuf* in_buf, OutBuf* out_buf);
-    virtual bool decompress(InBuf* in_buf, OutBuf* out_buf);
-
   private:
+    virtual bool compress(Context* ctx) const;
+    virtual bool decompress(Context* ctx) const;
+
+    virtual Context* newContext() const {
+      Context* ctx = new Context;
+      ctx->in_buf = nullptr;
+      ctx->out_buf = nullptr;
+      return ctx;
+    }
+
     DISALLOW_COPY_AND_ASSIGN(SnappyCompression);
 };
 

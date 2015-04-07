@@ -49,7 +49,7 @@ class InputStream {
     }
 
     // return false iif no data can be read.
-    // buf and len must be null.
+    // buf and len must not be null.
     bool read(const char** buf, uint64* len) const;
 
     void skip(uint64 len) const;

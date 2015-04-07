@@ -36,7 +36,7 @@ inline int ListPopRange(void** head, int n, void** start, void** end) {
   int size;
   void* item = nullptr;
   for (size = 0; size < n; ++size) {
-    void* item = ListPop(head);
+    item = ListPop(head);
     if (size == 0) {
       *start = item;
     }

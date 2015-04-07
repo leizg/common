@@ -2,7 +2,9 @@
 
 namespace util {
 
-bool SnappyCompression::compress(InBuf* in_buf, OutBuf* out_buf) {
+bool SnappyCompression::compress(Context* ctx) const {
+  InBuf* in_buf = ctx->in_buf;
+  OutBuf* out_buf = ctx->out_buf;
   uint64 used_size = 0, max_size = snappy::MaxCompressedLength(in_buf->size());
   char* data;
   out_buf->ensureLeft(max_size);
@@ -20,7 +22,9 @@ bool SnappyCompression::compress(InBuf* in_buf, OutBuf* out_buf) {
   return true;
 }
 
-bool SnappyCompression::decompress(InBuf* in_buf, OutBuf* out_buf) {
+bool SnappyCompression::decompress(Context* ctx) const {
+  InBuf* in_buf = ctx->in_buf;
+  OutBuf* out_buf = ctx->out_buf;
   char* src_data, *dst_data;
   size_t src_len, dst_len;
   while (in_buf->read(&src_data, &src_len)) {

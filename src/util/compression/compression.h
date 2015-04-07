@@ -32,8 +32,18 @@ class Compression {
         virtual void backUp(size_t size) = 0;
     };
 
-    virtual bool compress(InBuf* in_buf, OutBuf* out_buf) = 0;
-    virtual bool decompress(InBuf* in_buf, OutBuf* out_buf) = 0;
+    struct Context {
+        virtual ~Context() {
+        }
+
+        InBuf* in_buf;
+        OutBuf* out_buf;
+    };
+
+    virtual Context* newContext() const = 0;
+
+    virtual bool compress(Context* ctx) const = 0;
+    virtual bool decompress(Context* ctx) const = 0;
 
   protected:
     Compression() {

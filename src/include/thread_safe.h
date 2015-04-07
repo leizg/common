@@ -9,7 +9,10 @@ class ThreadSafe {
     }
 
     bool inValidThread() const {
+#ifdef DEBUG
       return pthread_self() == pid_;
+#endif
+      return true;
     }
 
     void assertThreadSafe() const {
