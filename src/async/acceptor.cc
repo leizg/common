@@ -6,7 +6,7 @@
 
 namespace {
 void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts) {
-  async::Acceptor* a = static_cast<async::Acceptor*>(arg);
+  async::TcpAcceptor* a = static_cast<async::TcpAcceptor*>(arg);
   a->handleAccept(ts);
 }
 
@@ -37,14 +37,14 @@ class ReassignConnectionClosure : public Closure {
 }
 
 namespace async {
-Acceptor::~Acceptor() {
+TcpAcceptor::~TcpAcceptor() {
   if (listen_fd_ != INVALID_FD) {
     ev_mgr_->del(*event_);
     ::close(listen_fd_);
   }
 }
 
-bool Acceptor::createListenFd(const std::string& ip, uint16 port) {
+bool TcpAcceptor::createListenFd(const std::string& ip, uint16 port) {
   listen_fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
   if (listen_fd_ == -1) {
     PLOG(WARNING)<< "socket error";
@@ -88,7 +88,7 @@ bool Acceptor::createListenFd(const std::string& ip, uint16 port) {
   return true;
 }
 
-bool Acceptor::doBind(const std::string& ip, uint16 port) {
+bool TcpAcceptor::doBind(const std::string& ip, uint16 port) {
   if (listen_fd_ != INVALID_FD) return true;
   if (!createListenFd(ip, port)) return false;
 
@@ -109,7 +109,7 @@ bool Acceptor::doBind(const std::string& ip, uint16 port) {
   return true;
 }
 
-void Acceptor::handleAccept(TimeStamp ts) {
+void TcpAcceptor::handleAccept(TimeStamp ts) {
   int fd;
   while (true) {
 #if __linux__

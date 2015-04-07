@@ -4,7 +4,7 @@
 #include "base/base.h"
 
 namespace async {
-class TcpServer;
+class AsyncServer;
 class EventManager;
 }
 
@@ -25,7 +25,7 @@ class EchoServer {
     scoped_ptr<EchoProtocol> protocol_;
 
     scoped_ptr<async::EventManager> ev_mgr_;
-    scoped_ptr<async::TcpServer> server_;
+    scoped_ptr<async::AsyncServer> server_;
 
     DISALLOW_COPY_AND_ASSIGN(EchoServer);
 };

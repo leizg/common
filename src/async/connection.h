@@ -34,6 +34,7 @@ class Connection : public RefCounted {
     EventManager* getEventLoop() const {
       return ev_mgr_;
     }
+
     void setProtocol(Protocol* p) {
       protocol_ = p;
     }
@@ -42,18 +43,6 @@ class Connection : public RefCounted {
         close_closure_->Run();
       }
       close_closure_.reset(cb);
-    }
-
-    void setSaver(ObjectSaver<int, Connection>* saver) {
-      DCHECK_NE(saver_, saver);
-      if (saver_ != nullptr) {
-        saver_->Remove(fd_);
-        saver_ = nullptr;
-      }
-      if (saver != nullptr) {
-        saver->Add(fd_, this);
-        saver_ = saver;
-      }
     }
 
     void setData(UserData* attr);
@@ -69,6 +58,7 @@ class Connection : public RefCounted {
 
     void handleRead(TimeStamp time_stamp);
     void handleWrite(TimeStamp time_stamp);
+
     void shutDownFromServer();
 
   private:

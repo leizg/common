@@ -1,25 +1,54 @@
 #include "acceptor.h"
 #include "protocol.h"
-#include "tcp_server.h"
 #include "connection.h"
-#include "event_manager.h"
 #include "event_pooler.h"
+#include "async_server.h"
+#include "event_manager.h"
 
 namespace async {
 
-TcpServer::TcpServer(EventManager* ev_mgr, uint8 worker)
-    : MulityTableObjectSaver<int, Connection,
-          ThreadSafeObjectSaver<int, Connection, RefCountedObjectMapSaver> >(
-        100, false), worker_(worker), ev_mgr_(ev_mgr) {
-  protocol_ = nullptr;
-  CHECK_NOTNULL(ev_mgr);
-  listeners_.reset(new ListenerMap);
+AsyncServer::~AsyncServer() {
+  stop();
 }
 
-TcpServer::~TcpServer() {
+void AsyncServer::stopInternal(SyncEvent* ev) {
+  ev_mgr_->assertThreadSafe();
+
+  if (listerner_ != nullptr) {
+    listerner_->stop();
+    listerner_ = nullptr;
+  }
+
+  {
+    ScopedMutex l(&mutex_);
+    for (auto it : map_) {
+      Connection* conn = it.second;
+      conn->shutDownFromServer();
+      conn->UnRef();
+    }
+    map_.clear();
+  }
+
+  if (event_poller_ != nullptr) {
+    event_poller_->stop();
+    event_poller_.reset();
+  }
+
+  if (ev != nullptr) ev->Signal();
 }
 
-bool TcpServer::Init() {
+void AsyncServer::stop() {
+  if (ev_mgr_->inValidThread()) {
+    stopInternal(NULL);
+    return;
+  }
+
+  SyncEvent ev;
+  ev_mgr_->runInLoop(NewCallback(this, &AsyncServer::stopInternal, &ev));
+  ev.Wait();
+}
+
+bool AsyncServer::init() {
   if (event_poller_ != nullptr) return false;
 
   event_poller_.reset(new EventPooler(ev_mgr_, worker_));
@@ -31,7 +60,7 @@ bool TcpServer::Init() {
   return true;
 }
 
-bool TcpServer::bindIp(const std::string& ip, uint16 port) {
+bool AsyncServer::bindIp(const std::string& ip, uint16 port) {
   DCHECK_NOTNULL(protocol_);
 
   bool success = false;
@@ -42,7 +71,7 @@ bool TcpServer::bindIp(const std::string& ip, uint16 port) {
 
   SyncEvent event;
   ev_mgr_->runInLoop(
-      ::NewCallback(this, &TcpServer::bindIpInternal, ip, port, &success,
+      ::NewCallback(this, &AsyncServer::bindIpInternal, ip, port, &success,
                     &event));
   if (!event.TimeWait(3 * TimeStamp::kMicroSecsPerSecond)) {
     return false;
@@ -50,7 +79,7 @@ bool TcpServer::bindIp(const std::string& ip, uint16 port) {
   return success;
 }
 
-void TcpServer::unBindIp(const std::string& ip) {
+void AsyncServer::unBindIp(const std::string& ip) {
   if (ev_mgr_->inValidThread()) {
     unBindIpInternal(ip, NULL);
     return;
@@ -58,11 +87,11 @@ void TcpServer::unBindIp(const std::string& ip) {
 
   SyncEvent event;
   ev_mgr_->runInLoop(
-      ::NewCallback(this, &TcpServer::unBindIpInternal, ip, &event));
+      ::NewCallback(this, &AsyncServer::unBindIpInternal, ip, &event));
   event.TimeWait(3 * TimeStamp::kMicroSecsPerSecond);
 }
 
-void TcpServer::unBindAll() {
+void AsyncServer::unBindAll() {
   if (ev_mgr_->inValidThread()) {
     unBindAllInternal( NULL);
     return;
@@ -70,12 +99,12 @@ void TcpServer::unBindAll() {
 
   SyncEvent event;
   ev_mgr_->runInLoop(
-      ::NewCallback(this, &TcpServer::unBindAllInternal, &event));
+      ::NewCallback(this, &AsyncServer::unBindAllInternal, &event));
   event.TimeWait(3 * TimeStamp::kMicroSecsPerSecond);
 }
 
-void TcpServer::bindIpInternal(const std::string ip, uint16 port, bool* success,
-                               SyncEvent* ev) {
+void AsyncServer::bindIpInternal(const std::string ip, uint16 port,
+                                 bool* success, SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
   if (listeners_->Find(ip) != nullptr) {
     *success = true;
@@ -83,7 +112,7 @@ void TcpServer::bindIpInternal(const std::string ip, uint16 port, bool* success,
     return;
   }
 
-  Acceptor* a = new Acceptor(ev_mgr_, this);
+  TcpAcceptor* a = new TcpAcceptor(ev_mgr_, this);
   a->setProtocol(protocol_);
   if (!a->doBind(ip, port) || !listeners_->Add(ip, a)) {
     delete a;
@@ -95,42 +124,19 @@ void TcpServer::bindIpInternal(const std::string ip, uint16 port, bool* success,
   if (ev != nullptr) ev->Signal();
 }
 
-void TcpServer::unBindAllInternal(SyncEvent* ev) {
+void AsyncServer::unBindAllInternal(SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
   listeners_->clear();
   if (ev != nullptr) ev->Signal();
 }
 
-void TcpServer::unBindIpInternal(const std::string ip, SyncEvent* ev) {
+void AsyncServer::unBindIpInternal(const std::string ip, SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
   listeners_->Remove(ip);
   if (ev != nullptr) ev->Signal();
 }
 
-void TcpServer::stop() {
-  if (ev_mgr_->inValidThread()) {
-    stopInternal(NULL);
-    return;
-  }
-
-  SyncEvent ev;
-  ev_mgr_->runInLoop(NewCallback(this, &TcpServer::stopInternal, &ev));
-  ev.Wait();
-}
-
-void TcpServer::stopInternal(SyncEvent* ev) {
-  clear();
-  unBindAll();
-
-  if (event_poller_ != nullptr) {
-    event_poller_->stop();
-    event_poller_.reset();
-  }
-
-  if (ev != nullptr) ev->Signal();
-}
-
-EventManager* TcpServer::getPoller() {
+EventManager* AsyncServer::getPoller() {
   CHECK_NOTNULL(event_poller_.get());
   return event_poller_->getPoller();
 }
