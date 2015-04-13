@@ -32,6 +32,8 @@ class TimerQueue {
     // called by event_manager, you shouldn't call this method forever.
     // not threadsafe. must in loop thread.
     virtual void handleRead(TimeStamp time_stamp);
+
+    // threadsafe.
     void runAt(Closure* closure, TimeStamp time_stamp);
 
   protected:

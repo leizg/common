@@ -85,17 +85,17 @@ bool EpollerImpl::loopInAnotherThread() {
       new StoppableThread(
           ::NewPermanentCallback(this, &EpollerImpl::loop, &start_event)));
   if (loop_pthread_->Start()) {
-    if (!start_event.TimeWait(3 * 1000)) {
-      loop_pthread_.reset();
-      LOG(WARNING)<< "event loop thread start error";
-      return false;
-    }
-    DCHECK(!inValidThread());
-    return true;
+    loop_pthread_.reset();
+    return false;
   }
 
-  loop_pthread_.reset();
-  return false;
+  if (!start_event.TimeWait(3 * TimeStamp::kMicroSecsPerMilliSecond)) {
+    loop_pthread_.reset();
+    LOG(WARNING)<< "event loop thread start error";
+    return false;
+  }
+  DCHECK(!inValidThread());
+  return true;
 }
 
 void EpollerImpl::stop(SyncEvent* ev) {
@@ -112,6 +112,7 @@ void EpollerImpl::stop(SyncEvent* ev) {
 }
 
 void EpollerImpl::stopInternal(SyncEvent* ev) {
+  stop_ = true;
   EventManager::stop(ev);
 
   if (cb_delegate_ != nullptr) {
@@ -119,8 +120,10 @@ void EpollerImpl::stopInternal(SyncEvent* ev) {
     cb_delegate_.reset();
   }
 
-  stop_ = true;
-  if (loop_pthread_ != nullptr) loop_pthread_->Join();
+  if (loop_pthread_ != nullptr) {
+    loop_pthread_->Join();
+    loop_pthread_.reset();
+  }
   if (ev != nullptr) ev->Signal();
 }
 
@@ -138,7 +141,7 @@ uint32 EpollerImpl::convertEvent(uint8 event) {
 
 bool EpollerImpl::add(Event* ev) {
   CHECK_NOTNULL(ev);
-  this->assertThreadSafe();
+  assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it != ev_map_.end()) {
     LOG(WARNING)<< "already registe fd: " << ev->fd;
@@ -161,7 +164,7 @@ bool EpollerImpl::add(Event* ev) {
 
 void EpollerImpl::mod(Event* ev) {
   CHECK_NOTNULL(ev);
-  this->assertThreadSafe();
+  assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it == ev_map_.end()) {
     LOG(WARNING)<< "not registe fd: " << ev->fd;
@@ -178,7 +181,7 @@ void EpollerImpl::mod(Event* ev) {
 }
 
 void EpollerImpl::del(const Event& ev) {
-  this->assertThreadSafe();
+  assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev.fd);
   if (it == ev_map_.end()) {
     DLOG(WARNING)<< "not registe fd: " << ev.fd;

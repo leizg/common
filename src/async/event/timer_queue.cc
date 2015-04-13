@@ -13,24 +13,24 @@ void handleTimerQueueEvent(int fd, void* arg, uint8 event,
 namespace async {
 
 TimerQueue::TimerQueue(EventManager* ev_mgr, Delegate* delegate)
-    : actived_(false), ev_mgr_(ev_mgr), expired_time_(TimeStamp::now()), delegate_(
-        delegate) {
+    : actived_(false), ev_mgr_(ev_mgr) {
   DCHECK_NOTNULL(ev_mgr);
   DCHECK_NOTNULL(delegate);
+  expired_time_ = TimeStamp::now();
+  delegate_.reset(delegate);
 }
 
 TimerQueue::~TimerQueue() {
 }
 
 bool TimerQueue::init() {
-  if (event_ != NULL) return false;
-
-  event_.reset(new Event);
-  event_->fd = INVALID_FD;
-  event_->arg = this;
-  event_->event = EV_READ;
-  event_->cb = handleTimerQueueEvent;
-
+  if (event_ == nullptr) {
+    event_.reset(new Event);
+    event_->fd = INVALID_FD;
+    event_->arg = this;
+    event_->event = EV_READ;
+    event_->cb = handleTimerQueueEvent;
+  }
   return true;
 }
 
@@ -41,7 +41,7 @@ void TimerQueue::destory() {
   }
 
   SyncEvent ev;
-  ev_mgr_->runInLoop(NewCallback(this, &TimerQueue::destoryInternal, &ev));
+  ev_mgr_->runInLoop(::NewCallback(this, &TimerQueue::destoryInternal, &ev));
   ev.Wait();
 }
 

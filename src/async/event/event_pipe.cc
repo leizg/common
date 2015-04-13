@@ -36,7 +36,8 @@ void handlePipe(int fd, void* arg, uint8 revent, TimeStamp ts) {
 namespace async {
 
 bool EventPipe::init() {
-  if (event_ != NULL) return false;
+  ev_mgr_->assertThreadSafe();
+  if (event_ != nullptr) return false;
   if (!createPipe(&event_fd_[0], &event_fd_[1])) {
     return false;
   }
@@ -47,6 +48,7 @@ bool EventPipe::init() {
   event_->arg = this;
   event_->cb = handlePipe;
   if (!ev_mgr_->add(event_.get())) {
+    event_.reset();
     destory();
     return false;
   }
@@ -55,7 +57,8 @@ bool EventPipe::init() {
 }
 
 void EventPipe::destory() {
-  if (event_ != NULL) {
+  ev_mgr_->assertThreadSafe();
+  if (event_ != nullptr) {
     ev_mgr_->del(*event_);
     event_.reset();
   }
@@ -66,25 +69,29 @@ void EventPipe::destory() {
 }
 
 void EventPipe::triggerPipe() {
-  uint8 c;
-  ::write(event_fd_[1], &c, sizeof(c));
+  ev_mgr_->assertThreadSafe();
+  if (event_fd_[1] != INVALID_FD) {
+    uint8 c;
+    ::write(event_fd_[1], &c, sizeof(c));
+  }
 }
 
 void EventPipe::handleRead(TimeStamp ts) {
-  uint8 dummy;
+  DCHECK_NE(INVALID_FD, event_fd_[0]);
+  uint64 dummy;
   while (true) {  // read all of data.
     int ret = ::read(event_fd_[0], &dummy, sizeof(dummy));
-    if (ret == -1) {
+    if (ret == 0) return;
+    else if (ret == -1) {
       switch (errno) {
         case EINTR:
           continue;
         case EWOULDBLOCK:
-          return;
+          break;
       }
       PLOG(WARNING)<< "read pipe error" << event_fd_[0];
       return;
     }
-    break;
   }
 
   deletate_->handleEvent(ts);

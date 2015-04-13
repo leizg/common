@@ -80,8 +80,6 @@ void TimerQueuePosix::clearData() {
           continue;
         case EWOULDBLOCK:
           return;
-        default:
-          break;
       }
 
       DLOG(WARNING)<<"read timerfd error, fd:" << timer_fd_;

@@ -23,7 +23,7 @@ class EventManager : public ThreadSafe {
     }
 
     virtual bool init() = 0;
-    virtual void loop(SyncEvent* start_event = NULL) = 0;
+    virtual void loop(SyncEvent* start_event = nullptr) = 0;
     virtual bool loopInAnotherThread() = 0;
     virtual void stop(SyncEvent* stop_event) = 0;
 
@@ -50,6 +50,9 @@ class EventManager : public ThreadSafe {
         }
 
         EventManager* ev_mgr_;
+
+      private:
+        DISALLOW_COPY_AND_ASSIGN(ClosureDelegate);
     };
 
     // these methods are threadsafe,

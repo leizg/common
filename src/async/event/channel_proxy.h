@@ -5,7 +5,7 @@
 
 namespace async {
 
-class ChannelProxy : public EventPipe, SpinLock {
+class ChannelProxy : public EventPipe, /* private */SpinLock {
   public:
     explicit ChannelProxy(EventManager* ev_mgr);
     virtual ~ChannelProxy() {

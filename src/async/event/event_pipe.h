@@ -18,8 +18,8 @@ class EventPipe {
     };
 
     virtual ~EventPipe() {
-      DCHECK_EQ(event_fd_[0], -1);
-      DCHECK_EQ(event_fd_[1], -1);
+      DCHECK_EQ(event_fd_[0], INVALID_FD);
+      DCHECK_EQ(event_fd_[1], INVALID_FD);
     }
 
     virtual bool init();

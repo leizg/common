@@ -1,5 +1,5 @@
-#ifndef TIMER_LIST_H_
-#define TIMER_LIST_H_
+#ifndef TIMER_LIST_IMPL_H_
+#define TIMER_LIST_IMPL_H_
 
 #include "timer_queue.h"
 
@@ -31,4 +31,4 @@ class TimerListImpl : public TimerQueue::Delegate {
 
 }
 
-#endif /* TIMER_LIST_H_ */
+#endif /* TIMER_LIST_IMPL_H_ */
