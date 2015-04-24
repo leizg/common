@@ -7,16 +7,16 @@ class Protocol;
 class EventPooler;
 class EventManager;
 
-class Listerner;
+class AddrBinder;
 class Connection;
 
 // master + workers.
 // master accept new connection, and dispatch it to worker thread.
-// thread pool + event loop per thread.
+// thread pool + one event loop per thread.
 class AsyncServer {
   public:
     // event_manager must initialized successfully.
-    AsyncServer(EventManager* ev_mgr, uint8 worker, Listerner* listerner)
+    AsyncServer(EventManager* ev_mgr, uint8 worker, AddrBinder* listerner)
         : worker_(worker), ev_mgr_(ev_mgr) {
       DCHECK_NOTNULL(ev_mgr);
       DCHECK_NOTNULL(listerner);
@@ -37,7 +37,7 @@ class AsyncServer {
     const uint8 worker_;
     EventManager* ev_mgr_;
 
-    Listerner* listerner_;
+    AddrBinder* listerner_;
     scoped_ptr<EventPooler> event_poller_;
 
     typedef std::map<int, Connection*> ConnMap;

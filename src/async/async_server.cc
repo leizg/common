@@ -112,7 +112,7 @@ void AsyncServer::bindIpInternal(const std::string ip, uint16 port,
     return;
   }
 
-  TcpAcceptor* a = new TcpAcceptor(ev_mgr_, this);
+  Acceptor* a = new Acceptor(ev_mgr_, this);
   a->setProtocol(protocol_);
   if (!a->doBind(ip, port) || !listeners_->Add(ip, a)) {
     delete a;
