@@ -19,7 +19,10 @@ class Protocol {
     virtual Connection::UserData* NewConnectionData() const = 0;
 
     virtual void handleRead(Connection* conn, TimeStamp time_stamp) = 0;
-    virtual void handleWrite(Connection* conn, TimeStamp time_stamp) = 0;
+    // return true iif no data need to be sent.
+    // if false returned, must check err_no.
+    virtual bool handleWrite(Connection* conn, TimeStamp time_stamp,
+                             int* err_no) = 0;
     virtual void handleError(Connection* conn) = 0;
     virtual void handleClose(Connection* conn) = 0;
 
@@ -71,14 +74,15 @@ class ProReactorProtocol : public Protocol {
         virtual ~UserData();
 
         const char* peekHeader() const;
-        io::InputStream* releaseStream();
         void newPackage();
 
         bool is_last;
         IoStat io_stat;
         uint32 pending_size;
+
         scoped_ptr<io::ExternableChunk> chunk;
         scoped_ptr<io::ConcatenaterSource> src;
+        scoped_ptr<io::OutQueue> out_queue;
 
     };
 
@@ -96,7 +100,8 @@ class ProReactorProtocol : public Protocol {
     scoped_ptr<ErrorReporter> reporter_;
 
     virtual void handleRead(Connection* conn, TimeStamp time_stamp);
-    virtual void handleWrite(Connection* conn, TimeStamp time_stamp);
+    virtual bool handleWrite(Connection* conn, TimeStamp time_stamp,
+                             int* err_no);
     virtual void handleError(Connection* conn);
     virtual void handleClose(Connection* conn);
 

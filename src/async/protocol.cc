@@ -6,6 +6,14 @@
 
 namespace {
 
+io::InputStream* releaseStream(async::ProReactorProtocol::UserData* ud) {
+  ud->newPackage();
+
+  io::InputStream* stream(new io::InputStream(ud->src.release()));
+  ud->src.reset(new io::ConcatenaterSource);
+
+  return stream;
+}
 }
 
 namespace async {
@@ -14,6 +22,7 @@ ProReactorProtocol::UserData::UserData()
     : is_last(true), io_stat(IO_START), pending_size(0) {
   chunk.reset(new io::ExternableChunk);
   src.reset(new io::ConcatenaterSource);
+  out_queue.reset(new io::OutQueue);
 }
 
 void ProReactorProtocol::UserData::newPackage() {
@@ -25,15 +34,6 @@ const char* ProReactorProtocol::UserData::peekHeader() const {
   return chunk->peekR();
 }
 
-io::InputStream* ProReactorProtocol::UserData::releaseStream() {
-  newPackage();
-
-  io::InputStream* stream(new io::InputStream(src.release()));
-  src.reset(new io::ConcatenaterSource);
-
-  return stream;
-}
-
 ProReactorProtocol::UserData::~UserData() {
 }
 
@@ -41,55 +41,70 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
   UserData* u = reinterpret_cast<UserData*>(conn->getData());
   if (!RecvPending(conn, u)) return;
 
-  switch (u->io_stat) {
-    case IO_START:
-      u->io_stat = IO_HEADER;
-      if (!recvData(conn, u, parser_->headerLength())) {
-        return;
-      }
-
-    case IO_HEADER:
-      u->io_stat = IO_BODY;
-      if (!parser_->parseHeader(conn)) {
-        if (reporter_ != nullptr) {
-          reporter_->report(conn);
+  while (true) {
+    switch (u->io_stat) {
+      case IO_START:
+        u->io_stat = IO_HEADER;
+        if (!recvData(conn, u, parser_->headerLength())) {
+          return;
         }
-        return;
-      }
 
-    case IO_BODY:
-      u->io_stat = IO_END;
-      if (!recvData(conn, u, u->pending_size)) {
-        return;
-      }
+      case IO_HEADER:
+        u->io_stat = IO_BODY;
+        if (!parser_->parseHeader(conn)) {
+          if (reporter_ != nullptr) {
+            reporter_->report(conn);
+          }
+          return;
+        }
 
-    case IO_END:
-      if (u->is_last) {
-        scheluder_->dispatch(conn, u->releaseStream(), time_stamp);
-        u->is_last = false;
+      case IO_BODY:
+        u->io_stat = IO_END;
+        if (!recvData(conn, u, u->pending_size)) {
+          return;
+        }
+
+      case IO_END:
+        if (u->is_last) {
+          scheluder_->dispatch(conn, releaseStream(u), time_stamp);
+          u->is_last = false;
+          u->io_stat = IO_START;
+          return;
+        }
+
+        u->newPackage();
         u->io_stat = IO_START;
-        return;
-      }
-      u->newPackage();
-      u->io_stat = IO_START;
-      break;
+        break;
+    }
   }
 }
 
-void ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp) {
-  // todo:
+bool ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp,
+                                     int* err_no) {
+  DCHECK_NOTNULL(err_no);
+  UserData* ud = reinterpret_cast<UserData*>(conn->getData());
+  if (!ud->out_queue->empty()) {
+    if (!ud->out_queue->send(conn->fileHandle(), err_no)) {
+      if (*err_no != EWOULDBLOCK) {
+        handleClose(conn);
+      }
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void ProReactorProtocol::handleError(Connection* conn) {
-  if (reporter_ != nullptr) {
-    reporter_->report(conn);
-  }
+  handleClose(conn);
 }
 
 void ProReactorProtocol::handleClose(Connection* conn) {
   if (reporter_ != nullptr) {
     reporter_->report(conn);
   }
+
+  conn->handleClose();
 }
 
 bool ProReactorProtocol::recvData(Connection* conn, UserData* u,

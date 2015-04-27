@@ -4,11 +4,10 @@
 
 namespace async {
 class Protocol;
+class Connection;
+
 class EventPooler;
 class EventManager;
-
-class AddrBinder;
-class Connection;
 
 // master + workers.
 // master accept new connection, and dispatch it to worker thread.
@@ -16,13 +15,12 @@ class Connection;
 class AsyncServer {
   public:
     // event_manager must initialized successfully.
-    AsyncServer(EventManager* ev_mgr, uint8 worker, AddrBinder* listerner)
-        : worker_(worker), ev_mgr_(ev_mgr) {
-      DCHECK_NOTNULL(ev_mgr);
-      DCHECK_NOTNULL(listerner);
-      listerner_ = listerner;
-    }
+    AsyncServer(EventManager* ev_mgr, int server_fd, uint8 worker = 4);
     virtual ~AsyncServer();
+
+    void setProtocol(Protocol* protocol) {
+      protocol_ = protocol;
+    }
 
     bool init();
     void stop();
@@ -30,15 +28,18 @@ class AsyncServer {
     void add(Connection* conn);
     void remove(Connection* conn);
 
-    // thread safe.
+    // not thread safe.
+    // only can be called in loop thread.
     EventManager* getPoller();
 
   private:
     const uint8 worker_;
     EventManager* ev_mgr_;
+    Protocol* protocol_;
 
-    AddrBinder* listerner_;
-    scoped_ptr<EventPooler> event_poller_;
+    class Acceptor;
+    scoped_ptr<Acceptor> acceptor_;
+    scoped_ptr<EventPooler> pooler_;
 
     typedef std::map<int, Connection*> ConnMap;
     Mutex mutex_;
@@ -48,5 +49,9 @@ class AsyncServer {
 
     DISALLOW_COPY_AND_ASSIGN(AsyncServer);
 };
+
+bool createTcpServer(const std::string& ip, uint16 port, int* server_fd);
+bool createLocalServer(const std::string& path, int* server_fd);
+
 }
 

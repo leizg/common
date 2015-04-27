@@ -1,12 +1,6 @@
-#ifndef CONNECTION_H_
-#define CONNECTION_H_
+#pragma once
 
-#include "include/object_saver.h"
-
-namespace io {
-class OutQueue;
-class OutputObject;
-}
+#include "base/base.h"
 
 namespace async {
 struct Event;
@@ -16,17 +10,11 @@ class EventManager;
 // Note: Connection shouldn't delete directly.
 class Connection : public RefCounted {
   public:
-    struct UserData {
-        virtual ~UserData() {
-        }
-
-        Connection* conn;
-    };
-
     Connection(int fd, EventManager* ev_mgr);
     virtual ~Connection();
 
     bool init();
+    void shutDown();
 
     int fileHandle() const {
       return fd_;
@@ -45,21 +33,27 @@ class Connection : public RefCounted {
       close_closure_.reset(cb);
     }
 
-    void setData(UserData* attr);
-    UserData* getData() const {
-      return data_.get();
-    }
-
     bool read(char* buf, int32* len);
-    void send(io::OutputObject* out_obj);
-    bool write(const char* buf, int32* len);
-    bool write(int fd, off_t offset, int32* len);
-    bool write(const std::vector<iovec>& iov, int32* len);
+    bool write(const char* buf, int32* len, int* err_no);
+    bool write(int fd, off_t offset, int32* len, int* err_no);
+    bool write(const std::vector<iovec>& iov, int32* len, int* err_no);
 
+    void handleClose();
     void handleRead(TimeStamp time_stamp);
     void handleWrite(TimeStamp time_stamp);
 
-    void shutDownFromServer();
+    struct UserData {
+        virtual ~UserData() {
+        }
+
+        Connection* conn;
+    };
+    void setData(UserData* data) {
+      data_.reset(data);
+    }
+    UserData* getData() const {
+      return data_.get();
+    }
 
   private:
     int fd_;
@@ -72,15 +66,9 @@ class Connection : public RefCounted {
     scoped_ptr<Closure> close_closure_;
     scoped_ptr<UserData> data_;
 
-    void handleClose();
     void updateChannel(uint8 event);
-    scoped_ptr<io::OutQueue> out_queue_;
-
-    ObjectSaver<int, Connection>* saver_;
+    void shutDownInternal(SyncEvent* ev = nullptr);
 
     DISALLOW_COPY_AND_ASSIGN(Connection);
 };
-
 }
-
-#endif /* CONNECTION_H_ */

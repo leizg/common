@@ -20,7 +20,7 @@ void handleEvent(int fd, void* arg, uint8 revent, TimeStamp time_stamp) {
 
 void skipData(std::vector<iovec>* iov, uint32 len) {
   std::vector<iovec> data;
-  for (auto it = iov->begin(); it != iov->end(); ++it) {
+  for (auto it : *iov) {
     const iovec& io = *it;
     if (len == 0) {
       data.push_back(io);
@@ -49,7 +49,6 @@ Connection::Connection(int fd, EventManager* ev_mgr)
     : fd_(fd), closed_(false), ev_mgr_(ev_mgr) {
   DCHECK_NE(fd, INVALID_FD);
   DCHECK_NOTNULL(ev_mgr);
-  saver_ = nullptr;
   protocol_ = nullptr;
 }
 
@@ -73,7 +72,6 @@ bool Connection::init() {
     return false;
   }
 
-  out_queue_.reset(new io::OutQueue);
   return true;
 }
 
@@ -89,19 +87,15 @@ void Connection::handleRead(TimeStamp time_stamp) {
 
 void Connection::handleWrite(TimeStamp time_stamp) {
   if (fd_ != INVALID_FD && !closed_) {
-    if (out_queue_->empty()) {
+    int err_no;
+    if (protocol_->handleWrite(this, time_stamp, &err_no)) {
       updateChannel(EV_READ);
-      protocol_->handleWrite(this, time_stamp);
       return;
     }
 
-    int32 err_no;
-    if (out_queue_->send(fd_, &err_no)) {
-      updateChannel(EV_READ);
-      protocol_->handleWrite(this, time_stamp);
-      return;
+    if (err_no == EWOULDBLOCK && !(EV_WRITE & event_->event)) {
+      updateChannel(EV_READ | EV_WRITE);
     }
-    if (err_no != EWOULDBLOCK) protocol_->handleClose(this);
   }
 }
 
@@ -113,15 +107,10 @@ void Connection::handleClose() {
   if (close_closure_ != nullptr) {
     close_closure_->Run();
   }
-  if (saver_ != nullptr) {
-    saver_->Remove(fd_);
-  }
 }
 
 bool Connection::read(char* buf, int32* len) {
-  if (fd_ == INVALID_FD || closed_) {
-    return false;
-  }
+  if (fd_ == INVALID_FD || closed_) return false;
 
   int32 ret, left = *len;
   while (left != 0) {
@@ -152,42 +141,16 @@ bool Connection::read(char* buf, int32* len) {
   return true;
 }
 
-void Connection::send(io::OutputObject* out_obj) {
-  if (fd_ == INVALID_FD || closed_) {
-    delete out_obj;
-    return;
-  }
-  if (!out_queue_->empty()) {
-    out_queue_->push(out_obj);
-    return;
-  }
-
-  int32 err_no;
-  if (out_obj->send(fd_, &err_no)) {
-    delete out_obj;
-    return;
-  }
-  if (err_no != EWOULDBLOCK) {
-    protocol_->handleClose(this);
-    handleClose();
-    return;
-  }
-
-  out_queue_->push(out_obj);
-  updateChannel(EV_READ | EV_WRITE);
-}
-
-bool Connection::write(const char* buf, int32* len) {
-  std::vector<iovec> iov;
+bool Connection::write(const char* buf, int32* len, int* err_no) {
   iovec io;
   io.iov_base = const_cast<char*>(buf);
   io.iov_len = static_cast<uint32>(*len);
-  iov.push_back(io);
-  return write(iov, len);
+  return write(std::vector<iovec>(io), len, err_no);
 }
 
-bool Connection::write(int fd, off_t offset, int32* len) {
+bool Connection::write(int fd, off_t offset, int32* len, int* err_no) {
   if (fd_ == INVALID_FD || closed_) {
+    if (err_no != nullptr) *err_no = EBADFD;
     return false;
   }
 
@@ -204,6 +167,7 @@ bool Connection::write(int fd, off_t offset, int32* len) {
         default:
           protocol_->handleError(this);
           handleClose();
+          if (err_no != nullptr) *err_no = errno;
           return false;
       }
     }
@@ -215,8 +179,9 @@ bool Connection::write(int fd, off_t offset, int32* len) {
   return true;
 }
 
-bool Connection::write(const std::vector<iovec>& iov, int32* len) {
+bool Connection::write(const std::vector<iovec>& iov, int32* len, int* err_no) {
   if (fd_ == INVALID_FD || closed_) {
+    if (err_no != nullptr) *err_no = EBADFD;
     return false;
   }
 
@@ -233,6 +198,7 @@ bool Connection::write(const std::vector<iovec>& iov, int32* len) {
         default:
           protocol_->handleError(this);
           handleClose();
+          if (err_no != nullptr) *err_no = errno;
           return false;
       }
     }
@@ -246,14 +212,29 @@ bool Connection::write(const std::vector<iovec>& iov, int32* len) {
 }
 
 void Connection::updateChannel(uint8 event) {
-  event_->event = event;
-  ev_mgr_->mod(event_.get());
+  if (!closed_) {
+    event_->event = event;
+    ev_mgr_->mod(event_.get());
+  }
 }
 
-void Connection::shutDownFromServer() {
-  if (!closed_) {
-    ::shutdown(fd_, SHUT_WR);
+void Connection::shutDown() {
+  if (closed_) return;
+  if (ev_mgr_->inValidThread()) {
+    shutDownInternal();
+    return;
   }
+
+  SyncEvent ev;
+  ev_mgr_->runInLoop(
+      ::NewPermanentCallback(this, &Connection::shutDownInternal, &ev));
+  ev.Wait();
+}
+
+void Connection::shutDownInternal(SyncEvent* ev) {
+  ev_mgr_->assertThreadSafe();
+  handleClose();
+  if (ev != nullptr) ev->Signal();
 }
 
 }
