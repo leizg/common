@@ -6,8 +6,11 @@
 
 class TimeStamp {
   public:
-    explicit TimeStamp(uint64 micro_secs)
+    explicit TimeStamp(uint64 micro_secs = 0)
         : ms_(micro_secs) {
+    }
+    TimeStamp(const TimeStamp& rhs)
+        : ms_(rhs.ms_) {
     }
 
     const static uint64 kMilliSecsPerSecond = 1000ULL;
@@ -66,6 +69,10 @@ class TimeStamp {
     }
     TimeStamp& operator -=(const TimeStamp& rhs) {
       ms_ -= rhs.ms_;
+      return *this;
+    }
+    const TimeStamp& operator =(const TimeStamp& rhs) {
+      ms_ = rhs.ms_;
       return *this;
     }
 

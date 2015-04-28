@@ -1,7 +1,8 @@
 #include "protocol.h"
 #include "connector.h"
 #include "connection.h"
-#include "event_manager.h"
+#include "async_client.h"
+#include "event/event_manager.h"
 
 namespace async {
 
@@ -21,7 +22,7 @@ void AsyncClient::stopInternal(SyncEvent* ev) {
 
 void AsyncClient::stop() {
   if (ev_mgr_->inValidThread()) {
-    connectInternal (&success);
+    stopInternal();
     return;
   }
 

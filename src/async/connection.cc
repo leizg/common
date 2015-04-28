@@ -1,7 +1,7 @@
 #include "protocol.h"
 #include "connection.h"
-#include "event_manager.h"
 #include "io/io_buf.h"
+#include "event/event_manager.h"
 
 #include <sys/sendfile.h>
 
@@ -21,7 +21,7 @@ void handleEvent(int fd, void* arg, uint8 revent, TimeStamp time_stamp) {
 void skipData(std::vector<iovec>* iov, uint32 len) {
   std::vector<iovec> data;
   for (auto it : *iov) {
-    const iovec& io = *it;
+    const iovec& io = it;
     if (len == 0) {
       data.push_back(io);
       continue;
@@ -73,10 +73,6 @@ bool Connection::init() {
   }
 
   return true;
-}
-
-void Connection::setData(UserData* data) {
-  data_.reset(data);
 }
 
 void Connection::handleRead(TimeStamp time_stamp) {
@@ -145,7 +141,9 @@ bool Connection::write(const char* buf, int32* len, int* err_no) {
   iovec io;
   io.iov_base = const_cast<char*>(buf);
   io.iov_len = static_cast<uint32>(*len);
-  return write(std::vector<iovec>(io), len, err_no);
+  std::vector<iovec> vec;
+  vec.push_back(io);
+  return write(vec, len, err_no);
 }
 
 bool Connection::write(int fd, off_t offset, int32* len, int* err_no) {

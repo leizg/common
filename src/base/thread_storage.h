@@ -9,6 +9,7 @@ class ThreadStorage {
   public:
     ThreadStorage() {
       ::pthread_key_create(&key_, NULL);
+      set(nullptr);
     }
     ~ThreadStorage() {
       ::pthread_key_delete(key_);

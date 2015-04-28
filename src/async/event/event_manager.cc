@@ -16,6 +16,8 @@ bool EventManager::init() {
     ev_store.set(this);
     return true;
   }
+
+  LOG(WARNING)<< "already exist";
   return false;
 }
 

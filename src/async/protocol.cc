@@ -1,6 +1,8 @@
 #include "protocol.h"
 #include "connection.h"
-#include "event_manager.h"
+#include "event/event_manager.h"
+
+#include "io/io_buf.h"
 #include "io/memory_block.h"
 #include "io/input_stream.h"
 

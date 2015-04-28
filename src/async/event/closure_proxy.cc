@@ -1,7 +1,7 @@
 #include "closure_proxy.h"
 #include "channel_proxy.h"
 
-#include "timer_list.h"
+#include "timer_list_impl.h"
 #include "timer_queue_mac.h"
 #include "timer_queue_posix.h"
 

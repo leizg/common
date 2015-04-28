@@ -1,13 +1,10 @@
-#include <sys/un.h>
-
 #include "protocol.h"
 #include "connection.h"
 #include "event_pooler.h"
 #include "async_server.h"
-#include "event_manager.h"
+#include "event/event_manager.h"
 
 namespace {
-void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts);
 
 // move to logic layer.
 class ReassignConnectionClosure : public Closure {
@@ -85,6 +82,8 @@ class AsyncServer::Acceptor {
 
     void handleAccept(TimeStamp ts);
 
+    static void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts);
+
   private:
     EventManager* ev_mgr_;
     AsyncServer* serv_;
@@ -94,6 +93,12 @@ class AsyncServer::Acceptor {
 
     DISALLOW_COPY_AND_ASSIGN(Acceptor);
 };
+
+void AsyncServer::Acceptor::handleAcceptEvent(int fd, void* arg, uint8 event,
+                                              TimeStamp ts) {
+  AsyncServer::Acceptor* a = static_cast<AsyncServer::Acceptor*>(arg);
+  a->handleAccept(ts);
+}
 
 bool AsyncServer::Acceptor::init() {
   if (event_ != nullptr) return false;
@@ -286,12 +291,4 @@ bool createLocalServer(const std::string& path, int* server_fd) {
   return true;
 }
 
-}
-
-namespace {
-void handleAcceptEvent(int fd, void* arg, uint8 event, TimeStamp ts) {
-async::AsyncServer::Acceptor* a =
-    static_cast<async::AsyncServer::Acceptor*>(arg);
-a->handleAccept(ts);
-}
 }

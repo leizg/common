@@ -2,6 +2,7 @@
 #define BASE_H_
 
 #include <errno.h>
+#include <sys/un.h>
 #include <sys/uio.h>
 #include <sys/signal.h>
 #include <sys/types.h>

@@ -4,15 +4,16 @@
 #include "async/protocol.h"
 
 namespace test {
-class EchoDispatcher;
+using async::Connection;
+using async::ProReactorProtocol;
 
-class EchoProtocol : public async::ProReactorProtocol {
+class EchoProtocol : public ProReactorProtocol {
   public:
-    explicit EchoProtocol(async::ProReactorProtocol::Scheluder* scheluder);
+    explicit EchoProtocol(Scheluder* scheluder);
     virtual ~EchoProtocol();
 
   private:
-    class EchoParser : public async::ProReactorProtocol::Parser {
+    class EchoParser : public Parser {
       public:
         EchoParser() {
         }
@@ -20,16 +21,15 @@ class EchoProtocol : public async::ProReactorProtocol {
         }
 
       private:
+        virtual bool parseHeader(Connection* conn) const;
         virtual uint32 headerLength() const {
           return sizeof(uint32);
         }
 
-        virtual bool parseHeader(async::Connection* conn) const;
-
         DISALLOW_COPY_AND_ASSIGN(EchoParser);
     };
 
-    virtual async::Connection::UserData* NewConnectionData() const {
+    virtual UserData* NewConnectionData() const {
       return new UserData;
     }
 

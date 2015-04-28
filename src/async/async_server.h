@@ -18,6 +18,8 @@ class AsyncServer {
     AsyncServer(EventManager* ev_mgr, int server_fd, uint8 worker = 4);
     virtual ~AsyncServer();
 
+    // not threadsafe,
+    // must called before initialize server.
     void setProtocol(Protocol* protocol) {
       protocol_ = protocol;
     }

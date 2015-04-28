@@ -1,5 +1,5 @@
-#include "async/tcp_server.h"
-#include "async/event_manager.h"
+#include "async/async_server.h"
+#include "async/event/event_manager.h"
 
 #include "echo_server.h"
 #include "echo_dispatcher.h"
@@ -36,11 +36,15 @@ bool EchoServer::init(const std::string& ip, uint16 port) {
     return false;
   }
 
-  server_.reset(new async::AsyncServer(ev_mgr_.get(), worker_));
-  server_->setProtocol(protocol_.get());
-  if (!server_->init() || !server_->bindIp(ip, port)) {
+  int server_fd;
+  if (!async::createTcpServer(ip, port, &server_fd)) {
     ev_mgr_.reset();
-    protocol_.reset();
+    return false;
+  }
+  server_.reset(new async::AsyncServer(ev_mgr_.get(), server_fd, worker_));
+  server_->setProtocol(protocol_.get());
+  if (!server_->init()) {
+    ev_mgr_.reset();
     server_.reset();
     return false;
   }

@@ -7,9 +7,8 @@
 
 namespace test {
 
-bool EchoProtocol::EchoParser::parseHeader(async::Connection* conn) const {
-  ProReactorProtocol::UserData* ud =
-      static_cast<ProReactorProtocol::UserData*>(conn->getData());
+bool EchoProtocol::EchoParser::parseHeader(Connection* conn) const {
+  UserData* ud = static_cast<UserData*>(conn->getData());
   const char* data = ud->peekHeader();
 
   bool is_last;
@@ -27,7 +26,7 @@ bool EchoProtocol::EchoParser::parseHeader(async::Connection* conn) const {
   return true;
 }
 
-EchoProtocol::EchoProtocol(async::ProReactorProtocol::Scheluder* scheluder)
+EchoProtocol::EchoProtocol(Scheluder* scheluder)
     : async::ProReactorProtocol(new EchoParser, scheluder) {
 }
 

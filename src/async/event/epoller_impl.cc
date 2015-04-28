@@ -33,11 +33,6 @@ bool EpollerImpl::init() {
     return false;
   }
 
-  if (!EventManager::init()) {
-    closeWrapper(ep_fd_);
-    return false;
-  }
-
   epoll_event ev;
   ::memset(&ev, 0, sizeof ev);
   events_.resize(kTriggerNumber, ev);
@@ -47,11 +42,14 @@ bool EpollerImpl::init() {
 
 void EpollerImpl::loop(SyncEvent* start_event) {
   stop_ = false;
-  DCHECK_NE(ep_fd_, INVALID_FD);
-  if (!inValidThread()) update();
-  if (start_event != nullptr) start_event->Signal();
+  {
+    ScopedSyncEvent n(start_event);
+    if (!inValidThread()) update();
+    if (!EventManager::init()) return;
+  }
 
-  DLOG(INFO)<< "start event loop...";
+  DCHECK_NE(ep_fd_, INVALID_FD);
+  LOG(INFO)<< "start event loop...";
   while (!stop_) {
     int32 trigger_number = ::epoll_wait(ep_fd_, events_.data(), events_.size(),
                                         1);
@@ -84,7 +82,7 @@ bool EpollerImpl::loopInAnotherThread() {
   loop_pthread_.reset(
       new StoppableThread(
           ::NewPermanentCallback(this, &EpollerImpl::loop, &start_event)));
-  if (loop_pthread_->Start()) {
+  if (!loop_pthread_->Start()) {
     loop_pthread_.reset();
     return false;
   }

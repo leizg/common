@@ -4,6 +4,7 @@
 #include  "connection.h"
 
 namespace io {
+class OutQueue;
 class InputStream;
 class ExternableChunk;
 class ConcatenaterSource;
