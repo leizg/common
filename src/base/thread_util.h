@@ -162,6 +162,20 @@ class SyncEvent {
 
     DISALLOW_COPY_AND_ASSIGN(SyncEvent);
 };
-// TODO: rw_lock
+
+class ScopedSyncEvent {
+  public:
+    explicit ScopedSyncEvent(SyncEvent* ev)
+        : ev_(ev) {
+    }
+    ~ScopedSyncEvent() {
+      if (ev_ != nullptr) ev_->Signal();
+    }
+
+  private:
+    SyncEvent* ev_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedSyncEvent);
+};
 
 #endif /* THREAD_UTIL_H_ */

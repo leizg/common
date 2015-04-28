@@ -198,6 +198,7 @@ bool AsyncServer::init() {
 
   pooler_.reset(new EventPooler(ev_mgr_, worker_));
   if (!pooler_->Init()) {
+    acceptor_->destory();
     acceptor_.reset();
     pooler_.reset();
     return false;
@@ -207,12 +208,13 @@ bool AsyncServer::init() {
 }
 
 EventManager* AsyncServer::getPoller() {
-  CHECK_NOTNULL(pooler_.get());
+  DCHECK_NOTNULL(pooler_.get());
   return pooler_->getPoller();
 }
 
 void AsyncServer::stopInternal(SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
+  ScopedSyncEvent n(ev);
   if (acceptor_ != nullptr) acceptor_->destory();
 
   ConnMap tmp;
@@ -230,8 +232,6 @@ void AsyncServer::stopInternal(SyncEvent* ev) {
     pooler_->stop();
     pooler_.reset();
   }
-
-  if (ev != nullptr) ev->Signal();
 }
 
 bool createTcpServer(const std::string& ip, uint16 port, int* server_fd) {
