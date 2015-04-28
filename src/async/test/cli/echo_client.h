@@ -4,9 +4,9 @@
 #include "base/base.h"
 
 namespace async {
-class Protocol;
-class TcpClient;
+class AsyncClient;
 class EventManager;
+class ProReactorProtocol;
 }
 
 namespace test {
@@ -25,8 +25,8 @@ class EchoClient {
     uint32 test_number_;
 
     async::EventManager* ev_mgr_;
-    scoped_ptr<async::Protocol> protocol_;
-    scoped_ptr<async::TcpClient> client_;
+    scoped_ptr<async::AsyncClient> client_;
+    scoped_ptr<async::ProReactorProtocol> protocol_;
 
     scoped_ptr<StoppableThread> thread_;
 

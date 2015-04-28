@@ -1,7 +1,8 @@
 #include "protocol.h"
 #include "connection.h"
-#include "io/io_buf.h"
 #include "event/event_manager.h"
+
+#include "io/io_buf.h"
 
 #include <sys/sendfile.h>
 
@@ -84,6 +85,15 @@ void Connection::handleRead(TimeStamp time_stamp) {
 void Connection::handleWrite(TimeStamp time_stamp) {
   if (fd_ != INVALID_FD && !closed_) {
     int err_no;
+    if (!data_->out_queue->empty()) {
+      if (!data_->out_queue->send(fd_, &err_no)) {
+        if (err_no != EWOULDBLOCK) {
+          handleClose();
+        }
+        return;
+      }
+    }
+
     if (protocol_->handleWrite(this, time_stamp, &err_no)) {
       updateChannel(EV_READ);
       return;
@@ -135,6 +145,36 @@ bool Connection::read(char* buf, int32* len) {
 
   *len -= left;
   return true;
+}
+
+Connection::UserData::UserData()
+    : conn(nullptr) {
+  out_queue.reset(new io::OutQueue);
+}
+
+Connection::UserData::~UserData() {
+}
+
+void Connection::send(io::OutputObject* obj) {
+  if (event_->event & EV_WRITE) {
+    data_->out_queue->push(obj);
+    updateChannel(EV_READ | EV_WRITE);
+    return;
+  }
+
+  int err_no;
+  if (closed_ || obj->send(fd_, &err_no)) {
+    delete obj;
+    return;
+  }
+
+  if (err_no == EWOULDBLOCK) {
+    data_->out_queue->push(obj);
+    updateChannel(EV_READ | EV_WRITE);
+    return;
+  }
+
+  shutDown();
 }
 
 bool Connection::write(const char* buf, int32* len, int* err_no) {

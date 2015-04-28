@@ -24,7 +24,6 @@ ProReactorProtocol::UserData::UserData()
     : is_last(true), io_stat(IO_START), pending_size(0) {
   chunk.reset(new io::ExternableChunk);
   src.reset(new io::ConcatenaterSource);
-  out_queue.reset(new io::OutQueue);
 }
 
 void ProReactorProtocol::UserData::newPackage() {
@@ -41,7 +40,7 @@ ProReactorProtocol::UserData::~UserData() {
 
 void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
   UserData* u = reinterpret_cast<UserData*>(conn->getData());
-  if (!RecvPending(conn, u)) return;
+  if (!recvPending(conn, u)) return;
 
   while (true) {
     switch (u->io_stat) {
@@ -112,10 +111,10 @@ void ProReactorProtocol::handleClose(Connection* conn) {
 bool ProReactorProtocol::recvData(Connection* conn, UserData* u,
                                   uint32 data_len) {
   u->pending_size = data_len;
-  return RecvPending(conn, u);
+  return recvPending(conn, u);
 }
 
-bool ProReactorProtocol::RecvPending(Connection* conn, UserData* ud) {
+bool ProReactorProtocol::recvPending(Connection* conn, UserData* ud) {
   if (ud->pending_size == 0) return true;
 
   int size = ud->pending_size;

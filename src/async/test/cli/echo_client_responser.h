@@ -4,8 +4,10 @@
 #include "async/protocol.h"
 
 namespace test {
+using async::Connection;
+using async::ProReactorProtocol;
 
-class EchoResponser : public async::ProReactorProtocol::Scheluder {
+class EchoResponser : public ProReactorProtocol::Scheluder {
   public:
     EchoResponser() {
     }
@@ -13,7 +15,7 @@ class EchoResponser : public async::ProReactorProtocol::Scheluder {
     }
 
   private:
-    virtual void dispatch(async::Connection* conn, io::InputStream* in_stream,
+    virtual void dispatch(Connection* conn, io::InputStream* in_stream,
                           TimeStamp time_stamp) {
       // just ignore.
     }

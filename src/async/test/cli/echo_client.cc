@@ -6,8 +6,8 @@
 #include "io/io_buf.h"
 #include "io/memory_block.h"
 #include "async/connector.h"
-#include "async/tcp_client.h"
-#include "async/event_manager.h"
+#include "async/async_client.h"
+#include "async/event/event_manager.h"
 
 namespace {
 class EchoObject : public io::OutVectorObject::IoObject {
@@ -34,13 +34,13 @@ class EchoObject : public io::OutVectorObject::IoObject {
 
 uint64 EchoObject::value_ = 1;
 
-void EchoObject::buildData() {
+void EchoObject::buildData() {  // it's so ugly...
   buf_.reset(new io::ExternableChunk(64));
   uint64 val = value_++;
   iovec io;
   const char* begin = buf_->peekW();
   CHECK(test::Encode((const char* )&val, sizeof(val), buf_.get()));
-  char* end = (char*)buf_->peekW();
+  char* end = (char*) buf_->peekW();
   io.iov_base = (char*) begin;
   io.iov_len = end - begin;
   DCHECK_EQ(io.iov_len, 4 + 8);
@@ -60,7 +60,7 @@ EchoClient::~EchoClient() {
 }
 
 bool EchoClient::connect(const std::string& ip, uint16 port) {
-  client_.reset(async::TcpClient::create(ev_mgr_, ip, port));
+  client_.reset(new async::TcpAsyncClient(ev_mgr_, ip, port));
   client_->setProtocol(protocol_.get());
   if (!client_->connect(3 * TimeStamp::kMicroSecsPerSecond)) {
     LOG(WARNING)<< "connect error: " << ip << ": " << port;

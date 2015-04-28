@@ -2,6 +2,8 @@
 #include "connector.h"
 #include "connection.h"
 #include "async_client.h"
+
+#include "io/io_buf.h"
 #include "event/event_manager.h"
 
 namespace async {
@@ -109,9 +111,9 @@ bool LocalAsyncClient::doConnect(int* fd) {
   return true;
 }
 
-#if 0
-void TcpClientImpl::sendInternal(io::OutputObject* out_obj) {
-  if (conn_.get() == nullptr) {
+void AsyncClient::sendInternal(io::OutputObject* out_obj) {
+  ev_mgr_->assertThreadSafe();
+  if (conn_ == nullptr) {
     DLOG(INFO)<<"not connected, drop package.";
     delete out_obj;
     return;
@@ -120,15 +122,13 @@ void TcpClientImpl::sendInternal(io::OutputObject* out_obj) {
   conn_->send(out_obj);
 }
 
-void TcpClientImpl::send(io::OutputObject* out_obj) {
+void AsyncClient::send(io::OutputObject* out_obj) {
   if (ev_mgr_->inValidThread()) {
     sendInternal(out_obj);
     return;
   }
 
-  ev_mgr_->runInLoop(
-      ::NewCallback(this, &TcpClientImpl::sendInternal, out_obj));
+  ev_mgr_->runInLoop(::NewCallback(this, &AsyncClient::sendInternal, out_obj));
 }
-#endif
 
 }

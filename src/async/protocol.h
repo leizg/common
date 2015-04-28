@@ -83,8 +83,6 @@ class ProReactorProtocol : public Protocol {
 
         scoped_ptr<io::ExternableChunk> chunk;
         scoped_ptr<io::ConcatenaterSource> src;
-        scoped_ptr<io::OutQueue> out_queue;
-
     };
 
   protected:
@@ -106,8 +104,8 @@ class ProReactorProtocol : public Protocol {
     virtual void handleError(Connection* conn);
     virtual void handleClose(Connection* conn);
 
+    bool recvPending(Connection* conn, UserData* ud);
     bool recvData(Connection* conn, UserData* u, uint32 data_len);
-    bool RecvPending(Connection* conn, UserData* ud);
 
     DISALLOW_COPY_AND_ASSIGN(ProReactorProtocol);
 };

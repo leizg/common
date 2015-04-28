@@ -171,6 +171,7 @@ void AsyncServer::add(Connection* conn) {
   conn->setCloseClosure(
       ::NewPermanentCallback(this, &AsyncServer::remove, conn));
   ScopedMutex l(&mutex_);
+  conn->Ref();
   DCHECK_EQ(map_.count(conn->fileHandle()), 0);
   map_.insert(std::make_pair(conn->fileHandle(), conn));
 }

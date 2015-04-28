@@ -2,6 +2,10 @@
 
 #include "base/base.h"
 
+namespace io {
+class OutputObject;
+}
+
 namespace async {
 class Protocol;
 class Connection;
@@ -30,8 +34,10 @@ class AsyncClient {
 
     // thread safe.
     // please set protocol and Closures first.
-    virtual bool connect(uint32 time_out);
+    bool connect(uint32 time_out);
     void stop();
+
+    void send(io::OutputObject* obj);
 
   protected:
     // ev_mgr must be initialized successfully.
@@ -50,6 +56,7 @@ class AsyncClient {
     scoped_ptr<Closure> reconnect_closure_;
 
     void handleConnectionAbort();
+    void sendInternal(io::OutputObject* obj);
     void stopInternal(SyncEvent* ev = nullptr);
 
     virtual bool doConnect(int* fd) = 0;

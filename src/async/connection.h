@@ -2,6 +2,11 @@
 
 #include "base/base.h"
 
+namespace io {
+class OutQueue;
+class OutputObject;
+}
+
 namespace async {
 struct Event;
 class Protocol;
@@ -34,6 +39,7 @@ class Connection : public RefCounted {
     }
 
     bool read(char* buf, int32* len);
+    void send(io::OutputObject* obj);
     bool write(const char* buf, int32* len, int* err_no);
     bool write(int fd, off_t offset, int32* len, int* err_no);
     bool write(const std::vector<iovec>& iov, int32* len, int* err_no);
@@ -43,10 +49,11 @@ class Connection : public RefCounted {
     void handleWrite(TimeStamp time_stamp);
 
     struct UserData {
-        virtual ~UserData() {
-        }
+        UserData();
+        virtual ~UserData();
 
         Connection* conn;
+        scoped_ptr<io::OutQueue> out_queue;
     };
     void setData(UserData* data) {
       data_.reset(data);

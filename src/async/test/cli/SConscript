@@ -2,11 +2,11 @@ import os, sys, time
 from glob import glob
 
 env = Environment()
-ccflags = ['-std=c++11', ]
+ccflags = ['-std=c++11', '-Werror']
 if ARGUMENTS.get('release', '0') == '0':
-  ccflags += ['-O0', '-g3', '-Wall', ]
+  ccflags += ['-O0', '-g3', ]
 else:
-  ccflags += ['-O2', '-g0', '-Werror', ]
+  ccflags += ['-O2', '-g0', ]
 env.Append(CPPFLAGS = ccflags)
 env.Append(CPPPATH = ['../', '/usr/local/include'])
 
@@ -30,6 +30,7 @@ source_files = glob('../io/*.cc') + \
                glob('../util/*.cc') + \
                glob('../async/*.cc') + \
                glob('../async/test/*.cc') + \
+               glob('../async/event/*.cc') + \
                glob('../async/test/cli/*.cc')
 
 print("souce code list: >>")

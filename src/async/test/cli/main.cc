@@ -2,7 +2,7 @@
 #include <google/gflags.h>
 
 #include "echo_client.h"
-#include "async/event_manager.h"
+#include "async/event/event_manager.h"
 
 DEFINE_string(ip, "0.0.0.0", "ip for echo server");
 DEFINE_int32(port, 8888, "port for echo server");
