@@ -69,15 +69,20 @@ void EventPipe::destory() {
 }
 
 void EventPipe::triggerPipe() {
-  ev_mgr_->assertThreadSafe();
   if (event_fd_[1] != INVALID_FD) {
     uint8 c;
     ::write(event_fd_[1], &c, sizeof(c));
   }
 }
 
+void EventPipe::clearDummyData() {
+
+}
+
 void EventPipe::handleRead(TimeStamp ts) {
   DCHECK_NE(INVALID_FD, event_fd_[0]);
+  //todo: if error orrcured, exit...
+
   uint64 dummy;
   while (true) {  // read all of data.
     int ret = ::read(event_fd_[0], &dummy, sizeof(dummy));
@@ -87,13 +92,12 @@ void EventPipe::handleRead(TimeStamp ts) {
         case EINTR:
           continue;
         case EWOULDBLOCK:
-          break;
+          deletate_->handleEvent(ts);
+          return;
       }
       PLOG(WARNING)<< "read pipe error" << event_fd_[0];
       return;
     }
   }
-
-  deletate_->handleEvent(ts);
 }
 }

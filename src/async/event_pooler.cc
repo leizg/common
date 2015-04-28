@@ -27,9 +27,8 @@ bool EventPooler::Init() {
 }
 
 void EventPooler::stop() {
-  for (auto it = ev_vec_.begin(); it != ev_vec_.end(); ++it) {
+  for (auto ev_mgr : ev_vec_) {
     SyncEvent stop_ev;
-    EventManager* ev_mgr = *it;
     ev_mgr->stop(&stop_ev);
     stop_ev.Wait();
     delete ev_mgr;

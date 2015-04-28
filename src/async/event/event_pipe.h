@@ -46,6 +46,8 @@ class EventPipe {
 
     scoped_ptr<Delegate> deletate_;
 
+    void clearDummyData();
+
     DISALLOW_COPY_AND_ASSIGN(EventPipe);
 };
 }
