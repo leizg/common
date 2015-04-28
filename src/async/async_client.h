@@ -2,10 +2,6 @@
 
 #include "base/base.h"
 
-namespace io {
-class OutputObject;
-}
-
 namespace async {
 class Protocol;
 class Connection;
@@ -21,16 +17,21 @@ class AsyncClient {
     }
 
     // not thread safe.
+    // be called when connection abort.
     void setCloseClosure(Closure* c) {
       close_closure_.reset(c);
     }
+
+    // not thread safe.
+    // be called when connection reconnect successfully.
     void setReconnectClosure(Closure* c) {
       reconnect_closure_.reset(c);
     }
 
     // thread safe.
-    // please set protocol and closeClosure first.
+    // please set protocol and Closures first.
     virtual bool connect(uint32 time_out);
+    void stop();
 
   protected:
     // ev_mgr must be initialized successfully.
@@ -49,7 +50,10 @@ class AsyncClient {
     scoped_ptr<Closure> reconnect_closure_;
 
     void handleConnectionAbort();
-    virtual void connectInternal(bool* success, SyncEvent* ev = nullptr) = 0;
+    void stopInternal(SyncEvent* ev = nullptr);
+
+    virtual bool doConnect(int* fd) = 0;
+    void connectInternal(bool* success, SyncEvent* ev = nullptr);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(AsyncClient);
@@ -71,14 +75,11 @@ class TcpAsyncClient : public AsyncClient {
       return port_;
     }
 
-    // timeout: milli second
-    virtual bool connect(uint32 timeout);
-
   private:
     const std::string ip_;
     uint16 port_;
 
-    virtual void connectInternal(bool* success, SyncEvent* ev = nullptr);
+    virtual bool doConnect(int* fd);
 
     DISALLOW_COPY_AND_ASSIGN(TcpAsyncClient);
 };
@@ -99,7 +100,7 @@ class LocalAsyncClient : public AsyncClient {
   private:
     const std::string path_;
 
-    virtual void connectInternal(bool* success, SyncEvent* ev = nullptr);
+    virtual bool doConnect(int* fd);
 
     DISALLOW_COPY_AND_ASSIGN(LocalAsyncClient);
 };

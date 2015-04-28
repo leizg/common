@@ -1,34 +1,56 @@
-#include "io/io_buf.h"
 #include "protocol.h"
 #include "connector.h"
 #include "connection.h"
 #include "event_manager.h"
-#include "tcp_client_impl.h"
 
 namespace async {
 
 AsyncClient::~AsyncClient() {
 }
 
-void TcpAsyncClient::handleConnectionAbort() {
+void AsyncClient::stopInternal(SyncEvent* ev) {
   ev_mgr_->assertThreadSafe();
-  {
-    scoped_ref<Connection> conn(conn_.release());
-    if (close_closure_.get() != nullptr) {
-      close_closure_->Run();
-    }
+
+  ScopedSyncEvent n(ev);
+  if (close_closure_.get() != nullptr) {
+    close_closure_->Run();
   }
 
-  while (!connect(timeout_)) {
-    ;  // maybe sleep a while.
+  conn_.reset();
+}
+
+void AsyncClient::stop() {
+  if (ev_mgr_->inValidThread()) {
+    connectInternal (&success);
+    return;
+  }
+
+  SyncEvent ev;
+  ev_mgr_->runInLoop(::NewCallback(this, &AsyncClient::stopInternal, &ev));
+  ev.Wait();
+}
+
+void AsyncClient::handleConnectionAbort() {
+  ev_mgr_->assertThreadSafe();
+  conn_.reset();
+
+  while (true) {
+    if (connect(timeout_)) {
+      if (reconnect_closure_ != nullptr) {
+        reconnect_closure_->Run();
+      }
+      break;
+    }
+
+    // todo: wait policy.
   }
 }
 
 bool AsyncClient::connect(uint32 timeout) {
+  DCHECK_NOTNULL(protocol_);
   if (conn_ != nullptr) return false;
 
   timeout_ = timeout;
-  DCHECK_NOTNULL(protocol_);
   bool success = false;
   if (ev_mgr_->inValidThread()) {
     connectInternal(&success);
@@ -44,16 +66,13 @@ bool AsyncClient::connect(uint32 timeout) {
   return success;
 }
 
-void TcpAsyncClient::connectInternal(bool* success, SyncEvent* ev) {
+void AsyncClient::connectInternal(bool* success, SyncEvent* ev) {
+  ev_mgr_->assertThreadSafe();
   *success = false;
 
+  int fd;
   ScopedSyncEvent n(ev);
-  Connector connector;
-  int fd = connector.connect(ip_, port_, timeout_);
-  if (fd == INVALID_FD) {
-    return;
-  }
-
+  if (!doConnect(&fd)) return;
   scoped_ref<Connection> conn(new Connection(fd, ev_mgr_));
   conn->setProtocol(protocol_);
   conn->setData(protocol_->NewConnectionData());
@@ -62,32 +81,31 @@ void TcpAsyncClient::connectInternal(bool* success, SyncEvent* ev) {
                              &AsyncClient::handleConnectionAbort));
   if (conn->init()) {
     *success = true;
-    conn_.reset(conn.get());
+    conn_.reset(conn.release());
     return;
   }
 }
 
-void LocalAsyncClient::connectInternal(bool* success, SyncEvent* ev = nullptr) {
-  *success = false;
-
-  ScopedSyncEvent n(ev);
+bool TcpAsyncClient::doConnect(int* fd) {
   Connector connector;
-  int fd = connector.connect(path_, timeout_);
-  if (fd == INVALID_FD) {
-    return;
+  int client_fd = connector.connect(ip_, port_, timeout_);
+  if (client_fd == INVALID_FD) {
+    return false;
   }
 
-  scoped_ref<Connection> conn(new Connection(fd, ev_mgr_));
-  conn->setProtocol(protocol_);
-  conn->setData(protocol_->NewConnectionData());
-  conn->setCloseClosure(
-      ::NewPermanentCallback((AsyncClient*) this,
-                             &AsyncClient::handleConnectionAbort));
-  if (conn->init()) {
-    *success = true;
-    conn_.reset(conn.get());
-    return;
+  *fd = client_fd;
+  return true;
+}
+
+bool LocalAsyncClient::doConnect(int* fd) {
+  Connector connector;
+  int client_fd = connector.connect(path_, timeout_);
+  if (client_fd == INVALID_FD) {
+    return false;
   }
+
+  *fd = client_fd;
+  return true;
 }
 
 #if 0
