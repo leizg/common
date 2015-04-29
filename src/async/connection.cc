@@ -156,6 +156,10 @@ Connection::UserData::~UserData() {
 }
 
 void Connection::send(io::OutputObject* obj) {
+  if (closed_) {
+    delete obj;
+    return;
+  }
   if (event_->event & EV_WRITE) {
     data_->out_queue->push(obj);
     updateChannel(EV_READ | EV_WRITE);
@@ -163,7 +167,7 @@ void Connection::send(io::OutputObject* obj) {
   }
 
   int err_no;
-  if (closed_ || obj->send(fd_, &err_no)) {
+  if (obj->send(fd_, &err_no)) {
     delete obj;
     return;
   }

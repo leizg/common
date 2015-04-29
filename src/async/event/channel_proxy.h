@@ -38,8 +38,7 @@ class ChannelProxy : public EventPipe, /* private */SpinLock {
           std::deque<Closure*> cbs;
           p_->release(&cbs);
 
-          for (uint32 i = 0; i < cbs.size(); ++i) {
-            Closure* cb = cbs[i];
+          for (auto cb : cbs) {
             cb->Run();
           }
         }

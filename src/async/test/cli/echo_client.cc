@@ -10,6 +10,7 @@
 #include "async/event/event_manager.h"
 
 namespace {
+
 class EchoObject : public io::OutVectorObject::IoObject {
   public:
     EchoObject() {
@@ -36,6 +37,7 @@ uint64 EchoObject::value_ = 1;
 
 void EchoObject::buildData() {  // it's so ugly...
   buf_.reset(new io::ExternableChunk(64));
+
   uint64 val = value_++;
   iovec io;
   const char* begin = buf_->peekW();
@@ -44,6 +46,7 @@ void EchoObject::buildData() {  // it's so ugly...
   io.iov_base = (char*) begin;
   io.iov_len = end - begin;
   DCHECK_EQ(io.iov_len, 4 + 8);
+
   data_.push_back(io);
 }
 }
@@ -72,7 +75,7 @@ bool EchoClient::connect(const std::string& ip, uint16 port) {
 
 void EchoClient::startTest() {
   for (uint32 i = 0; i < test_number_; ++i) {
-    io::OutputObject* obj = new io::OutVectorObject(new EchoObject);
+    auto obj = new io::OutVectorObject(new EchoObject);
     client_->send(obj);
   }
 }

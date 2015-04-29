@@ -9,6 +9,7 @@
 namespace async {
 
 AsyncClient::~AsyncClient() {
+  stop();
 }
 
 void AsyncClient::stopInternal(SyncEvent* ev) {
@@ -19,7 +20,11 @@ void AsyncClient::stopInternal(SyncEvent* ev) {
     close_closure_->Run();
   }
 
-  conn_.reset();
+  if (conn_ != nullptr) {
+    conn_->setCloseClosure(nullptr);
+    conn_->shutDown();
+    conn_.reset();
+  }
 }
 
 void AsyncClient::stop() {
@@ -119,6 +124,7 @@ void AsyncClient::sendInternal(io::OutputObject* out_obj) {
     return;
   }
 
+  DLOG(INFO)<< "send obj...";
   conn_->send(out_obj);
 }
 

@@ -25,16 +25,22 @@ bool buildClients(async::EventManager* ev_mgr,
   return true;
 }
 
-static void startTest(const std::vector<test::EchoClient*>& clients) {
-  for (uint32 i = 0; i < clients.size(); ++i) {
-    test::EchoClient* cli = clients[i];
+static void startTest(async::EventManager* ev_mgr) {
+  std::vector<test::EchoClient*> clients;
+  if (!buildClients(ev_mgr, &clients)) {
+    STLClear(&clients);
+    return;
+  }
+
+  for (auto cli : clients) {
     cli->startTest();
   }
 
-  for (uint32 i = 0; i < clients.size(); ++i) {
-    test::EchoClient* cli = clients[i];
+  for (auto cli : clients) {
     cli->waitForFinished();
   }
+
+  STLClear(&clients);
 }
 
 static async::EventManager* createEventManager() {
@@ -56,23 +62,16 @@ int main(int argc, char* argv[]) {
   ::google::ParseCommandLineFlags(&argc, &argv, true);
 
   scoped_ptr<async::EventManager> ev_mgr(createEventManager());
-  if (ev_mgr == NULL) {
+  if (ev_mgr == nullptr) {
     LOG(WARNING)<< "create event manager error";
     return -1;
   }
-  std::vector<test::EchoClient*> clients;
-  if (!buildClients(ev_mgr.get(), &clients)) {
-    STLClear(&clients);
-    return false;
-  }
 
-  startTest(clients);
+  startTest(ev_mgr.get());
 
-  while (true) {
-    DLOG(INFO)<< "wait for exit...";
-    ::sleep(2);
-  }
-  STLClear(&clients);
+  SyncEvent ev;
+  ev_mgr->stop(&ev);
+  ev.Wait();
 
   return 0;
 }
