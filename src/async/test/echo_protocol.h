@@ -9,7 +9,7 @@ using async::ProActorProtocol;
 
 class EchoProtocol : public ProActorProtocol {
   public:
-    explicit EchoProtocol(Scheluder* scheluder);
+    explicit EchoProtocol(Scheduler* scheluder);
     virtual ~EchoProtocol();
 
   private:

@@ -26,7 +26,7 @@ bool EchoProtocol::EchoParser::parseHeader(Connection* conn) const {
   return true;
 }
 
-EchoProtocol::EchoProtocol(Scheluder* scheluder)
+EchoProtocol::EchoProtocol(Scheduler* scheluder)
     : async::ProActorProtocol(new EchoParser, scheluder) {
 }
 

@@ -5,7 +5,7 @@
 
 namespace test {
 
-class EchoDispatcher : public async::ProActorProtocol::Scheluder {
+class EchoDispatcher : public async::ProActorProtocol::Scheduler {
   public:
     EchoDispatcher() {
     }

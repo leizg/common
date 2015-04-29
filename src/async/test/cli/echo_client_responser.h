@@ -7,7 +7,7 @@ namespace test {
 using async::Connection;
 using async::ProActorProtocol;
 
-class EchoResponser : public ProActorProtocol::Scheluder {
+class EchoResponser : public ProActorProtocol::Scheduler {
   public:
     EchoResponser() {
     }

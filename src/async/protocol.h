@@ -57,9 +57,9 @@ class ProActorProtocol : public Protocol {
         virtual bool parseHeader(Connection* conn) const = 0;
     };
 
-    class Scheluder {
+    class Scheduler {
       public:
-        virtual ~Scheluder() {
+        virtual ~Scheduler() {
         }
 
         virtual void dispatch(Connection* conn, io::InputStream* in_stream,
@@ -86,7 +86,7 @@ class ProActorProtocol : public Protocol {
     };
 
   protected:
-    ProActorProtocol(Parser* parser, Scheluder* scheluder,
+    ProActorProtocol(Parser* parser, Scheduler* scheluder,
                        ErrorReporter* reporter = NULL)
         : parser_(parser), scheluder_(scheluder), reporter_(reporter) {
       DCHECK_NOTNULL(parser);
@@ -95,7 +95,7 @@ class ProActorProtocol : public Protocol {
 
   private:
     scoped_ptr<Parser> parser_;
-    scoped_ptr<Scheluder> scheluder_;
+    scoped_ptr<Scheduler> scheluder_;
     scoped_ptr<ErrorReporter> reporter_;
 
     virtual void handleRead(Connection* conn, TimeStamp time_stamp);
