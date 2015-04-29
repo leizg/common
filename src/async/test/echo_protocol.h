@@ -5,9 +5,9 @@
 
 namespace test {
 using async::Connection;
-using async::ProReactorProtocol;
+using async::ProActorProtocol;
 
-class EchoProtocol : public ProReactorProtocol {
+class EchoProtocol : public ProActorProtocol {
   public:
     explicit EchoProtocol(Scheluder* scheluder);
     virtual ~EchoProtocol();

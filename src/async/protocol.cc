@@ -8,7 +8,7 @@
 
 namespace {
 
-io::InputStream* releaseStream(async::ProReactorProtocol::UserData* ud) {
+io::InputStream* releaseStream(async::ProActorProtocol::UserData* ud) {
   ud->newPackage();
 
   io::InputStream* stream(new io::InputStream(ud->src.release()));
@@ -20,25 +20,25 @@ io::InputStream* releaseStream(async::ProReactorProtocol::UserData* ud) {
 
 namespace async {
 
-ProReactorProtocol::UserData::UserData()
+ProActorProtocol::UserData::UserData()
     : is_last(true), io_stat(IO_START), pending_size(0) {
   chunk.reset(new io::ExternableChunk);
   src.reset(new io::ConcatenaterSource);
 }
 
-void ProReactorProtocol::UserData::newPackage() {
+void ProActorProtocol::UserData::newPackage() {
   src->push(new io::ChunkSource(chunk.release()));
   chunk.reset(new io::ExternableChunk);
 }
 
-const char* ProReactorProtocol::UserData::peekHeader() const {
+const char* ProActorProtocol::UserData::peekHeader() const {
   return chunk->peekR();
 }
 
-ProReactorProtocol::UserData::~UserData() {
+ProActorProtocol::UserData::~UserData() {
 }
 
-void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
+void ProActorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
   UserData* u = reinterpret_cast<UserData*>(conn->getData());
   if (!recvPending(conn, u)) return;
 
@@ -80,7 +80,7 @@ void ProReactorProtocol::handleRead(Connection* conn, TimeStamp time_stamp) {
   }
 }
 
-bool ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp,
+bool ProActorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp,
                                      int* err_no) {
   DCHECK_NOTNULL(err_no);
   UserData* ud = reinterpret_cast<UserData*>(conn->getData());
@@ -96,11 +96,11 @@ bool ProReactorProtocol::handleWrite(Connection* conn, TimeStamp time_stamp,
   return true;
 }
 
-void ProReactorProtocol::handleError(Connection* conn) {
+void ProActorProtocol::handleError(Connection* conn) {
   handleClose(conn);
 }
 
-void ProReactorProtocol::handleClose(Connection* conn) {
+void ProActorProtocol::handleClose(Connection* conn) {
   if (reporter_ != nullptr) {
     reporter_->report(conn);
   }
@@ -108,13 +108,13 @@ void ProReactorProtocol::handleClose(Connection* conn) {
   conn->handleClose();
 }
 
-bool ProReactorProtocol::recvData(Connection* conn, UserData* u,
+bool ProActorProtocol::recvData(Connection* conn, UserData* u,
                                   uint32 data_len) {
   u->pending_size = data_len;
   return recvPending(conn, u);
 }
 
-bool ProReactorProtocol::recvPending(Connection* conn, UserData* ud) {
+bool ProActorProtocol::recvPending(Connection* conn, UserData* ud) {
   if (ud->pending_size == 0) return true;
 
   int size = ud->pending_size;

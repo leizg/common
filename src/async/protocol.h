@@ -35,9 +35,9 @@ class Protocol {
     DISALLOW_COPY_AND_ASSIGN(Protocol);
 };
 
-class ProReactorProtocol : public Protocol {
+class ProActorProtocol : public Protocol {
   public:
-    virtual ~ProReactorProtocol() {
+    virtual ~ProActorProtocol() {
     }
 
     class ErrorReporter {
@@ -86,7 +86,7 @@ class ProReactorProtocol : public Protocol {
     };
 
   protected:
-    ProReactorProtocol(Parser* parser, Scheluder* scheluder,
+    ProActorProtocol(Parser* parser, Scheluder* scheluder,
                        ErrorReporter* reporter = NULL)
         : parser_(parser), scheluder_(scheluder), reporter_(reporter) {
       DCHECK_NOTNULL(parser);
@@ -107,7 +107,7 @@ class ProReactorProtocol : public Protocol {
     bool recvPending(Connection* conn, UserData* ud);
     bool recvData(Connection* conn, UserData* u, uint32 data_len);
 
-    DISALLOW_COPY_AND_ASSIGN(ProReactorProtocol);
+    DISALLOW_COPY_AND_ASSIGN(ProActorProtocol);
 };
 
 }

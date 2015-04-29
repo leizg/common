@@ -6,7 +6,7 @@
 namespace async {
 class AsyncClient;
 class EventManager;
-class ProReactorProtocol;
+class ProActorProtocol;
 }
 
 namespace test {
@@ -26,7 +26,7 @@ class EchoClient {
 
     async::EventManager* ev_mgr_;
     scoped_ptr<async::AsyncClient> client_;
-    scoped_ptr<async::ProReactorProtocol> protocol_;
+    scoped_ptr<async::ProActorProtocol> protocol_;
 
     scoped_ptr<StoppableThread> thread_;
 

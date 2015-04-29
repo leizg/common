@@ -5,7 +5,7 @@
 
 namespace test {
 
-class EchoDispatcher : public async::ProReactorProtocol::Scheluder {
+class EchoDispatcher : public async::ProActorProtocol::Scheluder {
   public:
     EchoDispatcher() {
     }

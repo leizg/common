@@ -5,9 +5,9 @@
 
 namespace test {
 using async::Connection;
-using async::ProReactorProtocol;
+using async::ProActorProtocol;
 
-class EchoResponser : public ProReactorProtocol::Scheluder {
+class EchoResponser : public ProActorProtocol::Scheluder {
   public:
     EchoResponser() {
     }
