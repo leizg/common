@@ -201,4 +201,7 @@ class DirIterator : public detail::FileAbstruct {
     DISALLOW_COPY_AND_ASSIGN(DirIterator);
 };
 
+bool readFile(const std::string& path, std::string* data);
+bool writeFile(const std::string& path, const std::string& data);
+
 #endif

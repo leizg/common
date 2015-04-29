@@ -1,3 +1,4 @@
+#include "env.h"
 #include "protocol.h"
 #include "connection.h"
 #include "event_pooler.h"
@@ -197,6 +198,7 @@ void AsyncServer::stop() {
 }
 
 bool AsyncServer::init() {
+  Env env;
   if (!acceptor_->init()) {
     acceptor_.reset();
     return false;

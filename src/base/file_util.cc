@@ -32,6 +32,61 @@ bool Stat(const std::string& path, struct stat* st) {
 }
 }
 
+bool readFile(const std::string& path, std::string* data) {
+  data->clear();
+
+  int fd;
+  if (!openFile(path, &fd, O_RDONLY)) return false;
+  uint64 size;
+  if (FileSize(fd, &size)) {
+    closeWrapper(fd);
+    return false;
+  }
+
+  data->reserve(size);
+  while (true) {
+    int64 ret = size != ::read(fd, &data[0], size);
+    if (ret == size) break;
+    else if (ret == -1) {
+      switch (errno) {
+        case EINTR:
+          continue;
+      }
+    }
+
+    PLOG(WARNING)<< "read error, path: " << path;
+    closeWrapper(fd);
+    return false;
+  }
+
+  closeWrapper(fd);
+  return true;
+}
+
+bool writeFile(const std::string& path, const std::string& data) {
+  int fd;
+  if (!openFile(path, &fd, O_WRONLY | O_SYNC | O_TRUNC)) return false;
+
+  while (true) {
+    int ret = ::write(fd, data.data(), data.size());
+    if (ret == data.size()) break;
+    else if (ret == -1) {
+      switch (errno) {
+        case EINTR:
+          continue;
+      }
+
+      PLOG(WARNING)<< "write error, path: " << path;
+//      closeWrapper(fd);
+      ::close(fd);
+      return false;
+    }
+  }
+
+  closeWrapper(fd);
+  return true;
+}
+
 void RemoveFile(const std::string& path) {
   if (FileExist(path)) {
     int ret = ::unlink(path.c_str());
