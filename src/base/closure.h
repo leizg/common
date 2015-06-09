@@ -46,7 +46,7 @@ class Closure {
 template<typename Func, typename ... A>
 class FunctionClosure : public Closure {
   public:
-    FunctionClosure(Func func, bool self_delete, A ... a)
+    FunctionClosure(bool self_delete, Func func, A ... a)
         : func_(func), args_(a...) {
       self_delete_ = self_delete;
     }
@@ -69,7 +69,7 @@ class FunctionClosure : public Closure {
 template<typename Class, typename Func, typename ...A>
 class MethodClosure : public Closure {
   public:
-    MethodClosure(Class* obj, bool self_delete, Func func, A ... a)
+    MethodClosure(bool self_delete, Class* obj, Func func, A ... a)
         : obj_(obj), func_(func), args_(a...) {
       self_delete_ = self_delete;
     }
@@ -92,21 +92,21 @@ class MethodClosure : public Closure {
 
 template<typename Func, typename ... A>
 Closure* NewCallback(Func func, A ... a) {
-  return new FunctionClosure<Func, A...>(func, true, a...);
+  return new FunctionClosure<Func, A...>(true, func, a...);
 }
 
 template<typename Func, typename ... A>
 Closure* NewPermanentCallback(Func func, A ... a) {
-  return new FunctionClosure<Func, A...>(func, false, a...);
+  return new FunctionClosure<Func, A...>(false, func, a...);
 }
 
 template<typename Class, typename Func, typename ... A>
 Closure* NewCallback(Class* obj, Func func, A ... a) {
-  return new MethodClosure<Class, Func, A...>(obj, true, func, a...);
+  return new MethodClosure<Class, Func, A...>(true, obj, func, a...);
 }
 
 template<typename Class, typename Func, typename ... A>
 Closure* NewPermanentCallback(Class* obj, Func func, A ... a) {
-  return new MethodClosure<Class, Func, A...>(obj, false, func, a...);
+  return new MethodClosure<Class, Func, A...>(false, obj, func, a...);
 }
 
