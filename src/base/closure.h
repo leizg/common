@@ -5,6 +5,10 @@
 #include <tuple>
 #include "macro_def.h"
 
+/*
+ * Indices<N + 1> ==> Indices<0, 0, 1, 2, ..., N> ==> Seq<0, 1, 2, ... , N>
+ */
+
 template<int...> class Seq {};
 
 template<int N, int ... S>
@@ -64,6 +68,8 @@ class FunctionClosure : public Closure {
     std::tuple<A...> args_;
 
     bool self_delete_;
+
+    DISALLOW_COPY_AND_ASSIGN(FunctionClosure);
 };
 
 template<typename Class, typename Func, typename ...A>
@@ -88,6 +94,8 @@ class MethodClosure : public Closure {
     std::tuple<A...> args_;
 
     bool self_delete_;
+
+    DISALLOW_COPY_AND_ASSIGN(MethodClosure);
 };
 
 template<typename Func, typename ... A>
