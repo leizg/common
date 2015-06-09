@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
- #include <sys/resource.h>
+#include <sys/resource.h>
 
 #include <time.h>
 #include <unistd.h>
@@ -34,6 +34,7 @@
 #include "murmur_hash.h"
 
 #include "closure.h"
+#include "closure_new.h"
 #include "spin_lock.h"
 #include "scoped_ptr.h"
 #include "scoped_ref.h"

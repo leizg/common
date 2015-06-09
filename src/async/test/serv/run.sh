@@ -3,7 +3,7 @@
 is_build=0
 [ -n "$1" ] && { is_build=1 && shift; }
 
-build_command='scons -j4'
+build_command='scons -j1'
 
 bin='../../../build/serv'
 args='-alsologtostderr -enable_oom=true'
