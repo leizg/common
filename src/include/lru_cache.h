@@ -1,5 +1,4 @@
-#ifndef LRU_CACHE_H_
-#define LRU_CACHE_H_
+#pragma once
 
 #include "include/link_queue.h"
 
@@ -198,4 +197,3 @@ void Table<Key, Value>::clear() {
 }
 }  // end for namespace internal
 
-#endif /* LRU_CACHE_H_ */

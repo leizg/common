@@ -1,5 +1,4 @@
-#ifndef OBJECT_SAVER_H_
-#define OBJECT_SAVER_H_
+#pragma once
 
 #include "base/base.h"
 
@@ -331,14 +330,14 @@ template<>
 class SplitFunctor<std::string> {
   public:
     uint32 operator()(const std::string& key) const {
-      return Hash(key);
+      return SuperFastHash(key);
     }
 };
 template<>
 class SplitFunctor<char*> {
   public:
     uint32 operator()(const char*& key) const {
-      return Hash(key, ::strlen(key));
+      return SuperFastHash(key, ::strlen(key));
     }
 };
 }
@@ -405,4 +404,3 @@ class MulityTableObjectSaver : public ObjectSaver<Key, Object> {
     DISALLOW_COPY_AND_ASSIGN(MulityTableObjectSaver);
 };
 
-#endif /* OBJECT_SAVER_H_ */
