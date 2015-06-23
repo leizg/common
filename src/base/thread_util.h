@@ -1,5 +1,4 @@
-#ifndef THREAD_UTIL_H_
-#define THREAD_UTIL_H_
+#pragma once
 
 #include "macro_def.h"
 #include "data_types.h"
@@ -178,4 +177,3 @@ class ScopedSyncEvent {
     DISALLOW_COPY_AND_ASSIGN(ScopedSyncEvent);
 };
 
-#endif /* THREAD_UTIL_H_ */

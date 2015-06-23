@@ -1,5 +1,4 @@
-#ifndef TIMER_H_
-#define TIMER_H_
+#pragma once
 
 #include "event_manager.h"
 
@@ -129,4 +128,3 @@ class RepeatTimer : public detail::TimerAbstruct<true> {
     DISALLOW_COPY_AND_ASSIGN(RepeatTimer);
 };
 }
-#endif /* TIMER_H_ */

@@ -1,6 +1,6 @@
 #ifdef __APPALE__
 
-#include "kqueue_impl.h"
+#include "mac_event_manager.h"
 
 namespace {
 

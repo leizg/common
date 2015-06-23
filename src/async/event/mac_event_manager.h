@@ -1,5 +1,4 @@
-#ifndef KQUEUE_IMPL_H_
-#define KQUEUE_IMPL_H_
+#pragma once
 
 #ifdef __APPALE__
 #include "event_manager.h"
@@ -7,16 +6,16 @@
 
 namespace async {
 
-class KqueueImpl : public EventManager {
-  public:
+  class KqueueImpl : public EventManager {
+    public:
     KqueueImpl()
-        : kp_fd_(INVALID_FD), stop_(true) {
+    : kp_fd_(INVALID_FD), stop_(true) {
     }
     virtual ~KqueueImpl();
 
     void setTimer(Event* ev, uint32 exipred);
 
-  private:
+    private:
     virtual bool Init();
     virtual void Loop(SyncEvent* start_event = NULL);
     virtual bool LoopInAnotherThread();
@@ -26,7 +25,7 @@ class KqueueImpl : public EventManager {
     virtual void Mod(Event* ev);
     virtual void Del(const Event& ev);
 
-  private:
+    private:
     int kp_fd_;
     bool stop_;
 
@@ -40,7 +39,6 @@ class KqueueImpl : public EventManager {
     const static uint32 kTriggerNumber = 128;
 
     DISALLOW_COPY_AND_ASSIGN(KqueueImpl);
-};
+  };
 }
 #endif  // end for __APPALE__
-#endif /* KQUEUE_IMPL_H_ */

@@ -1,5 +1,4 @@
-#ifndef TIMER_QUEUE_POSIX_H_
-#define TIMER_QUEUE_POSIX_H_
+#pragma once
 
 #if __linux__
 
@@ -24,10 +23,9 @@ class TimerQueuePosix : public TimerQueue {
     virtual void clearData();
     virtual void reset(TimeStamp time_stamp);
 
-    DISALLOW_COPY_AND_ASSIGN(TimerQueuePosix);
+    DISALLOW_COPY_AND_ASSIGN (TimerQueuePosix);
 };
 
 }
 #endif  // end for __linux__
 
-#endif  // end for  TIMER_QUEUE_POSIX_H_

@@ -1,5 +1,4 @@
-#ifndef LINKED_LIST_H_
-#define LINKED_LIST_H_
+#pragma once
 
 #include <cstdlib>
 
@@ -59,4 +58,3 @@ inline int ListSize(void** list) {
   return size;
 }
 
-#endif /* LINKED_LIST_H_ */

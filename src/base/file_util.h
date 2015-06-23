@@ -1,5 +1,4 @@
-#ifndef FILE_UTIL_H_
-#define FILE_UTIL_H_
+#pragma once
 
 #include "macro_def.h"
 #include "data_types.h"
@@ -204,4 +203,3 @@ class DirIterator : public detail::FileAbstruct {
 bool readFile(const std::string& path, std::string* data);
 bool writeFile(const std::string& path, const std::string& data);
 
-#endif

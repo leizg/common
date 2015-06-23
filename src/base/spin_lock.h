@@ -1,5 +1,4 @@
-#ifndef SPIN_LOCK_H_
-#define SPIN_LOCK_H_
+#pragma once
 
 #include "macro_def.h"
 #include "thread_util.h" // for microSleep
@@ -48,6 +47,8 @@ class SpinLock {
   private:
     int lock_;
 
+    friend class ScopedSpinlock;
+
     DISALLOW_COPY_AND_ASSIGN(SpinLock);
 };
 
@@ -65,9 +66,6 @@ class ScopedSpinlock {
   private:
     SpinLock* lock_;
 
-    friend class SpinLock;
-
     DISALLOW_COPY_AND_ASSIGN(ScopedSpinlock);
 };
 
-#endif /* SPIN_LOCK_H_ */

@@ -1,5 +1,4 @@
-#ifndef THREAD_SAFE_H_
-#define THREAD_SAFE_H_
+#pragma once
 
 #include "base/base.h"
 
@@ -9,10 +8,7 @@ class ThreadSafe {
     }
 
     bool inValidThread() const {
-#ifdef DEBUG
       return pthread_self() == pid_;
-#endif
-      return true;
     }
 
     void assertThreadSafe() const {
@@ -34,4 +30,3 @@ class ThreadSafe {
     DISALLOW_COPY_AND_ASSIGN(ThreadSafe);
 };
 
-#endif /* THREAD_SAFE_H_ */

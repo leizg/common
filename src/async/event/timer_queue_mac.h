@@ -1,5 +1,4 @@
-#ifndef TIMER_QUEUE_MAC_H_
-#define TIMER_QUEUE_MAC_H_
+#pragma once
 
 #ifdef __APPLE__
 #include "timer_queue.h"
@@ -30,4 +29,3 @@ class TimerQueueMac : public TimerQueue {
 };
 }
 #endif  // end for __APPLE__
-#endif  /* TIMER_QUEUE_MAC_H_ */

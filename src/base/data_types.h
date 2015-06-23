@@ -1,5 +1,4 @@
-#ifndef DATA_TYPES_H_
-#define DATA_TYPES_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -50,4 +49,3 @@ inline uint64 microsecsFromTimespec(const timespec ts) {
   return micro_secs;
 }
 
-#endif

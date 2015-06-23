@@ -1,5 +1,4 @@
-#ifndef MACRO_DEF_H_
-#define MACRO_DEF_H_
+#pragma once
 
 #define INVALID_TID (-1)
 #define INVALID_FD (-1)
@@ -34,4 +33,3 @@
     fd = INVALID_FD; \
   } while(0)
 
-#endif

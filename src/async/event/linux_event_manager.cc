@@ -1,5 +1,5 @@
-#include "epoller_impl.h"
 #include "closure_proxy.h"
+#include "linux_event_manager.h"
 
 #ifdef __linux__
 
@@ -8,7 +8,7 @@ namespace {
 bool createEventFd(int* epfd) {
   int fd = ::epoll_create1(EPOLL_CLOEXEC);
   if (fd == INVALID_FD) {
-    PLOG(WARNING)<< "epoll_create error";
+    PLOG(WARNING) << "epoll_create error";
     return false;
   }
 
@@ -21,7 +21,7 @@ bool createEventFd(int* epfd) {
 
 namespace async {
 
-bool EpollerImpl::init() {
+bool LinuxEventManager::init() {
   if (ep_fd_ != INVALID_FD) return false;
   if (!createEventFd(&ep_fd_)) return false;
 
@@ -29,7 +29,7 @@ bool EpollerImpl::init() {
   if (!cb_delegate_->init()) {
     closeWrapper(ep_fd_);
     cb_delegate_.reset();
-    LOG(WARNING)<< "callback delegate init error";
+    LOG(WARNING) << "callback delegate init error";
     return false;
   }
 
@@ -40,7 +40,7 @@ bool EpollerImpl::init() {
   return true;
 }
 
-void EpollerImpl::loop(SyncEvent* start_event) {
+void LinuxEventManager::loop(SyncEvent* start_event) {
   stop_ = false;
   {
     ScopedSyncEvent n(start_event);
@@ -49,13 +49,13 @@ void EpollerImpl::loop(SyncEvent* start_event) {
   }
 
   DCHECK_NE(ep_fd_, INVALID_FD);
-  LOG(INFO)<< "start event loop...";
+  LOG(INFO) << "start event loop...";
   while (!stop_) {
     int32 trigger_number = ::epoll_wait(ep_fd_, events_.data(), events_.size(),
                                         1);
     if (trigger_number == -1) {
       if (errno != EINTR) {
-        PLOG(WARNING)<< "epoll_wait error";
+        PLOG(WARNING) << "epoll_wait error";
       }
       continue;
     }
@@ -77,11 +77,12 @@ void EpollerImpl::loop(SyncEvent* start_event) {
   }
 }
 
-bool EpollerImpl::loopInAnotherThread() {
+bool LinuxEventManager::loopInAnotherThread() {
   SyncEvent start_event(false, false);
   loop_pthread_.reset(
       new StoppableThread(
-          ::NewPermanentCallback(this, &EpollerImpl::loop, &start_event)));
+          ::NewPermanentCallback(this, &LinuxEventManager::loop,
+                                 &start_event)));
   if (!loop_pthread_->Start()) {
     loop_pthread_.reset();
     return false;
@@ -89,14 +90,14 @@ bool EpollerImpl::loopInAnotherThread() {
 
   if (!start_event.TimeWait(3 * TimeStamp::kMicroSecsPerMilliSecond)) {
     loop_pthread_.reset();
-    LOG(WARNING)<< "event loop thread start error";
+    LOG(WARNING) << "event loop thread start error";
     return false;
   }
   DCHECK(!inValidThread());
   return true;
 }
 
-void EpollerImpl::stop(SyncEvent* ev) {
+void LinuxEventManager::stop(SyncEvent* ev) {
   if (stop_) {
     if (ev != nullptr) ev->Signal();
     return;
@@ -105,11 +106,11 @@ void EpollerImpl::stop(SyncEvent* ev) {
   if (inValidThread()) {
     stopInternal(ev);
   } else {
-    runInLoop(NewCallback(this, &EpollerImpl::stopInternal, ev));
+    runInLoop(NewCallback(this, &LinuxEventManager::stopInternal, ev));
   }
 }
 
-void EpollerImpl::stopInternal(SyncEvent* ev) {
+void LinuxEventManager::stopInternal(SyncEvent* ev) {
   stop_ = true;
   EventManager::stop(ev);
 
@@ -125,7 +126,7 @@ void EpollerImpl::stopInternal(SyncEvent* ev) {
   if (ev != nullptr) ev->Signal();
 }
 
-uint32 EpollerImpl::convertEvent(uint8 event) {
+uint32 LinuxEventManager::convertEvent(uint8 event) {
   uint32 flags = 0;
   if (event & EV_READ) {
     flags |= EPOLLIN;
@@ -137,12 +138,12 @@ uint32 EpollerImpl::convertEvent(uint8 event) {
   return flags;
 }
 
-bool EpollerImpl::add(Event* ev) {
+bool LinuxEventManager::add(Event* ev) {
   CHECK_NOTNULL(ev);
   assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it != ev_map_.end()) {
-    LOG(WARNING)<< "already registe fd: " << ev->fd;
+    LOG(WARNING) << "already registe fd: " << ev->fd;
     return false;
   }
 
@@ -153,19 +154,19 @@ bool EpollerImpl::add(Event* ev) {
 
   int ret = ::epoll_ctl(ep_fd_, EPOLL_CTL_ADD, ev->fd, &event);
   if (ret != 0) {
-    PLOG(WARNING)<< "epoll_ctl error";
+    PLOG(WARNING) << "epoll_ctl error";
     return false;
   }
   ev_map_[ev->fd] = ev;
   return true;
 }
 
-void EpollerImpl::mod(Event* ev) {
+void LinuxEventManager::mod(Event* ev) {
   CHECK_NOTNULL(ev);
   assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev->fd);
   if (it == ev_map_.end()) {
-    LOG(WARNING)<< "not registe fd: " << ev->fd;
+    LOG(WARNING) << "not registe fd: " << ev->fd;
     return;
   }
 
@@ -178,11 +179,11 @@ void EpollerImpl::mod(Event* ev) {
   PLOG_IF(WARNING, ret != 0) << "epoll_ctl error";
 }
 
-void EpollerImpl::del(const Event& ev) {
+void LinuxEventManager::del(const Event& ev) {
   assertThreadSafe();
   EvMap::iterator it = ev_map_.find(ev.fd);
   if (it == ev_map_.end()) {
-    DLOG(WARNING)<< "not registe fd: " << ev.fd;
+    DLOG(WARNING) << "not registe fd: " << ev.fd;
     return;
   }
   ev_map_.erase(it);

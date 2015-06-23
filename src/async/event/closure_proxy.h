@@ -1,5 +1,4 @@
-#ifndef CLOSURE_PROXY_H_
-#define CLOSURE_PROXY_H_
+#pragma once
 
 #include "event_manager.h"
 
@@ -27,4 +26,3 @@ class ClosureProxy : public EventManager::ClosureDelegate {
 
 }
 
-#endif /* CLOSURE_PROXY_H_ */

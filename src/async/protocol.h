@@ -1,5 +1,4 @@
-#ifndef PROTOCOL_H_
-#define PROTOCOL_H_
+#pragma once
 
 #include  "connection.h"
 
@@ -87,7 +86,7 @@ class ProActorProtocol : public Protocol {
 
   protected:
     ProActorProtocol(Parser* parser, Scheduler* scheluder,
-                       ErrorReporter* reporter = NULL)
+                     ErrorReporter* reporter = NULL)
         : parser_(parser), scheluder_(scheluder), reporter_(reporter) {
       DCHECK_NOTNULL(parser);
       DCHECK_NOTNULL(scheluder);
@@ -111,4 +110,3 @@ class ProActorProtocol : public Protocol {
 };
 
 }
-#endif /* PROTOCOL_H_ */

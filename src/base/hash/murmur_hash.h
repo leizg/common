@@ -1,5 +1,4 @@
-#ifndef MURMURHASH_H_
-#define MURMURHASH_H_
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -26,4 +25,3 @@ inline uint64_t murmur_hash64(const std::string& s) {
   return murmur_hash64(s, 0);
 }
 
-#endif /* MURMURHASH_H_ */

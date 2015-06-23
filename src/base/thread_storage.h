@@ -1,5 +1,4 @@
-#ifndef THREAD_STORAGE_H_
-#define THREAD_STORAGE_H_
+#pragma once
 
 #include <pthread.h>
 #include "macro_def.h"
@@ -28,4 +27,3 @@ class ThreadStorage {
     DISALLOW_COPY_AND_ASSIGN(ThreadStorage);
 };
 
-#endif /* THREAD_STORAGE_H_ */

@@ -1,5 +1,4 @@
-#ifndef EVENT_PIPE_H_
-#define EVENT_PIPE_H_
+#pragma once
 
 #include "base/base.h"
 
@@ -51,4 +50,3 @@ class EventPipe {
     DISALLOW_COPY_AND_ASSIGN(EventPipe);
 };
 }
-#endif /* EVENT_PIPE_H_ */

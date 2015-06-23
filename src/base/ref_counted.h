@@ -1,5 +1,4 @@
-#ifndef REF_COUNTED_H_
-#define REF_COUNTED_H_
+#pragma once
 
 #include "macro_def.h"
 #include <assert.h>
@@ -38,4 +37,3 @@ class RefCounted {
     DISALLOW_COPY_AND_ASSIGN(RefCounted);
 };
 
-#endif

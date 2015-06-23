@@ -1,5 +1,4 @@
-#ifndef EVENT_MANAGER_H_
-#define EVENT_MANAGER_H_
+#pragma once
 
 #include "include/thread_safe.h"
 
@@ -52,7 +51,7 @@ class EventManager : public ThreadSafe {
         EventManager* ev_mgr_;
 
       private:
-        DISALLOW_COPY_AND_ASSIGN(ClosureDelegate);
+        DISALLOW_COPY_AND_ASSIGN (ClosureDelegate);
     };
 
     // these methods are threadsafe,
@@ -75,11 +74,10 @@ class EventManager : public ThreadSafe {
     scoped_ptr<ClosureDelegate> cb_delegate_;
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(EventManager);
+    DISALLOW_COPY_AND_ASSIGN (EventManager);
 };
 
 EventManager* CreateEventManager();
 
 }
 
-#endif /* EVENT_MANAGER_H_ */

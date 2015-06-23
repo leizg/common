@@ -1,5 +1,4 @@
-#ifndef HASH_H_
-#define HASH_H_
+#pragma once
 
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -27,4 +26,3 @@ inline uint32 SuperFastHash(const std::string& key) {
   return SuperFastHash(key.data(), key.size());
 }
 
-#endif /* HASH_H_ */

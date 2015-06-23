@@ -1,5 +1,4 @@
-#ifndef SCOPED_PTR_H_
-#define SCOPED_PTR_H_
+#pragma once
 
 #include <assert.h>
 #include <stdlib.h>
@@ -191,4 +190,3 @@ class scoped_array {
     scoped_array(const scoped_array&);
     void operator=(const scoped_array&);
 };
-#endif

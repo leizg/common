@@ -1,5 +1,5 @@
-#include "kqueue_impl.h"
-#include "epoller_impl.h"
+#include "mac_event_manager.h"
+#include "linux_event_manager.h"
 
 #include "event_pipe.h"
 #include "event_manager.h"
@@ -31,7 +31,7 @@ EventManager* EventManager::current() {
 
 EventManager* CreateEventManager() {
 #ifdef __linux__
-  return new EpollerImpl();
+  return new LinuxEventManager();
 #else
   return new KqueueImpl();
 #endif

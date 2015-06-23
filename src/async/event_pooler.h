@@ -1,5 +1,4 @@
-#ifndef EVENT_POOLER_H_
-#define EVENT_POOLER_H_
+#pragma once
 
 #include "base/base.h"
 
@@ -30,4 +29,3 @@ class EventPooler {
 };
 
 }
-#endif /* EVENT_POOLER_H_ */

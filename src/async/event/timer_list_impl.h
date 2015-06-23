@@ -1,5 +1,4 @@
-#ifndef TIMER_LIST_IMPL_H_
-#define TIMER_LIST_IMPL_H_
+#pragma once
 
 #include "timer_queue.h"
 
@@ -26,9 +25,8 @@ class TimerListImpl : public TimerQueue::Delegate {
     virtual bool fireActivedTimer(const TimeStamp& time_stamp,
                                   TimeStamp* next_expired);
 
-    DISALLOW_COPY_AND_ASSIGN(TimerListImpl);
+    DISALLOW_COPY_AND_ASSIGN (TimerListImpl);
 };
 
 }
 
-#endif /* TIMER_LIST_IMPL_H_ */

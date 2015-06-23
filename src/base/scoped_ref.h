@@ -1,5 +1,4 @@
-#ifndef SCOPED_REF_H_
-#define SCOPED_REF_H_
+#pragma once
 
 #include <stddef.h>
 #include "macro_def.h"
@@ -54,4 +53,3 @@ class scoped_ref {
     DISALLOW_COPY_AND_ASSIGN(scoped_ref);
 };
 
-#endif

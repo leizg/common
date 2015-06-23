@@ -1,5 +1,4 @@
-#ifndef CHANNEL_PROXY_H_
-#define CHANNEL_PROXY_H_
+#pragma once
 
 #include "event_pipe.h"
 
@@ -49,4 +48,3 @@ class ChannelProxy : public EventPipe, /* private */SpinLock {
     DISALLOW_COPY_AND_ASSIGN(ChannelProxy);
 };
 }
-#endif /* CHANNEL_PROXY_H_ */

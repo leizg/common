@@ -1,5 +1,4 @@
-#ifndef TIME_STAMP_H_
-#define TIME_STAMP_H_
+#pragma once
 
 #include <stddef.h>
 #include <sys/time.h>
@@ -106,4 +105,3 @@ inline TimeStamp TimeStamp::afterSeconds(uint64 secs) {
   return TimeStamp(now().microSecs() + secs * 1000);
 }
 
-#endif /* TIME_STAMP_H_ */

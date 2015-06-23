@@ -1,5 +1,4 @@
-#ifndef THREAD_H_
-#define THREAD_H_
+#pragma once
 
 #include "closure.h"
 #include "scoped_ptr.h"
@@ -144,4 +143,3 @@ class StoppableThread : public Thread {
     DISALLOW_COPY_AND_ASSIGN(StoppableThread);
 };
 
-#endif

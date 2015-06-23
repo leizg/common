@@ -1,5 +1,4 @@
-#ifndef EPOLLER_IMPL_H_
-#define EPOLLER_IMPL_H_
+#pragma once
 
 #ifdef __linux__
 
@@ -8,12 +7,12 @@
 
 namespace async {
 
-class EpollerImpl : public EventManager {
+class LinuxEventManager : public EventManager {
   public:
-    EpollerImpl()
+    LinuxEventManager()
         : ep_fd_(INVALID_FD), stop_(true) {
     }
-    virtual ~EpollerImpl() {
+    virtual ~LinuxEventManager() {
       DCHECK(stop_);
       closeWrapper(ep_fd_);
     }
@@ -42,8 +41,8 @@ class EpollerImpl : public EventManager {
     void stopInternal(SyncEvent* ev);
     uint32 convertEvent(uint8 event);
 
-    DISALLOW_COPY_AND_ASSIGN(EpollerImpl);
+    DISALLOW_COPY_AND_ASSIGN (LinuxEventManager);
 };
 }
+
 #endif // end for __linux__
-#endif // end for EPOLLER_IMPL_H_

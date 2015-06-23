@@ -1,5 +1,4 @@
-#ifndef TIMER_QUEUE_H_
-#define TIMER_QUEUE_H_
+#pragma once
 
 #include "base/base.h"
 
@@ -55,4 +54,3 @@ class TimerQueue {
     DISALLOW_COPY_AND_ASSIGN(TimerQueue);
 };
 }
-#endif
