@@ -1,11 +1,10 @@
-#ifndef CRC32_H_
-#define CRC32_H_
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
 
-// this file copy from leveldb.
+// this file is copyed from leveldb.
 
 namespace crc32 {
 // Return the crc32c of concat(A, data[0,n-1]) where init_crc is the
@@ -43,4 +42,3 @@ inline uint32_t Unmask(uint32_t masked_crc) {
 }
 
 }
-#endif /* CRC32_H_ */

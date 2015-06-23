@@ -1,5 +1,4 @@
-#ifndef BASE_H_
-#define BASE_H_
+#pragma once
 
 #include <errno.h>
 #include <sys/un.h>
@@ -28,10 +27,7 @@
 #include "macro_def.h"
 #include "data_types.h"
 
-#include "crc32.h"
-#include "xx_hash.h"
-#include "super_hash.h"
-#include "murmur_hash.h"
+#include "hash/hash.h"
 
 #include "closure.h"
 #include "spin_lock.h"
@@ -162,4 +158,3 @@ class AutoRunner {
 
 void SplitString(const std::string& src, char c, std::vector<std::string>* vec);
 
-#endif

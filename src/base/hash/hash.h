@@ -1,9 +1,11 @@
-#ifndef XX_HASH_H_
-#define XX_HASH_H_
+#pragma once
 
-#include "data_types.h"
-#include "xx_hash_internal.h"
+#include "crc32.h"
+#include "xx_hash.h"
+#include "super_hash.h"
+#include "murmur_hash.h"
 
+// for xxhash.
 inline uint32 XXHash32(const char* data, uint32 len, uint32 seed) {
   return static_cast<uint32>(XXH32(data, len, seed));
 }
@@ -43,5 +45,3 @@ class XXHash {
     XXHash(const XXHash&);
     void operator=(const XXHash&);
 };
-
-#endif /* XX_HASH_H_ */

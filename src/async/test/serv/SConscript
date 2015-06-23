@@ -26,6 +26,7 @@ if sys.platform != 'darwin':
 env.Append(LIBS=libs)
 
 source_files = glob('../base/*.cc') + \
+               glob('../base/hash/*.cc') + \
                glob('../util/*.cc') + \
                glob('../io/*.cc') + \
                glob('../async/*.cc') + \

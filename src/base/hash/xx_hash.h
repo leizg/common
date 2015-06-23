@@ -1,5 +1,4 @@
-#ifndef XX_HASH_INTERNAL_H_
-#define XX_HASH_INTERNAL_H_
+#pragma once
 
 /*
  xxHash - Fast Hash algorithm
@@ -136,4 +135,3 @@ unsigned int XXH32_intermediateDigest(void* state);
 #define XXH32_result XXH32_digest
 #define XXH32_getIntermediateResult XXH32_intermediateDigest
 
-#endif /* XXHASH_H_ */
