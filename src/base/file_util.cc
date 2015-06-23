@@ -45,7 +45,7 @@ bool readFile(const std::string& path, std::string* data) {
 
   data->reserve(size);
   while (true) {
-    int64 ret = size != ::read(fd, &data[0], size);
+    int64 ret = ::read(fd, &data[0], size);
     if (ret == size) break;
     else if (ret == -1) {
       switch (errno) {
