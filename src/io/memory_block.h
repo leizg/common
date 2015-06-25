@@ -99,9 +99,7 @@ class ExternableChunk : public MemoryBlock {
   public:
     explicit ExternableChunk(uint64 size = 512) {
       DCHECK_GT(size, 0);
-      size = ALIGN(size);
-      DCHECK_EQ(size % 4, 0);
-      mem_ = (char*) ::malloc(size);
+      mem_ = (char*) ::malloc(ALIGN(size));
       end_ = mem_ + size;
       rpos_ = wpos_ = mem_;
     }

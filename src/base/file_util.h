@@ -47,6 +47,32 @@ bool FlushFile(int fd);
 bool FileTruncate(int fd, uint64 size);
 bool FileTruncate(const std::string& path, uint64 size);
 
+class AutoFd {
+  public:
+    AutoFd() {
+      fd = INVALID_FD;
+      self_close = true;
+    }
+    AutoFd(int file_handle, bool auto_close = true)
+        : fd(file_handle), self_close(auto_close) {
+    }
+    ~AutoFd() {
+      close();
+    }
+
+    void close() {
+      if (self_close) {
+        closeWrapper(fd);
+      }
+    }
+
+    int fd;
+    bool self_close;
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(AutoFd);
+};
+
 class SequentialReadonlyFile : public detail::FileAbstruct {
   public:
     explicit SequentialReadonlyFile(const std::string& fpath)
