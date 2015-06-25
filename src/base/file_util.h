@@ -303,20 +303,20 @@ class ScopedFileReaderLock {
     DISALLOW_COPY_AND_ASSIGN(ScopedFileReaderLock);
 };
 
-class ScopedFileWriteerLock {
+class ScopedFileWriterLock {
   public:
-    ScopedFileWriteerLock(const std::string& path)
+    ScopedFileWriterLock(const std::string& path)
         : locker_(path) {
       locker_.writeLock();
     }
-    ~ScopedFileWriteerLock() {
+    ~ScopedFileWriterLock() {
       locker_.unLock();
     }
 
   private:
     FileLocker locker_;
 
-    DISALLOW_COPY_AND_ASSIGN(ScopedFileWriteerLock);
+    DISALLOW_COPY_AND_ASSIGN(ScopedFileWriterLock);
 };
 
 bool readFile(const std::string& path, std::string* data);
