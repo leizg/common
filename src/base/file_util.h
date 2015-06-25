@@ -61,6 +61,7 @@ class SequentialReadonlyFile : public detail::FileAbstruct {
 
     virtual bool Init();
 
+    void skip(uint64 len);
     int32 read(char* buf, uint32 len);
 
   private:

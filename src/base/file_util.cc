@@ -183,6 +183,14 @@ bool SequentialReadonlyFile::Init() {
   return true;
 }
 
+void SequentialReadonlyFile::skip(uint64 len) {
+  int ret = ::fseek(stream_, len, SEEK_SET);
+  if (ret != 0) {
+    PLOG(WARNING)<< "fseek error: " << fpath_;
+    abort();
+  }
+}
+
 int32 SequentialReadonlyFile::read(char* buf, uint32 len) {
   DCHECK_GE(len, 0);
   int32 readn = ::fread(buf, 1, len, stream_);
