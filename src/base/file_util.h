@@ -200,6 +200,66 @@ class DirIterator : public detail::FileAbstruct {
     DISALLOW_COPY_AND_ASSIGN(DirIterator);
 };
 
+class FileLocker {
+  public:
+    explicit FileLocker(const std::string& path)
+        : path_(path), fd_(INVALID_FD) {
+      DCHECK(!path.empty());
+    }
+    ~FileLocker() {
+      if (fd_ != INVALID_FD) {
+        closeWrapper(fd_);
+        RemoveFile(path_);
+      }
+    }
+
+    void readLock();
+    void writeLock();
+    void unLock();
+
+  private:
+    const std::string path_;
+
+    int fd_;
+    bool openFile(int mode);
+
+    DISALLOW_COPY_AND_ASSIGN(FileLocker);
+};
+
+class ScopedReadFileLock {
+  public:
+    explicit ScopedReadFileLock(FileLocker* lock)
+        : lock_(lock) {
+      DCHECK_NOTNULL(lock);
+      lock->readLock();
+    }
+    ~ScopedReadFileLock() {
+      lock_->unLock();
+    }
+
+  private:
+    FileLocker* lock_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedReadFileLock);
+};
+
+class ScopedWriteFileLock {
+  public:
+    explicit ScopedWriteFileLock(FileLocker* lock)
+        : lock_(lock) {
+      DCHECK_NOTNULL(lock);
+      lock->writeLock();
+    }
+    ~ScopedWriteFileLock() {
+      lock_->unLock();
+    }
+
+  private:
+    FileLocker* lock_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedWriteFileLock);
+};
+
 bool readFile(const std::string& path, std::string* data);
 bool writeFile(const std::string& path, const std::string& data);
 

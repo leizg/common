@@ -426,3 +426,50 @@ const std::string* DirIterator::next() {
 
   return nullptr;
 }
+
+bool FileLocker::openFile(int mode) {
+  DCHECK_EQ(fd_, INVALID_FD);
+  if (FileExist(path_)) {
+    fd_ = ::open(path_.c_str(), mode);
+    if (fd_ == INVALID_FD) {
+      PLOG(WARNING)<< "open exist file error: " << path_;
+      return false;
+    }
+    return true;
+  }
+
+  fd_ = ::open(path_.c_str(), O_CREAT);
+  if (fd_ == INVALID_FD) {
+    PLOG(WARNING)<< "open error: " << path_;
+    return false;
+  }
+
+  return true;
+}
+
+void FileLocker::readLock() {
+  CHECK(openFile(O_RDONLY));
+  int ret = ::flock(fd_, LOCK_SH);
+  if (ret != 0) {
+    PLOG(WARNING)<< "flock error: " << path_;
+    ::abort();
+  }
+}
+
+void FileLocker::writeLock() {
+  CHECK(openFile(O_WRONLY));
+  int ret = ::flock(fd_, LOCK_EX);
+  if (ret != 0) {
+    PLOG(WARNING)<< "flock error: " << path_;
+    ::abort();
+  }
+}
+
+void FileLocker::unLock() {
+  DCHECK_NE(fd_, INVALID_FD);
+  int ret = ::flock(fd_, LOCK_UN);
+  if (ret != 0) {
+    PLOG(WARNING)<< "unlock error: " << path_;
+    ::abort();
+  }
+}
