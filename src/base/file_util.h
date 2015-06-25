@@ -287,6 +287,38 @@ class ScopedWriteFileLock {
     DISALLOW_COPY_AND_ASSIGN(ScopedWriteFileLock);
 };
 
+class ScopedFileReaderLock {
+  public:
+    ScopedFileReaderLock(const std::string& path)
+        : locker_(path) {
+      locker_.readLock();
+    }
+    ~ScopedFileReaderLock() {
+      locker_.unLock();
+    }
+
+  private:
+    FileLocker locker_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedFileReaderLock);
+};
+
+class ScopedFileWriteerLock {
+  public:
+    ScopedFileWriteerLock(const std::string& path)
+        : locker_(path) {
+      locker_.writeLock();
+    }
+    ~ScopedFileWriteerLock() {
+      locker_.unLock();
+    }
+
+  private:
+    FileLocker locker_;
+
+    DISALLOW_COPY_AND_ASSIGN(ScopedFileWriteerLock);
+};
+
 bool readFile(const std::string& path, std::string* data);
 bool writeFile(const std::string& path, const std::string& data);
 
