@@ -156,5 +156,47 @@ class AutoRunner {
     DISALLOW_COPY_AND_ASSIGN(AutoRunner);
 };
 
+class TaskQueue : public Closure {
+  public:
+    TaskQueue() {
+    }
+    virtual ~TaskQueue() {
+      event_.Signal();
+      if (flush_thread_ != nullptr) {
+        flush_thread_->Join();
+        flush_thread_.reset();
+      }
+
+      ScopedMutex l(&mutex_);
+      STLClear(&cbs_);
+    }
+
+    void push(Closure* cb) {
+      pushInternal(cb);
+      event_.Signal();
+    }
+
+  private:
+    typedef std::deque<Closure*> Queue;
+
+    Mutex mutex_;
+    Queue cbs_;
+
+    void release(Queue* cbs) {
+      ScopedMutex l(&mutex_);
+      cbs->swap(cbs_);
+    }
+    void pushInternal(Closure* cb) {
+      ScopedMutex l(&mutex_);
+      cbs_.push_back(cb);
+    }
+
+    virtual void Run();
+    SyncEvent event_;
+    scoped_ptr<StoppableThread> flush_thread_;
+
+    DISALLOW_COPY_AND_ASSIGN(TaskQueue);
+};
+
 void SplitString(const std::string& src, char c, std::vector<std::string>* vec);
 

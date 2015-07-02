@@ -20,3 +20,13 @@ void SplitString(const std::string& src, char c,
   }
 }
 
+void TaskQueue::Run() {
+  event_.TimeWait(500UL * TimeStamp::kMicroSecsPerMilliSecond);
+
+  Queue cbs;
+  release(&cbs);
+  for (auto cb : cbs) {
+    cb->Run();
+  }
+}
+
