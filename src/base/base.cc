@@ -21,6 +21,13 @@ void SplitString(const std::string& src, char c,
 }
 
 void TaskQueue::Run() {
+  flush_thread_.reset(
+      new StoppableThread(
+          ::NewPermanentCallback(this, &TaskQueue::runInternal)));
+  flush_thread_->Start();
+}
+
+void TaskQueue::runInternal() {
   event_.TimeWait(500UL * TimeStamp::kMicroSecsPerMilliSecond);
 
   Queue cbs;

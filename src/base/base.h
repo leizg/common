@@ -171,6 +171,7 @@ class TaskQueue : public Closure {
       STLClear(&cbs_);
     }
 
+    virtual void Run();
     void push(Closure* cb) {
       pushInternal(cb);
       event_.Signal();
@@ -191,7 +192,7 @@ class TaskQueue : public Closure {
       cbs_.push_back(cb);
     }
 
-    virtual void Run();
+    virtual void runInternal();
     SyncEvent event_;
     scoped_ptr<StoppableThread> flush_thread_;
 
